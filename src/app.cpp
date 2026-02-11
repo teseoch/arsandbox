@@ -27,7 +27,9 @@
 // upload path identical.
 
 #include "image.hpp"
+#include "overlay.hpp"
 #include "utils.hpp"
+
 #include <filesystem>
 
 // ----------------------------- Tiny math types ------------------------------
@@ -133,6 +135,14 @@ int main() {
 
   glfwSetKeyCallback(win, keyCallback);
 
+  // once
+  OverlayRenderer overlay = overlayInit();
+
+  // per frame
+  std::vector<OverlaySprite> sprites;
+  sprites.push_back({0.5f, 0.5f, 14.0f, 0.2f, 0.8f, 1.0f, 0.8f}); // droplet
+  sprites.push_back({0.2f, 0.8f, 10.0f, 1.0f, 1.0f, 1.0f, 0.9f}); // creature
+
   // Initial projector quad covers whole window
   gP.v[0] = {0, 0};
   gP.v[1] = {(float)winW, 0};
@@ -152,6 +162,9 @@ int main() {
   glDeleteShader_(vs);
   glDeleteShader_(fs);
 
+  GLuint overlayProgram = createOverlayProgram();
+  // GLuint overlayProgram = 0;
+
   // Empty VAO (we use gl_VertexID)
   GLuint vao = 0;
   glGenVertexArrays_(1, &vao);
@@ -162,6 +175,8 @@ int main() {
   const int depthH = 240;
   std::vector<uint16_t> depthCPU;
   generateDepthFrame(depthCPU, depthW, depthH, 0.0);
+
+  glDisable(GL_DEPTH_TEST);
 
   GLuint depthTex = 0;
   glGenTextures_(1, &depthTex);
@@ -260,6 +275,8 @@ int main() {
     // draw the warped quad
     glBindVertexArray_(vao);
     glDrawArrays_(GL_TRIANGLE_FAN, 0, 4);
+
+    overlayDraw(overlay, overlayProgram, winW, winH, P8, sprites);
 
     glfwSwapBuffers(win);
     glfwPollEvents();

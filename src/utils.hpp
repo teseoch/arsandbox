@@ -1,5 +1,7 @@
 #pragma once
 
+#define GL_SILENCE_DEPRECATION
+
 #include <GLFW/glfw3.h>
 
 #include <algorithm>
@@ -134,41 +136,59 @@ using PFNGLTEXPARAMETERIPROC = void(APIENTRY *)(GLenum, GLenum, GLint);
 using PFNGLACTIVETEXTUREPROC = void(APIENTRY *)(GLenum);
 using PFNGLDRAWARRAYSPROC = void(APIENTRY *)(GLenum, GLint, GLsizei);
 
-static PFNGLCREATESHADERPROC glCreateShader_ = nullptr;
-static PFNGLSHADERSOURCEPROC glShaderSource_ = nullptr;
-static PFNGLCOMPILESHADERPROC glCompileShader_ = nullptr;
-static PFNGLGETSHADERIVPROC glGetShaderiv_ = nullptr;
-static PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog_ = nullptr;
-static PFNGLCREATEPROGRAMPROC glCreateProgram_ = nullptr;
-static PFNGLATTACHSHADERPROC glAttachShader_ = nullptr;
-static PFNGLLINKPROGRAMPROC glLinkProgram_ = nullptr;
-static PFNGLGETPROGRAMIVPROC glGetProgramiv_ = nullptr;
-static PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog_ = nullptr;
-static PFNGLUSEPROGRAMPROC glUseProgram_ = nullptr;
-static PFNGLDELETESHADERPROC glDeleteShader_ = nullptr;
-static PFNGLDELETEPROGRAMPROC glDeleteProgram_ = nullptr;
-static PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation_ = nullptr;
-static PFNGLUNIFORM1IPROC glUniform1i_ = nullptr;
-static PFNGLUNIFORM1FPROC glUniform1f_ = nullptr;
-static PFNGLUNIFORM2FPROC glUniform2f_ = nullptr;
-static PFNGLUNIFORM2FVPROC glUniform2fv_ = nullptr;
-static PFNGLGENVERTEXARRAYSPROC glGenVertexArrays_ = nullptr;
-static PFNGLBINDVERTEXARRAYPROC glBindVertexArray_ = nullptr;
-static PFNGLGENTEXTURESPROC glGenTextures_ = nullptr;
-static PFNGLBINDTEXTUREPROC glBindTexture_ = nullptr;
-static PFNGLTEXIMAGE2DPROC glTexImage2D_ = nullptr;
-static PFNGLTEXSUBIMAGE2DPROC glTexSubImage2D_ = nullptr;
-static PFNGLTEXIMAGE1DPROC glTexImage1D_ = nullptr;
-static PFNGLTEXSUBIMAGE1DPROC glTexSubImage1D_ = nullptr;
-static PFNGLTEXPARAMETERIPROC glTexParameteri_ = nullptr;
-static PFNGLACTIVETEXTUREPROC glActiveTexture_ = nullptr;
-static PFNGLDRAWARRAYSPROC glDrawArrays_ = nullptr;
+using PFNGLGENBUFFERSPROC = void(APIENTRY *)(GLsizei, GLuint *);
+using PFNGLBINDBUFFERPROC = void(APIENTRY *)(GLenum, GLuint);
+using PFNGLBUFFERDATAPROC = void(APIENTRY *)(GLenum, GLsizeiptr, const void *,
+                                             GLenum);
+using PFNGLDRAWARRAYSINSTANCEDPROC = void(APIENTRY *)(GLenum, GLint, GLsizei,
+                                                      GLsizei);
+
+inline PFNGLCREATESHADERPROC glCreateShader_ = nullptr;
+inline PFNGLSHADERSOURCEPROC glShaderSource_ = nullptr;
+inline PFNGLCOMPILESHADERPROC glCompileShader_ = nullptr;
+inline PFNGLGETSHADERIVPROC glGetShaderiv_ = nullptr;
+inline PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog_ = nullptr;
+inline PFNGLCREATEPROGRAMPROC glCreateProgram_ = nullptr;
+inline PFNGLATTACHSHADERPROC glAttachShader_ = nullptr;
+inline PFNGLLINKPROGRAMPROC glLinkProgram_ = nullptr;
+inline PFNGLGETPROGRAMIVPROC glGetProgramiv_ = nullptr;
+inline PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog_ = nullptr;
+inline PFNGLUSEPROGRAMPROC glUseProgram_ = nullptr;
+inline PFNGLDELETESHADERPROC glDeleteShader_ = nullptr;
+inline PFNGLDELETEPROGRAMPROC glDeleteProgram_ = nullptr;
+inline PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation_ = nullptr;
+inline PFNGLUNIFORM1IPROC glUniform1i_ = nullptr;
+inline PFNGLUNIFORM1FPROC glUniform1f_ = nullptr;
+inline PFNGLUNIFORM2FPROC glUniform2f_ = nullptr;
+inline PFNGLUNIFORM2FVPROC glUniform2fv_ = nullptr;
+inline PFNGLGENVERTEXARRAYSPROC glGenVertexArrays_ = nullptr;
+inline PFNGLBINDVERTEXARRAYPROC glBindVertexArray_ = nullptr;
+inline PFNGLGENTEXTURESPROC glGenTextures_ = nullptr;
+inline PFNGLBINDTEXTUREPROC glBindTexture_ = nullptr;
+inline PFNGLTEXIMAGE2DPROC glTexImage2D_ = nullptr;
+inline PFNGLTEXSUBIMAGE2DPROC glTexSubImage2D_ = nullptr;
+inline PFNGLTEXIMAGE1DPROC glTexImage1D_ = nullptr;
+inline PFNGLTEXSUBIMAGE1DPROC glTexSubImage1D_ = nullptr;
+inline PFNGLTEXPARAMETERIPROC glTexParameteri_ = nullptr;
+inline PFNGLACTIVETEXTUREPROC glActiveTexture_ = nullptr;
+inline PFNGLDRAWARRAYSPROC glDrawArrays_ = nullptr;
+
+inline PFNGLGENBUFFERSPROC glGenBuffers_ = nullptr;
+inline PFNGLBINDBUFFERPROC glBindBuffer_ = nullptr;
+inline PFNGLBUFFERDATAPROC glBufferData_ = nullptr;
+inline PFNGLDRAWARRAYSINSTANCEDPROC glDrawArraysInstanced_ = nullptr;
 
 static void *getGLProc(const char *name) {
   return (void *)glfwGetProcAddress(name);
 }
 
 static bool loadGL() {
+  glGenBuffers_ = (PFNGLGENBUFFERSPROC)getGLProc("glGenBuffers");
+  glBindBuffer_ = (PFNGLBINDBUFFERPROC)getGLProc("glBindBuffer");
+  glBufferData_ = (PFNGLBUFFERDATAPROC)getGLProc("glBufferData");
+  glDrawArraysInstanced_ =
+      (PFNGLDRAWARRAYSINSTANCEDPROC)getGLProc("glDrawArraysInstanced");
+
   glCreateShader_ = (PFNGLCREATESHADERPROC)getGLProc("glCreateShader");
   glShaderSource_ = (PFNGLSHADERSOURCEPROC)getGLProc("glShaderSource");
   glCompileShader_ = (PFNGLCOMPILESHADERPROC)getGLProc("glCompileShader");
@@ -211,7 +231,8 @@ static bool loadGL() {
          glBindVertexArray_ && glGenTextures_ && glBindTexture_ &&
          glTexImage2D_ && glTexSubImage2D_ && glTexImage1D_ &&
          glTexSubImage1D_ && glTexParameteri_ && glActiveTexture_ &&
-         glDrawArrays_;
+         glDrawArrays_ && glGenBuffers_ && glBindBuffer_ && glBufferData_ &&
+         glDrawArraysInstanced_;
 }
 
 // ----------------------------- GL Utils ------------------------------------
