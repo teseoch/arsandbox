@@ -562,7 +562,7 @@ static GLuint makeColormap1D(const std::vector<uint8_t> &rgb, int L = 256) {
 
 // ----------------------------- Synthetic Depth ------------------------------
 // Generates uint16 depth in millimeters, with a few smooth bumps that drift
-// over time. This is NOT smoothing a real sensor; it’s just a convenient
+// over time. This is NOT smoothing a real sensor; it's just a convenient
 // development source.
 static void generateDepthFrame(std::vector<uint16_t> &depth, int W, int H,
                                double t) {
@@ -763,7 +763,7 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
   }
 
   // parameter knobs (press+repeat)
-  // Sea level +/- (nice “flood everything” effect with showWater on)
+  // Sea level +/- (nice "flood everything" effect with showWater on)
   if (key == GLFW_KEY_EQUAL) {
     gCtl.seaLevel += stepScale(mods, 0.01f);
     gCtl.seaLevel = std::clamp(gCtl.seaLevel, 0.0f, 2.0f);
@@ -775,7 +775,7 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
     return;
   }
 
-  // Depth min/max “chaos knobs”
+  // Depth min/max "chaos knobs"
   if (key == GLFW_KEY_LEFT_BRACKET) { // '['
     gCtl.depthMinMm -= stepScale(mods, 10.0f);
     return;
@@ -832,8 +832,8 @@ int main() {
 #endif
 
   int winW = 1280, winH = 720;
-  GLFWwindow *win = glfwCreateWindow(
-      winW, winH, "AR Sandbox Prototype (single file)", nullptr, nullptr);
+  GLFWwindow *win =
+      glfwCreateWindow(winW, winH, "AR Sandbox", nullptr, nullptr);
   if (!win) {
     std::fprintf(stderr, "Failed to create window\n");
     glfwTerminate();
