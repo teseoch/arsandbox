@@ -171,18 +171,18 @@ int main() {
   glBindVertexArray_(vao);
 
   // Depth texture (synthetic)
-  const int depthW = 320;
-  const int depthH = 240;
-  std::vector<uint16_t> depthCPU;
-  generateDepthFrame(depthCPU, depthW, depthH, 0.0);
+  Depth depth;
+  depth.w = 320;
+  depth.h = 240;
+  generateDepthFrame(depth, 0.0);
 
   glDisable(GL_DEPTH_TEST);
 
   GLuint depthTex = 0;
   glGenTextures_(1, &depthTex);
   glBindTexture_(GL_TEXTURE_2D, depthTex);
-  glTexImage2D_(GL_TEXTURE_2D, 0, GL_R16UI, depthW, depthH, 0, GL_RED_INTEGER,
-                GL_UNSIGNED_SHORT, depthCPU.data());
+  glTexImage2D_(GL_TEXTURE_2D, 0, GL_R16UI, depth.w, depth.h, 0, GL_RED_INTEGER,
+                GL_UNSIGNED_SHORT, depth.depth.data());
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -237,11 +237,11 @@ int main() {
     // Update synthetic depth
     if (!gCtl.freezeDepth) {
       tSim += dt;
-      generateDepthFrame(depthCPU, depthW, depthH, tSim);
+      generateDepthFrame(depth, tSim);
       glActiveTexture_(GL_TEXTURE0);
       glBindTexture_(GL_TEXTURE_2D, depthTex);
-      glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, depthW, depthH, GL_RED_INTEGER,
-                       GL_UNSIGNED_SHORT, depthCPU.data());
+      glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, depth.w, depth.h, GL_RED_INTEGER,
+                       GL_UNSIGNED_SHORT, depth.depth.data());
     }
 
     // Clear to black

@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+#include "depth.hpp"
+
 // ----------------------------- Minimal GL loader -----------------------------
 // We only load the GL entry points we actually use.
 // This avoids GLAD/GLEW and keeps it single-file.
@@ -291,9 +293,9 @@ static GLuint makeColormap1D(const std::vector<uint8_t> &rgb, int L = 256) {
 // Generates uint16 depth in millimeters, with a few smooth bumps that drift
 // over time. This is NOT smoothing a real sensor; it's just a convenient
 // development source.
-static void generateDepthFrame(std::vector<uint16_t> &depth, int W, int H,
-                               double t) {
-  depth.resize((size_t)W * (size_t)H);
+static void generateDepthFrame(Depth &depth, double t) {
+  const int W = depth.w, H = depth.h;
+  depth.depth.resize((size_t)W * (size_t)H);
   auto idx = [&](int x, int y) { return (size_t)y * (size_t)W + (size_t)x; };
 
   // Base plane depth ~1100mm with moving hills.
@@ -330,7 +332,7 @@ static void generateDepthFrame(std::vector<uint16_t> &depth, int W, int H,
 
       // Clamp to valid-ish range
       d = std::max(300.0f, std::min(2200.0f, d));
-      depth[idx(x, y)] = (uint16_t)std::lround(d);
+      depth.depth[idx(x, y)] = (uint16_t)std::lround(d);
     }
   }
 }
