@@ -33,8 +33,8 @@ include(GLFW)
 
 
 
-add_executable(arsandbox src/app.cpp)
-
+add_executable(arsandbox src/app.cpp src/image.cpp)
+target_compile_definitions(arsandbox PRIVATE AR_IMAGE_FOLDER=\"${PROJECT_SOURCE_DIR}/images\" )
 target_link_libraries(arsandbox PRIVATE glfw::glfw imgui::imgui)
 
 

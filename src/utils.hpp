@@ -254,109 +254,6 @@ static GLuint linkProgram(GLuint vs, GLuint fs) {
   return prog;
 }
 
-// ----------------------------- Colormap LUTs -------------------------------
-// Small procedural LUTs (256 entries). These are "map-like", not rainbow.
-static std::vector<uint8_t> lut_normal(int L = 256) {
-  std::vector<uint8_t> rgb(L * 3);
-  auto lerp = [](float a, float b, float t) { return a + (b - a) * t; };
-  auto put = [&](int i, float r, float g, float b) {
-    rgb[3 * i + 0] = (uint8_t)std::lround(std::clamp(r, 0.0f, 1.0f) * 255.0f);
-    rgb[3 * i + 1] = (uint8_t)std::lround(std::clamp(g, 0.0f, 1.0f) * 255.0f);
-    rgb[3 * i + 2] = (uint8_t)std::lround(std::clamp(b, 0.0f, 1.0f) * 255.0f);
-  };
-  // water->green->brown->rock->snow
-  struct Key {
-    float t;
-    float r, g, b;
-  };
-  Key keys[] = {
-      {0.00f, 0.05f, 0.12f, 0.30f}, {0.18f, 0.05f, 0.25f, 0.70f},
-      {0.28f, 0.10f, 0.55f, 0.25f}, {0.55f, 0.35f, 0.55f, 0.20f},
-      {0.78f, 0.55f, 0.45f, 0.30f}, {0.90f, 0.75f, 0.75f, 0.75f},
-      {1.00f, 0.95f, 0.95f, 0.95f},
-  };
-  for (int i = 0; i < L; i++) {
-    float t = (float)i / (L - 1);
-    int k = 0;
-    while (k + 1 < (int)(sizeof(keys) / sizeof(keys[0])) && t > keys[k + 1].t)
-      k++;
-    Key a = keys[k],
-        b = keys[std::min(k + 1, (int)(sizeof(keys) / sizeof(keys[0])) - 1)];
-    float u = (b.t > a.t) ? (t - a.t) / (b.t - a.t) : 0.0f;
-    put(i, lerp(a.r, b.r, u), lerp(a.g, b.g, u), lerp(a.b, b.b, u));
-  }
-  return rgb;
-}
-
-static std::vector<uint8_t> lut_tropical(int L = 256) {
-  auto base = lut_normal(L);
-  // shift towards more saturated greens and turquoise water
-  for (int i = 0; i < L; i++) {
-    float r = base[3 * i + 0] / 255.0f;
-    float g = base[3 * i + 1] / 255.0f;
-    float b = base[3 * i + 2] / 255.0f;
-    g = std::min(1.0f, g * 1.15f);
-    b = std::min(1.0f, b * 1.10f);
-    r = std::max(0.0f, r * 0.95f);
-    base[3 * i + 0] = (uint8_t)std::lround(r * 255);
-    base[3 * i + 1] = (uint8_t)std::lround(g * 255);
-    base[3 * i + 2] = (uint8_t)std::lround(b * 255);
-  }
-  return base;
-}
-
-static std::vector<uint8_t> lut_volcanic(int L = 256) {
-  std::vector<uint8_t> rgb(L * 3);
-  auto put = [&](int i, float r, float g, float b) {
-    rgb[3 * i + 0] = (uint8_t)std::lround(std::clamp(r, 0.0f, 1.0f) * 255);
-    rgb[3 * i + 1] = (uint8_t)std::lround(std::clamp(g, 0.0f, 1.0f) * 255);
-    rgb[3 * i + 2] = (uint8_t)std::lround(std::clamp(b, 0.0f, 1.0f) * 255);
-  };
-  for (int i = 0; i < L; i++) {
-    float t = (float)i / (L - 1);
-    // dark basalt -> ember -> ash
-    float r, g, b;
-    if (t < 0.6f) {
-      r = 0.05f + 0.25f * t;
-      g = 0.05f + 0.10f * t;
-      b = 0.06f + 0.08f * t;
-    } else if (t < 0.85f) {
-      float u = (t - 0.6f) / (0.25f);
-      r = 0.20f + 0.70f * u;
-      g = 0.10f + 0.25f * u;
-      b = 0.08f + 0.10f * u;
-    } else {
-      float u = (t - 0.85f) / (0.15f);
-      r = 0.90f + 0.08f * u;
-      g = 0.35f + 0.55f * u;
-      b = 0.18f + 0.70f * u;
-    }
-    put(i, r, g, b);
-  }
-  return rgb;
-}
-
-static std::vector<uint8_t> lut_ice(int L = 256) {
-  std::vector<uint8_t> rgb(L * 3);
-  auto put = [&](int i, float r, float g, float b) {
-    rgb[3 * i + 0] = (uint8_t)std::lround(std::clamp(r, 0.0f, 1.0f) * 255);
-    rgb[3 * i + 1] = (uint8_t)std::lround(std::clamp(g, 0.0f, 1.0f) * 255);
-    rgb[3 * i + 2] = (uint8_t)std::lround(std::clamp(b, 0.0f, 1.0f) * 255);
-  };
-  for (int i = 0; i < L; i++) {
-    float t = (float)i / (L - 1);
-    float r = 0.02f + 0.90f * t;
-    float g = 0.08f + 0.92f * t;
-    float b = 0.12f + 0.95f * t;
-    // add a bluish mid-tone
-    if (t < 0.5f) {
-      b = std::min(1.0f, b + 0.10f * (0.5f - t));
-    }
-    put(i, r, g, b);
-  }
-  return rgb;
-}
-
 static GLuint makeColormap1D(const std::vector<uint8_t> &rgb, int L = 256) {
   GLuint tex = 0;
   glGenTextures_(1, &tex);
@@ -381,6 +278,9 @@ static void generateDepthFrame(std::vector<uint16_t> &depth, int W, int H,
   // Base plane depth ~1100mm with moving hills.
   float base = 1100.0f;
   float a1 = 140.0f, a2 = 90.0f, a3 = 60.0f;
+
+  float min = base;
+  float max = base;
 
   for (int y = 0; y < H; y++) {
     for (int x = 0; x < W; x++) {
@@ -413,6 +313,11 @@ static void generateDepthFrame(std::vector<uint16_t> &depth, int W, int H,
       // Clamp to valid-ish range
       d = std::max(300.0f, std::min(2200.0f, d));
       depth[idx(x, y)] = (uint16_t)std::lround(d);
+      if (d < min)
+        min = d;
+      if (d > max)
+        max = d;
     }
   }
+  std::printf("Depth range: %.0fmm to %.0fmm\n", min, max);
 }

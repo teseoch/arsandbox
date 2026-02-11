@@ -75,16 +75,16 @@ void main(){
   t = pow(t, u_gamma);
   vec3 col = texture(u_colormapTex, t).rgb;
 
-  col = addIsolines(col, h, u_isoStep);
+//   col = addIsolines(col, h, u_isoStep);
 
-  if(u_showWater != 0){
-    float w = smoothstep(u_seaLevel + u_shoreWidth, u_seaLevel - u_shoreWidth, h);
-    vec3 water = vec3(0.05, 0.25, 0.85);
-    // darken with "depth below sea"
-    float deep = clamp((u_seaLevel - h) / max(u_seaLevel, 1e-3), 0.0, 1.0);
-    water *= (0.7 + 0.3 * deep);
-    col = mix(col, water, w);
-  }
+//   if(u_showWater != 0){
+//     float w = smoothstep(u_seaLevel + u_shoreWidth, u_seaLevel - u_shoreWidth, h);
+//     vec3 water = vec3(0.05, 0.25, 0.85);
+//     // darken with "depth below sea"
+//     float deep = clamp((u_seaLevel - h) / max(u_seaLevel, 1e-3), 0.0, 1.0);
+//     water *= (0.7 + 0.3 * deep);
+//     col = mix(col, water, w);
+//   }
 
   FragColor = vec4(col, 1.0);
 }

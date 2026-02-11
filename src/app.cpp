@@ -26,7 +26,9 @@
 // - If you later swap synthetic depth for Kinect/RealSense, keep the depthTex
 // upload path identical.
 
+#include "image.hpp"
 #include "utils.hpp"
+#include <filesystem>
 
 // ----------------------------- Tiny math types ------------------------------
 struct Vec2 {
@@ -186,10 +188,18 @@ int main() {
 
   // Colormap LUTs (1D textures)
   std::vector<GLuint> lutTex;
-  lutTex.push_back(makeColormap1D(lut_normal()));
-  lutTex.push_back(makeColormap1D(lut_tropical()));
-  lutTex.push_back(makeColormap1D(lut_volcanic()));
-  lutTex.push_back(makeColormap1D(lut_ice()));
+  const std::string folder = AR_IMAGE_FOLDER;
+  // loop over *.png in folder images
+  for (const auto &entry : std::filesystem::directory_iterator(folder)) {
+    if (entry.is_regular_file() && entry.path().extension() == ".png") {
+      int w = 0;
+      auto data = load_png_as_1d_texture(entry.path().string(), w);
+      if (!data.empty()) {
+        lutTex.push_back(makeColormap1D(data, w));
+        std::printf("Loaded colormap from %s\n", entry.path().string().c_str());
+      }
+    }
+  }
   gCtl.colormapCount = (int)lutTex.size();
 
   // Uniform locations
