@@ -279,9 +279,6 @@ static void generateDepthFrame(std::vector<uint16_t> &depth, int W, int H,
   float base = 1100.0f;
   float a1 = 140.0f, a2 = 90.0f, a3 = 60.0f;
 
-  float min = base;
-  float max = base;
-
   for (int y = 0; y < H; y++) {
     for (int x = 0; x < W; x++) {
       float fx = (x + 0.5f) / (float)W;
@@ -313,11 +310,6 @@ static void generateDepthFrame(std::vector<uint16_t> &depth, int W, int H,
       // Clamp to valid-ish range
       d = std::max(300.0f, std::min(2200.0f, d));
       depth[idx(x, y)] = (uint16_t)std::lround(d);
-      if (d < min)
-        min = d;
-      if (d > max)
-        max = d;
     }
   }
-  std::printf("Depth range: %.0fmm to %.0fmm\n", min, max);
 }

@@ -31,16 +31,11 @@ uniform usampler2D u_depthTex;   // GL_R16UI, mm
 uniform sampler1D  u_colormapTex;
 
 uniform vec2  u_depthUVQuad[4];  // normalized [0,1]
+
 uniform float u_depthMinMm;
 uniform float u_depthMaxMm;
-uniform float u_heightScale;
 uniform float u_gamma;
 
-uniform int   u_showWater;
-uniform float u_seaLevel;
-uniform float u_shoreWidth;
-
-uniform float u_isoStep;
 
 // bilinear warp from quad coords to depth UV
 vec2 warpUV(vec2 st){
@@ -69,22 +64,11 @@ void main(){
   }
 
   float dn = clamp((d - u_depthMinMm) / (u_depthMaxMm - u_depthMinMm), 0.0, 1.0);
-  float h  = (1.0 - dn) * u_heightScale;
+  float h  = (1.0 - dn);
 
   float t = clamp(h, 0.0, 1.0);
   t = pow(t, u_gamma);
   vec3 col = texture(u_colormapTex, t).rgb;
-
-//   col = addIsolines(col, h, u_isoStep);
-
-//   if(u_showWater != 0){
-//     float w = smoothstep(u_seaLevel + u_shoreWidth, u_seaLevel - u_shoreWidth, h);
-//     vec3 water = vec3(0.05, 0.25, 0.85);
-//     // darken with "depth below sea"
-//     float deep = clamp((u_seaLevel - h) / max(u_seaLevel, 1e-3), 0.0, 1.0);
-//     water *= (0.7 + 0.3 * deep);
-//     col = mix(col, water, w);
-//   }
 
   FragColor = vec4(col, 1.0);
 }

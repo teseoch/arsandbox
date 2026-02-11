@@ -35,10 +35,6 @@ static void updateGamepad(Controls &c, float dt) {
   c.gamma += (-ly) * (0.8f * dt);
   c.gamma = std::clamp(c.gamma, 0.2f, 3.0f);
 
-  // sea level with triggers
-  c.seaLevel += (RT - LT) * (0.6f * dt);
-  c.seaLevel = std::clamp(c.seaLevel, 0.0f, 2.0f);
-
   // buttons
   bool A = (s.buttons[GLFW_GAMEPAD_BUTTON_A] == GLFW_PRESS);
   bool B = (s.buttons[GLFW_GAMEPAD_BUTTON_B] == GLFW_PRESS);
@@ -49,12 +45,6 @@ static void updateGamepad(Controls &c, float dt) {
 
   if (c.aEdge.pressed(A))
     c.colormapIndex = (c.colormapIndex + 1) % std::max(1, c.colormapCount);
-  if (c.bEdge.pressed(B))
-    c.showWater = !c.showWater;
-  if (c.xEdge.pressed(X)) {
-    c.showIsolines = !c.showIsolines;
-    c.isoStep = c.showIsolines ? 0.10f : 0.0f;
-  }
   if (c.yEdge.pressed(Y))
     c.reset();
   if (c.lbEdge.pressed(LB))
@@ -117,16 +107,6 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
       return;
     }
 
-    // toggles
-    if (key == GLFW_KEY_W) {
-      gCtl.showWater = !gCtl.showWater;
-      return;
-    }
-    if (key == GLFW_KEY_I) {
-      gCtl.showIsolines = !gCtl.showIsolines;
-      gCtl.isoStep = gCtl.showIsolines ? 0.10f : 0.0f;
-      return;
-    }
     if (key == GLFW_KEY_SPACE) {
       gCtl.freezeDepth = !gCtl.freezeDepth;
       return;
@@ -153,19 +133,6 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
       moveSelectedCorner(gU, key, uvStep);
       gU.v[gSelCorner] = clamp01(gU.v[gSelCorner]);
     }
-    return;
-  }
-
-  // parameter knobs (press+repeat)
-  // Sea level +/- (nice "flood everything" effect with showWater on)
-  if (key == GLFW_KEY_EQUAL) {
-    gCtl.seaLevel += stepScale(mods, 0.01f);
-    gCtl.seaLevel = std::clamp(gCtl.seaLevel, 0.0f, 2.0f);
-    return;
-  }
-  if (key == GLFW_KEY_MINUS) {
-    gCtl.seaLevel -= stepScale(mods, 0.01f);
-    gCtl.seaLevel = std::clamp(gCtl.seaLevel, 0.0f, 2.0f);
     return;
   }
 

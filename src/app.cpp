@@ -54,18 +54,11 @@ struct Controls {
   // Shader knobs
   float depthMinMm = 700.0f;
   float depthMaxMm = 1700.0f;
-  float heightScale = 1.0f;
+
   float gamma = 1.0f;
 
-  bool showWater = true;
-  float seaLevel = 0.35f; // in height units after scaling (~0..1-ish)
-  float shoreWidth = 0.03f;
-
-  float isoStep = 0.0f; // 0 disables
-  bool showIsolines = false;
-
   int colormapIndex = 0;
-  int colormapCount = 4;
+  int colormapCount = 0;
 
   bool freezeDepth = false;
 
@@ -76,13 +69,7 @@ struct Controls {
   void reset() {
     depthMinMm = 700.0f;
     depthMaxMm = 1700.0f;
-    heightScale = 1.0f;
     gamma = 1.0f;
-    showWater = true;
-    seaLevel = 0.35f;
-    shoreWidth = 0.03f;
-    isoStep = 0.0f;
-    showIsolines = false;
     colormapIndex = 0;
     freezeDepth = false;
   }
@@ -209,12 +196,7 @@ int main() {
   const GLint loc_depthUVQuad = glGetUniformLocation_(prog, "u_depthUVQuad");
   const GLint loc_depthMinMm = glGetUniformLocation_(prog, "u_depthMinMm");
   const GLint loc_depthMaxMm = glGetUniformLocation_(prog, "u_depthMaxMm");
-  const GLint loc_heightScale = glGetUniformLocation_(prog, "u_heightScale");
   const GLint loc_gamma = glGetUniformLocation_(prog, "u_gamma");
-  const GLint loc_showWater = glGetUniformLocation_(prog, "u_showWater");
-  const GLint loc_seaLevel = glGetUniformLocation_(prog, "u_seaLevel");
-  const GLint loc_shoreWidth = glGetUniformLocation_(prog, "u_shoreWidth");
-  const GLint loc_isoStep = glGetUniformLocation_(prog, "u_isoStep");
   const GLint loc_depthSampler = glGetUniformLocation_(prog, "u_depthTex");
   const GLint loc_lutSampler = glGetUniformLocation_(prog, "u_colormapTex");
 
@@ -266,13 +248,7 @@ int main() {
 
     glUniform1f_(loc_depthMinMm, gCtl.depthMinMm);
     glUniform1f_(loc_depthMaxMm, gCtl.depthMaxMm);
-    glUniform1f_(loc_heightScale, gCtl.heightScale);
     glUniform1f_(loc_gamma, gCtl.gamma);
-
-    glUniform1i_(loc_showWater, gCtl.showWater ? 1 : 0);
-    glUniform1f_(loc_seaLevel, gCtl.seaLevel);
-    glUniform1f_(loc_shoreWidth, gCtl.shoreWidth);
-    glUniform1f_(loc_isoStep, gCtl.isoStep);
 
     // bind textures
     glActiveTexture_(GL_TEXTURE0);
@@ -307,9 +283,6 @@ Calibration:
 
 Visual / interaction:
   M / N : next / previous colormap
-  W : toggle water overlay
-  I : toggle isolines
-  + / - : raise / lower sea level
   [ / ] : decrease / increase depthMinMm
   ; / ' : decrease / increase depthMaxMm
   Space : freeze/unfreeze depth
@@ -318,10 +291,7 @@ Visual / interaction:
 
 Gamepad (if present, GLFW mapping):
   A: next colormap
-  B: toggle water
-  X: toggle isolines
   Y: reset
-  Triggers: sea level up/down
   Left stick Y: gamma
   LB/RB: cycle colormap backward/forward
 */
