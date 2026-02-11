@@ -26,6 +26,8 @@
 // - If you later swap synthetic depth for Kinect/RealSense, keep the depthTex
 // upload path identical.
 
+#include "creature.hpp"
+#include "depth.hpp"
 #include "image.hpp"
 #include "overlay.hpp"
 #include "utils.hpp"
@@ -53,9 +55,7 @@ struct ButtonEdge {
 };
 
 struct Controls {
-  // Shader knobs
-  float depthMinMm = 700.0f;
-  float depthMaxMm = 1700.0f;
+  Depth depth;
 
   float gamma = 1.0f;
 
@@ -69,8 +69,11 @@ struct Controls {
   bool gamepadPresent = false;
 
   void reset() {
-    depthMinMm = 700.0f;
-    depthMaxMm = 1700.0f;
+    depth.w = 320;
+    depth.h = 240;
+
+    depth.depthMinMm = 700.0f;
+    depth.depthMaxMm = 1700.0f;
     gamma = 1.0f;
     colormapIndex = 0;
     freezeDepth = false;
@@ -133,15 +136,12 @@ int main() {
     return 1;
   }
 
+  gCtl.reset();
+
   glfwSetKeyCallback(win, keyCallback);
 
   // once
   OverlayRenderer overlay = overlayInit();
-
-  // per frame
-  std::vector<OverlaySprite> sprites;
-  sprites.push_back({0.5f, 0.5f, 14.0f, 0.2f, 0.8f, 1.0f, 0.8f}); // droplet
-  sprites.push_back({0.2f, 0.8f, 10.0f, 1.0f, 1.0f, 1.0f, 0.9f}); // creature
 
   // Initial projector quad covers whole window
   gP.v[0] = {0, 0};
@@ -171,18 +171,15 @@ int main() {
   glBindVertexArray_(vao);
 
   // Depth texture (synthetic)
-  Depth depth;
-  depth.w = 320;
-  depth.h = 240;
-  generateDepthFrame(depth, 0.0);
+  generateDepthFrame(gCtl.depth, 0.0);
 
   glDisable(GL_DEPTH_TEST);
 
   GLuint depthTex = 0;
   glGenTextures_(1, &depthTex);
   glBindTexture_(GL_TEXTURE_2D, depthTex);
-  glTexImage2D_(GL_TEXTURE_2D, 0, GL_R16UI, depth.w, depth.h, 0, GL_RED_INTEGER,
-                GL_UNSIGNED_SHORT, depth.depth.data());
+  glTexImage2D_(GL_TEXTURE_2D, 0, GL_R16UI, gCtl.depth.w, gCtl.depth.h, 0,
+                GL_RED_INTEGER, GL_UNSIGNED_SHORT, gCtl.depth.depth.data());
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -222,6 +219,18 @@ int main() {
   double tPrev = glfwGetTime();
   double tSim = 0.0;
 
+  std::vector<Creature> creatures;
+  for (int i = 0; i < 10; i++) {
+    Creature c;
+    c.u = ((float)std::rand()) / RAND_MAX;
+    c.v = ((float)std::rand()) / RAND_MAX;
+    // c.u = 0.5f;
+    // c.v = 0.5f;
+    c.h0 = gCtl.depth.sample_bilinear(c.u, c.v);
+    c.dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+    creatures.push_back(c);
+  }
+
   while (!glfwWindowShouldClose(win)) {
     double tNow = glfwGetTime();
     float dt = (float)(tNow - tPrev);
@@ -237,13 +246,16 @@ int main() {
     // Update synthetic depth
     if (!gCtl.freezeDepth) {
       tSim += dt;
-      generateDepthFrame(depth, tSim);
+      generateDepthFrame(gCtl.depth, tSim);
       glActiveTexture_(GL_TEXTURE0);
       glBindTexture_(GL_TEXTURE_2D, depthTex);
-      glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, depth.w, depth.h, GL_RED_INTEGER,
-                       GL_UNSIGNED_SHORT, depth.depth.data());
+      glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, gCtl.depth.w, gCtl.depth.h,
+                       GL_RED_INTEGER, GL_UNSIGNED_SHORT,
+                       gCtl.depth.depth.data());
     }
 
+    for (auto &c : creatures)
+      c.step(gCtl.depth, dt);
     // Clear to black
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -261,8 +273,8 @@ int main() {
     glUniform2f_(loc_screenSize, (float)winW, (float)winH);
     glUniform2fv_(loc_depthUVQuad, 4, U8);
 
-    glUniform1f_(loc_depthMinMm, gCtl.depthMinMm);
-    glUniform1f_(loc_depthMaxMm, gCtl.depthMaxMm);
+    glUniform1f_(loc_depthMinMm, gCtl.depth.depthMinMm);
+    glUniform1f_(loc_depthMaxMm, gCtl.depth.depthMaxMm);
     glUniform1f_(loc_gamma, gCtl.gamma);
 
     // bind textures
@@ -275,6 +287,13 @@ int main() {
     // draw the warped quad
     glBindVertexArray_(vao);
     glDrawArrays_(GL_TRIANGLE_FAN, 0, 4);
+
+    std::vector<OverlaySprite> sprites;
+    for (const auto &c : creatures) {
+      sprites.push_back({c.u, c.v, 10.0f, 1.0f, 1.0f, 1.0f, 0.9f});
+    }
+    // sprites.push_back({0.5f, 0.5f, 14.0f, 0.2f, 0.8f, 1.0f, 0.8f}); //
+    // droplet
 
     overlayDraw(overlay, overlayProgram, winW, winH, P8, sprites);
 

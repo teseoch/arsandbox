@@ -138,24 +138,23 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 
   // Depth min/max "chaos knobs"
   if (key == GLFW_KEY_LEFT_BRACKET) { // '['
-    gCtl.depthMinMm -= stepScale(mods, 10.0f);
+    gCtl.depth.depthMinMm -= stepScale(mods, 10.0f);
     return;
   }
   if (key == GLFW_KEY_RIGHT_BRACKET) { // ']'
-    gCtl.depthMinMm += stepScale(mods, 10.0f);
+    gCtl.depth.depthMinMm += stepScale(mods, 10.0f);
     return;
   }
   if (key == GLFW_KEY_SEMICOLON) { // ';'
-    gCtl.depthMaxMm -= stepScale(mods, 10.0f);
+    gCtl.depth.depthMaxMm -= stepScale(mods, 10.0f);
     return;
   }
   if (key == GLFW_KEY_APOSTROPHE) { // '''
-    gCtl.depthMaxMm += stepScale(mods, 10.0f);
+    gCtl.depth.depthMaxMm += stepScale(mods, 10.0f);
     return;
   }
-  if (gCtl.depthMaxMm < gCtl.depthMinMm + 50.0f)
-    gCtl.depthMaxMm = gCtl.depthMinMm + 50.0f;
-
+  if (gCtl.depth.depthMaxMm < gCtl.depth.depthMinMm + 50.0f)
+    gCtl.depth.depthMaxMm = gCtl.depth.depthMinMm + 50.0f;
   // Gamma
   if (key == GLFW_KEY_G) {
     // tap G cycles common gammas; hold with repeat will still just cycle
