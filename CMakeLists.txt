@@ -43,6 +43,11 @@ target_link_libraries(arsandbox PRIVATE glfw::glfw imgui::imgui)
 if(LINUX)
   find_package(OpenGL REQUIRED)
   target_link_libraries(arsandbox PRIVATE OpenGL::GL)
+
+  find_package(realsense2 CONFIG REQUIRED)
+  target_link_libraries(arsandbox PRIVATE realsense2::realsense2)
+
+  target_compile_definitions(arsandbox PRIVATE SANDBOX_WITH_REALSENSE)
 endif()
 
 set_target_properties(arsandbox PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")

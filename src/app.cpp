@@ -32,29 +32,43 @@
 #include "overlay.hpp"
 #include "utils.hpp"
 
+#ifdef SANDBOX_WITH_REALSENSE
+#include "realsense.hpp"
+#endif
+
 #include <filesystem>
 
 // ----------------------------- Tiny math types ------------------------------
-struct Vec2 {
+struct Vec2
+{
   float x = 0, y = 0;
 };
-struct Quad {
+struct Quad
+{
   Vec2 v[4];
 };
 
 // ----------------------------- Controls / State -----------------------------
-enum Mode { NONE, PROJ, UV };
+enum Mode
+{
+  NONE,
+  PROJ,
+  UV
+};
 
-struct ButtonEdge {
+struct ButtonEdge
+{
   bool prev = false;
-  bool pressed(bool now) {
+  bool pressed(bool now)
+  {
     bool r = (now && !prev);
     prev = now;
     return r;
   }
 };
 
-struct Controls {
+struct Controls
+{
   Depth depth;
 
   float gamma = 1.0f;
@@ -68,9 +82,12 @@ struct Controls {
   ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge;
   bool gamepadPresent = false;
 
-  void reset() {
+  void reset()
+  {
+#ifndef SANDBOX_WITH_REALSENSE
     depth.w = 320;
     depth.h = 240;
+#endif
 
     depth.depthMinMm = 700.0f;
     depth.depthMaxMm = 1700.0f;
@@ -82,7 +99,8 @@ struct Controls {
 
 static Controls gCtl;
 
-static inline Vec2 clamp01(Vec2 p) {
+static inline Vec2 clamp01(Vec2 p)
+{
   p.x = std::max(0.0f, std::min(1.0f, p.x));
   p.y = std::max(0.0f, std::min(1.0f, p.y));
   return p;
@@ -101,8 +119,10 @@ static Quad gU;
 #include "shaders.hpp"
 
 // ----------------------------- Main -----------------------------------------
-int main() {
-  if (!glfwInit()) {
+int main()
+{
+  if (!glfwInit())
+  {
     std::fprintf(stderr, "Failed to init GLFW\n");
     return 1;
   }
@@ -121,7 +141,8 @@ int main() {
   int winW = 1280, winH = 720;
   GLFWwindow *win =
       glfwCreateWindow(winW, winH, "AR Sandbox", nullptr, nullptr);
-  if (!win) {
+  if (!win)
+  {
     std::fprintf(stderr, "Failed to create window\n");
     glfwTerminate();
     return 1;
@@ -129,7 +150,8 @@ int main() {
   glfwMakeContextCurrent(win);
   glfwSwapInterval(1);
 
-  if (!loadGL()) {
+  if (!loadGL())
+  {
     std::fprintf(stderr, "Failed to load required GL functions.\n");
     std::fprintf(stderr,
                  "Try updating drivers or adjusting GL version hints.\n");
@@ -171,7 +193,12 @@ int main() {
   glBindVertexArray_(vao);
 
   // Depth texture (synthetic)
+#ifdef SANDBOX_WITH_REALSENSE
+  RSGrabber realsense;
+  realsense.start(gCtl.depth);
+#else
   generateDepthFrame(gCtl.depth, 0.0);
+#endif
 
   glDisable(GL_DEPTH_TEST);
 
@@ -189,11 +216,14 @@ int main() {
   std::vector<GLuint> lutTex;
   const std::string folder = AR_IMAGE_FOLDER;
   // loop over *.png in folder images
-  for (const auto &entry : std::filesystem::directory_iterator(folder)) {
-    if (entry.is_regular_file() && entry.path().extension() == ".png") {
+  for (const auto &entry : std::filesystem::directory_iterator(folder))
+  {
+    if (entry.is_regular_file() && entry.path().extension() == ".png")
+    {
       int w = 0;
       auto data = load_png_as_1d_texture(entry.path().string(), w);
-      if (!data.empty()) {
+      if (!data.empty())
+      {
         lutTex.push_back(makeColormap1D(data, w));
         std::printf("Loaded colormap from %s\n", entry.path().string().c_str());
       }
@@ -220,7 +250,8 @@ int main() {
   double tSim = 0.0;
 
   std::vector<Creature> creatures;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 10; i++)
+  {
     Creature c;
     c.u = ((float)std::rand()) / RAND_MAX;
     c.v = ((float)std::rand()) / RAND_MAX;
@@ -231,7 +262,8 @@ int main() {
     creatures.push_back(c);
   }
 
-  while (!glfwWindowShouldClose(win)) {
+  while (!glfwWindowShouldClose(win))
+  {
     double tNow = glfwGetTime();
     float dt = (float)(tNow - tPrev);
     tPrev = tNow;
@@ -244,9 +276,15 @@ int main() {
     updateGamepad(gCtl, dt);
 
     // Update synthetic depth
-    if (!gCtl.freezeDepth) {
+    if (!gCtl.freezeDepth)
+    {
       tSim += dt;
+
+#ifdef SANDBOX_WITH_REALSENSE
+      realsense.grab(gCtl.depth);
+#else
       generateDepthFrame(gCtl.depth, tSim);
+#endif
       glActiveTexture_(GL_TEXTURE0);
       glBindTexture_(GL_TEXTURE_2D, depthTex);
       glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, gCtl.depth.w, gCtl.depth.h,
@@ -289,7 +327,8 @@ int main() {
     glDrawArrays_(GL_TRIANGLE_FAN, 0, 4);
 
     std::vector<OverlaySprite> sprites;
-    for (const auto &c : creatures) {
+    for (const auto &c : creatures)
+    {
       sprites.push_back({c.u, c.v, 10.0f, 1.0f, 1.0f, 1.0f, 0.9f});
     }
     // sprites.push_back({0.5f, 0.5f, 14.0f, 0.2f, 0.8f, 1.0f, 0.8f}); //
