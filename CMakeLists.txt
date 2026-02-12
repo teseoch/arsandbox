@@ -40,6 +40,10 @@ add_executable(arsandbox
 target_compile_definitions(arsandbox PRIVATE AR_IMAGE_FOLDER=\"${PROJECT_SOURCE_DIR}/images\" )
 target_link_libraries(arsandbox PRIVATE glfw::glfw imgui::imgui)
 
+if(LINUX)
+  find_package(OpenGL REQUIRED)
+  target_link_libraries(arsandbox PRIVATE OpenGL::GL)
+endif()
 
 set_target_properties(arsandbox PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 install(TARGETS arsandbox DESTINATION .)

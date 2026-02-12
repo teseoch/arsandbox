@@ -145,6 +145,10 @@ using PFNGLBUFFERDATAPROC = void(APIENTRY *)(GLenum, GLsizeiptr, const void *,
 using PFNGLDRAWARRAYSINSTANCEDPROC = void(APIENTRY *)(GLenum, GLint, GLsizei,
                                                       GLsizei);
 
+using PFNGLENABLEVERTEXATTRIBARRAYPROC = void(APIENTRY *)(GLuint);
+using PFNGLVERTEXATTRIBPOINTERPROC = void(APIENTRY *)(GLuint, GLint, GLenum, GLboolean, GLsizei, const void *);
+using PFNGLVERTEXATTRIBDIVISORPROC = void(APIENTRY *)(GLuint, GLuint);
+
 inline PFNGLCREATESHADERPROC glCreateShader_ = nullptr;
 inline PFNGLSHADERSOURCEPROC glShaderSource_ = nullptr;
 inline PFNGLCOMPILESHADERPROC glCompileShader_ = nullptr;
@@ -180,11 +184,24 @@ inline PFNGLBINDBUFFERPROC glBindBuffer_ = nullptr;
 inline PFNGLBUFFERDATAPROC glBufferData_ = nullptr;
 inline PFNGLDRAWARRAYSINSTANCEDPROC glDrawArraysInstanced_ = nullptr;
 
-static void *getGLProc(const char *name) {
+inline PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray_ = nullptr;
+inline PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer_ = nullptr;
+inline PFNGLVERTEXATTRIBDIVISORPROC glVertexAttribDivisor_ = nullptr;
+
+static void *getGLProc(const char *name)
+{
   return (void *)glfwGetProcAddress(name);
 }
 
-static bool loadGL() {
+static bool loadGL()
+{
+  glEnableVertexAttribArray_ =
+      (PFNGLENABLEVERTEXATTRIBARRAYPROC)getGLProc("glEnableVertexAttribArray");
+  glVertexAttribPointer_ =
+      (PFNGLVERTEXATTRIBPOINTERPROC)getGLProc("glVertexAttribPointer");
+  glVertexAttribDivisor_ =
+      (PFNGLVERTEXATTRIBDIVISORPROC)getGLProc("glVertexAttribDivisor");
+
   glGenBuffers_ = (PFNGLGENBUFFERSPROC)getGLProc("glGenBuffers");
   glBindBuffer_ = (PFNGLBINDBUFFERPROC)getGLProc("glBindBuffer");
   glBufferData_ = (PFNGLBUFFERDATAPROC)getGLProc("glBufferData");
@@ -238,13 +255,15 @@ static bool loadGL() {
 }
 
 // ----------------------------- GL Utils ------------------------------------
-static GLuint compileShader(GLenum type, const char *src) {
+static GLuint compileShader(GLenum type, const char *src)
+{
   GLuint sh = glCreateShader_(type);
   glShaderSource_(sh, 1, &src, nullptr);
   glCompileShader_(sh);
   GLint ok = 0;
   glGetShaderiv_(sh, GL_COMPILE_STATUS, &ok);
-  if (!ok) {
+  if (!ok)
+  {
     GLint len = 0;
     glGetShaderiv_(sh, GL_INFO_LOG_LENGTH, &len);
     std::string log;
@@ -257,14 +276,16 @@ static GLuint compileShader(GLenum type, const char *src) {
   return sh;
 }
 
-static GLuint linkProgram(GLuint vs, GLuint fs) {
+static GLuint linkProgram(GLuint vs, GLuint fs)
+{
   GLuint prog = glCreateProgram_();
   glAttachShader_(prog, vs);
   glAttachShader_(prog, fs);
   glLinkProgram_(prog);
   GLint ok = 0;
   glGetProgramiv_(prog, GL_LINK_STATUS, &ok);
-  if (!ok) {
+  if (!ok)
+  {
     GLint len = 0;
     glGetProgramiv_(prog, GL_INFO_LOG_LENGTH, &len);
     std::string log;
@@ -277,7 +298,8 @@ static GLuint linkProgram(GLuint vs, GLuint fs) {
   return prog;
 }
 
-static GLuint makeColormap1D(const std::vector<uint8_t> &rgb, int L = 256) {
+static GLuint makeColormap1D(const std::vector<uint8_t> &rgb, int L = 256)
+{
   GLuint tex = 0;
   glGenTextures_(1, &tex);
   glBindTexture_(GL_TEXTURE_1D, tex);
@@ -293,17 +315,21 @@ static GLuint makeColormap1D(const std::vector<uint8_t> &rgb, int L = 256) {
 // Generates uint16 depth in millimeters, with a few smooth bumps that drift
 // over time. This is NOT smoothing a real sensor; it's just a convenient
 // development source.
-static void generateDepthFrame(Depth &depth, double t) {
+static void generateDepthFrame(Depth &depth, double t)
+{
   const int W = depth.w, H = depth.h;
   depth.depth.resize((size_t)W * (size_t)H);
-  auto idx = [&](int x, int y) { return (size_t)y * (size_t)W + (size_t)x; };
+  auto idx = [&](int x, int y)
+  { return (size_t)y * (size_t)W + (size_t)x; };
 
   // Base plane depth ~1100mm with moving hills.
   float base = 1100.0f;
   float a1 = 140.0f, a2 = 90.0f, a3 = 60.0f;
 
-  for (int y = 0; y < H; y++) {
-    for (int x = 0; x < W; x++) {
+  for (int y = 0; y < H; y++)
+  {
+    for (int x = 0; x < W; x++)
+    {
       float fx = (x + 0.5f) / (float)W;
       float fy = (y + 0.5f) / (float)H;
 
@@ -314,7 +340,8 @@ static void generateDepthFrame(Depth &depth, double t) {
       float cx3 = 0.55f + 0.08f * (float)std::sin(1.1 * t + 2.0);
       float cy3 = 0.75f + 0.08f * (float)std::cos(1.0 * t + 0.8);
 
-      auto gauss = [&](float fx, float fy, float cx, float cy, float s) {
+      auto gauss = [&](float fx, float fy, float cx, float cy, float s)
+      {
         float dx = fx - cx, dy = fy - cy;
         return std::exp(-(dx * dx + dy * dy) / (2 * s * s));
       };
