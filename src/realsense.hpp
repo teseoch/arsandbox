@@ -8,6 +8,11 @@ private:
   rs2::pipeline pipe;
   rs2::config cfg;
   rs2::align align_to_color = rs2::align(RS2_STREAM_COLOR);
+
+  rs2::spatial_filter spatial;
+  rs2::temporal_filter temporal;
+  rs2::hole_filling_filter hole;
+
   bool started = false;
 
   int w = 640, h = 480;
@@ -33,10 +38,18 @@ public:
       return false;
     rs2::frameset fs = pipe.wait_for_frames();
     fs = align_to_color.process(fs);
+
+    rs2::depth_frame dpth = fs.get_depth_frame();
+
+    // Apply filters
+    dpth = spatial.process(dpth);
+    dpth = temporal.process(dpth);
+    dpth = hole.process(dpth);
+
     // outDepth = fs.get_depth_frame(); // Z16, aligned to color
     // outColor = fs.get_color_frame(); // BGR8
 
-    const uint16_t *depthZ16 = (const uint16_t *)fs.get_depth_frame().get_data(); // size w*h
+    const uint16_t *depthZ16 = (const uint16_t *)dpth.get_data(); // size w*h
     depth.depth.resize(w * h);
     std::memcpy(depth.depth.data(), depthZ16, w * h * sizeof(uint16_t));
 
