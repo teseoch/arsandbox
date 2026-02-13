@@ -43,6 +43,9 @@ static void updateGamepad(Controls &c, float dt) {
   bool LB = (s.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] == GLFW_PRESS);
   bool RB = (s.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] == GLFW_PRESS);
 
+  if (c.bEdge.pressed(B))
+    c.makeItRain = true;
+
   if (c.aEdge.pressed(A))
     c.colormapIndex = (c.colormapIndex + 1) % std::max(1, c.colormapCount);
   if (c.yEdge.pressed(Y))
@@ -113,6 +116,11 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
     }
     if (key == GLFW_KEY_R) {
       gCtl.reset();
+      return;
+    }
+
+    if (key == GLFW_KEY_T) {
+      gCtl.makeItRain = true;
       return;
     }
   }

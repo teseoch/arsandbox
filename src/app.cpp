@@ -28,6 +28,7 @@
 
 #include "creature.hpp"
 #include "depth.hpp"
+#include "drop.hpp"
 #include "image.hpp"
 #include "overlay.hpp"
 #include "utils.hpp"
@@ -39,36 +40,26 @@
 #include <filesystem>
 
 // ----------------------------- Tiny math types ------------------------------
-struct Vec2
-{
+struct Vec2 {
   float x = 0, y = 0;
 };
-struct Quad
-{
+struct Quad {
   Vec2 v[4];
 };
 
 // ----------------------------- Controls / State -----------------------------
-enum Mode
-{
-  NONE,
-  PROJ,
-  UV
-};
+enum Mode { NONE, PROJ, UV };
 
-struct ButtonEdge
-{
+struct ButtonEdge {
   bool prev = false;
-  bool pressed(bool now)
-  {
+  bool pressed(bool now) {
     bool r = (now && !prev);
     prev = now;
     return r;
   }
 };
 
-struct Controls
-{
+struct Controls {
   Depth depth;
 
   float gamma = 1.0f;
@@ -77,13 +68,13 @@ struct Controls
   int colormapCount = 0;
 
   bool freezeDepth = false;
+  bool makeItRain = false;
 
   // Gamepad edges
   ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge;
   bool gamepadPresent = false;
 
-  void reset()
-  {
+  void reset() {
 #ifndef SANDBOX_WITH_REALSENSE
     depth.w = 320;
     depth.h = 240;
@@ -99,8 +90,7 @@ struct Controls
 
 static Controls gCtl;
 
-static inline Vec2 clamp01(Vec2 p)
-{
+static inline Vec2 clamp01(Vec2 p) {
   p.x = std::max(0.0f, std::min(1.0f, p.x));
   p.y = std::max(0.0f, std::min(1.0f, p.y));
   return p;
@@ -119,10 +109,11 @@ static Quad gU;
 #include "shaders.hpp"
 
 // ----------------------------- Main -----------------------------------------
-int main()
-{
-  if (!glfwInit())
-  {
+int main() {
+  std::srand(std::time(nullptr));
+  // std::srand(42); // fixed seed for repeatable testing
+
+  if (!glfwInit()) {
     std::fprintf(stderr, "Failed to init GLFW\n");
     return 1;
   }
@@ -141,8 +132,7 @@ int main()
   int winW = 1280, winH = 720;
   GLFWwindow *win =
       glfwCreateWindow(winW, winH, "AR Sandbox", nullptr, nullptr);
-  if (!win)
-  {
+  if (!win) {
     std::fprintf(stderr, "Failed to create window\n");
     glfwTerminate();
     return 1;
@@ -150,8 +140,7 @@ int main()
   glfwMakeContextCurrent(win);
   glfwSwapInterval(1);
 
-  if (!loadGL())
-  {
+  if (!loadGL()) {
     std::fprintf(stderr, "Failed to load required GL functions.\n");
     std::fprintf(stderr,
                  "Try updating drivers or adjusting GL version hints.\n");
@@ -216,14 +205,11 @@ int main()
   std::vector<GLuint> lutTex;
   const std::string folder = AR_IMAGE_FOLDER;
   // loop over *.png in folder images
-  for (const auto &entry : std::filesystem::directory_iterator(folder))
-  {
-    if (entry.is_regular_file() && entry.path().extension() == ".png")
-    {
+  for (const auto &entry : std::filesystem::directory_iterator(folder)) {
+    if (entry.is_regular_file() && entry.path().extension() == ".png") {
       int w = 0;
       auto data = load_png_as_1d_texture(entry.path().string(), w);
-      if (!data.empty())
-      {
+      if (!data.empty()) {
         lutTex.push_back(makeColormap1D(data, w));
         std::printf("Loaded colormap from %s\n", entry.path().string().c_str());
       }
@@ -250,8 +236,7 @@ int main()
   double tSim = 0.0;
 
   std::vector<Creature> creatures;
-  for (int i = 0; i < 10; i++)
-  {
+  for (int i = 0; i < 10; i++) {
     Creature c;
     c.u = ((float)std::rand()) / RAND_MAX;
     c.v = ((float)std::rand()) / RAND_MAX;
@@ -262,8 +247,18 @@ int main()
     creatures.push_back(c);
   }
 
-  while (!glfwWindowShouldClose(win))
-  {
+  std::vector<Drop> drops;
+  for (int i = 0; i < 10; i++) {
+    Drop d;
+    d.u = ((float)std::rand()) / RAND_MAX;
+    d.v = ((float)std::rand()) / RAND_MAX;
+    d.life = 5.0f + 5.0f * (((float)std::rand()) / RAND_MAX);
+    // d.u = 0.5f;
+    // d.v = 0.5f;
+    drops.push_back(d);
+  }
+
+  while (!glfwWindowShouldClose(win)) {
     double tNow = glfwGetTime();
     float dt = (float)(tNow - tPrev);
     tPrev = tNow;
@@ -275,9 +270,22 @@ int main()
     // Optional gamepad controls (always safe; if no pad, no effect)
     updateGamepad(gCtl, dt);
 
+    if (gCtl.makeItRain) {
+      Drop d;
+      for (int i = 0; i < 10; i++) {
+        Drop d;
+        d.u = ((float)std::rand()) / RAND_MAX;
+        d.v = ((float)std::rand()) / RAND_MAX;
+        d.life = 5.0f + 5.0f * (((float)std::rand()) / RAND_MAX);
+        // d.u = 0.5f;
+        // d.v = 0.5f;
+        drops.push_back(d);
+      }
+      gCtl.makeItRain = false;
+    }
+
     // Update synthetic depth
-    if (!gCtl.freezeDepth)
-    {
+    if (!gCtl.freezeDepth) {
       tSim += dt;
 
 #ifdef SANDBOX_WITH_REALSENSE
@@ -294,6 +302,11 @@ int main()
 
     for (auto &c : creatures)
       c.step(gCtl.depth, dt);
+    for (auto &d : drops)
+      d.step(gCtl.depth, dt);
+    drops.erase(std::remove_if(drops.begin(), drops.end(),
+                               [](const Drop &d) { return !d.isAlive(); }),
+                drops.end());
     // Clear to black
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -327,12 +340,12 @@ int main()
     glDrawArrays_(GL_TRIANGLE_FAN, 0, 4);
 
     std::vector<OverlaySprite> sprites;
-    for (const auto &c : creatures)
-    {
+    for (const auto &c : creatures) {
       sprites.push_back({c.u, c.v, 10.0f, 1.0f, 1.0f, 1.0f, 0.9f});
     }
-    // sprites.push_back({0.5f, 0.5f, 14.0f, 0.2f, 0.8f, 1.0f, 0.8f}); //
-    // droplet
+    for (const auto &d : drops) {
+      sprites.push_back({d.u, d.v, 14.0f, 0.2f, 0.8f, 1.0f, 0.8f});
+    }
 
     overlayDraw(overlay, overlayProgram, winW, winH, P8, sprites);
 
