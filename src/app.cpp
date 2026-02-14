@@ -105,8 +105,8 @@ static Quad gP;
 // Depth UV quad in *normalized* [0,1] coords (you warp this to match depth ROI)
 static Quad gU;
 
+#include "c_map_shaders.hpp"
 #include "input.hpp"
-#include "shaders.hpp"
 
 // ----------------------------- Main -----------------------------------------
 int main() {
