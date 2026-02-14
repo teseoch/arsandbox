@@ -1,3 +1,4 @@
 bin
 bin_rel
 build
+.DS_Store

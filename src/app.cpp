@@ -105,9 +105,17 @@ static Quad gP;
 // Depth UV quad in *normalized* [0,1] coords (you warp this to match depth ROI)
 static Quad gU;
 
+#include "animated_shaders.hpp"
 #include "c_map_shaders.hpp"
 #include "input.hpp"
 
+static bool use_animated = true;
+const static int VARIANTS = 2;
+const static int FRAMES = 4;
+const static int MAT_COUNT = 3;
+
+const static int tileW = 128;
+const static int tileH = 128;
 // ----------------------------- Main -----------------------------------------
 int main() {
   std::srand(std::time(nullptr));
@@ -167,16 +175,20 @@ int main() {
   gU.v[3] = {0, 1};
 
   // Shaders
-  GLuint vs = compileShader(GL_VERTEX_SHADER, kVS);
-  GLuint fs = compileShader(GL_FRAGMENT_SHADER, kFS);
+  GLuint vs, fs;
+  if (use_animated) {
+    vs = compileShader(GL_VERTEX_SHADER, kVSa);
+    fs = compileShader(GL_FRAGMENT_SHADER, kFSa);
+  } else {
+    vs = compileShader(GL_VERTEX_SHADER, kVS);
+    fs = compileShader(GL_FRAGMENT_SHADER, kFS);
+  }
   GLuint prog = linkProgram(vs, fs);
   glDeleteShader_(vs);
   glDeleteShader_(fs);
 
   GLuint overlayProgram = createOverlayProgram();
-  // GLuint overlayProgram = 0;
 
-  // Empty VAO (we use gl_VertexID)
   GLuint vao = 0;
   glGenVertexArrays_(1, &vao);
   glBindVertexArray_(vao);
@@ -201,20 +213,67 @@ int main() {
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  // Colormap LUTs (1D textures)
-  std::vector<GLuint> lutTex;
   const std::string folder = AR_IMAGE_FOLDER;
-  // loop over *.png in folder images
-  for (const auto &entry : std::filesystem::directory_iterator(folder)) {
-    if (entry.is_regular_file() && entry.path().extension() == ".png") {
-      int w = 0;
-      auto data = load_png_as_1d_texture(entry.path().string(), w);
-      if (!data.empty()) {
-        lutTex.push_back(makeColormap1D(data, w));
-        std::printf("Loaded colormap from %s\n", entry.path().string().c_str());
+  std::vector<GLuint> lutTex;
+
+  if (use_animated) {
+    auto tileLayer = [](int mat, int variant, int frame) {
+      return ((mat * VARIANTS + variant) * FRAMES + frame);
+    };
+
+    const int layers = MAT_COUNT * VARIANTS * FRAMES;
+
+    for (const auto &entry :
+         std::filesystem::directory_iterator(folder + "/tiles")) {
+      if (!entry.is_directory())
+        continue;
+      std::cout << "Loading tile: " << entry.path().string() << std::endl;
+
+      lutTex.push_back(createTilesArrayTex(tileW, tileH, layers));
+
+      for (int m = 0; m < MAT_COUNT; ++m) {
+        for (int v = 0; v < VARIANTS; ++v) {
+          for (int f = 0; f < FRAMES; ++f) {
+            const int layer = tileLayer(m, v, f);
+
+            std::string path = entry.path().string() + "/m" +
+                               std::to_string(m) + "_v" + std::to_string(v) +
+                               "_f" + std::to_string(f) + ".png";
+
+            int w = 0, h = 0, comp = 0;
+            std::vector<uint8_t> data = load_png(path, w, h);
+            if (data.empty()) {
+              std::cerr << "Failed to load tile: " << path << "\n";
+              std::exit(1);
+            }
+            if (w != tileW || h != tileH) {
+              std::cerr << "Tile size mismatch for " << path << ": got " << w
+                        << "x" << h << " expected " << tileW << "x" << tileH
+                        << "\n";
+              std::exit(1);
+            }
+
+            uploadTileLayer(lutTex.back(), layer, tileW, tileH, data.data());
+          }
+        }
+      }
+    }
+  } else {
+    // loop over *.png in folder images
+    for (const auto &entry :
+         std::filesystem::directory_iterator(folder + "/cmaps")) {
+      if (entry.is_regular_file() && entry.path().extension() == ".png") {
+        int w = 0;
+        auto data = load_png_as_1d_texture(entry.path().string(), w);
+        if (!data.empty()) {
+          lutTex.push_back(makeColormap1D(data, w));
+          std::printf("Loaded colormap from %s\n",
+                      entry.path().string().c_str());
+        }
       }
     }
   }
+
   gCtl.colormapCount = (int)lutTex.size();
 
   // Uniform locations
@@ -226,11 +285,25 @@ int main() {
   const GLint loc_depthMaxMm = glGetUniformLocation_(prog, "u_depthMaxMm");
   const GLint loc_gamma = glGetUniformLocation_(prog, "u_gamma");
   const GLint loc_depthSampler = glGetUniformLocation_(prog, "u_depthTex");
-  const GLint loc_lutSampler = glGetUniformLocation_(prog, "u_colormapTex");
+  GLint loc_lutSampler;
+  GLint u_time = -1;
+  GLint u_tileScale = -1;
+
+  if (use_animated) {
+    loc_lutSampler = glGetUniformLocation_(prog, "u_tiles");
+    u_time = glGetUniformLocation_(prog, "u_time");
+    u_tileScale = glGetUniformLocation_(prog, "u_tileScale");
+  } else {
+    loc_lutSampler = glGetUniformLocation_(prog, "u_colormapTex");
+  }
 
   // Bind samplers once
   glUniform1i_(loc_depthSampler, 0);
   glUniform1i_(loc_lutSampler, 1);
+  if (use_animated) {
+    glUniform1f_(u_tileScale, 14.0f);
+    glUniform1f_(u_time, 0.0f);
+  }
 
   double tPrev = glfwGetTime();
   double tSim = 0.0;
@@ -332,8 +405,16 @@ int main() {
     glActiveTexture_(GL_TEXTURE0);
     glBindTexture_(GL_TEXTURE_2D, depthTex);
 
-    glActiveTexture_(GL_TEXTURE1);
-    glBindTexture_(GL_TEXTURE_1D, lutTex[gCtl.colormapIndex]);
+    if (use_animated) {
+      glUniform1f_(u_time, (float)tSim);
+      glUniform1f_(u_tileScale, 14.0f);
+
+      glActiveTexture_(GL_TEXTURE1);
+      glBindTexture_(GL_TEXTURE_2D_ARRAY, lutTex[gCtl.colormapIndex]);
+    } else {
+      glActiveTexture_(GL_TEXTURE1);
+      glBindTexture_(GL_TEXTURE_1D, lutTex[gCtl.colormapIndex]);
+    }
 
     // draw the warped quad
     glBindVertexArray_(vao);
@@ -351,6 +432,10 @@ int main() {
 
     glfwSwapBuffers(win);
     glfwPollEvents();
+
+    auto err = glGetError();
+    if (err != GL_NO_ERROR)
+      std::cout << "GL error: " << err << "\n";
   }
 
   glDeleteProgram_(prog);

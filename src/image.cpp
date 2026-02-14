@@ -48,3 +48,39 @@ std::vector<uint8_t> load_png_as_1d_texture(const std::string &filename,
   stbi_image_free(data);
   return tex1d;
 }
+
+std::vector<uint8_t> load_png(const std::string &filename, int &outWidth,
+                              int &outHeight) {
+  int w = 0, h = 0, channels = 0;
+
+  // Force 3 channels (RGB) regardless of input format
+  stbi_uc *data = stbi_load(filename.c_str(), &w, &h, &channels, 3);
+
+  if (!data) {
+    std::cerr << "stb_image failed to load: " << filename << "\n";
+    outWidth = 0;
+    outHeight = 0;
+    return {};
+  }
+
+  // We only care about width for a 1D colormap.
+  outWidth = w;
+  outHeight = h;
+
+  // Allocate output: width * 3 bytes (RGB)
+  std::vector<uint8_t> tex;
+  tex.resize(outWidth * outHeight * 3);
+  // Copy the first row into a 1D texture
+  // (you can change this later if you want to average rows)
+  for (int x = 0; x < outWidth; ++x) {
+    for (int y = 0; y < outHeight; ++y) {
+      int idx = 3 * (y * w + x);
+      tex[idx + 0] = data[idx + 0]; // R
+      tex[idx + 1] = data[idx + 1]; // G
+      tex[idx + 2] = data[idx + 2]; // B
+    }
+  }
+
+  stbi_image_free(data);
+  return tex;
+}
