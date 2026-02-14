@@ -40,9 +40,10 @@ uniform float u_depthMaxMm;
 uniform float u_gamma;
 
 // compile-time knobs
+#define VARIANTS   3
+#define FRAMES     2
 #define MAT_COUNT  3
-#define VARIANTS   2
-#define FRAMES     4
+#define TILE_SIZE   64.0
 
 
 float hash12(vec2 p) {
@@ -60,30 +61,66 @@ vec2 warpUV(vec2 st){
   vec2 b = mix(u_depthUVQuad[3], u_depthUVQuad[2], st.x);
   return mix(a, b, st.y);
 }
+  // Smoothstep-like ramp for nicer blending (removes grid)
+float smooth01(float x) { return x*x*(3.0 - 2.0*x); } // Hermite
 
-vec3 sampleMatAnimated(int mat, vec2 st) {
-  // stable UVs in sandbox space (NOT depth UV)
-  vec2 uvT = st * u_tileScale;
-  vec2 cell = floor(uvT);
-  vec2 f    = fract(uvT);
-
-  // choose a variant per tile cell
+int variantForCell(vec2 cell) {
   float r = hash12(cell);
-  int variant = int(floor(r * float(VARIANTS))); // 0..VARIANTS-1
+  return int(floor(r * float(VARIANTS))); // 0..VARIANTS-1
+}
 
-  // animate frames (blend between consecutive frames)
-  float fps = 2.0;               // tweak
+vec3 sampleTileLayer(int mat, int variant, int frame, vec2 local01) {
+  // local01 should be in [0,1] but we allow wrap via fract()
+  vec2 f = fract(local01);
+
+  // snap to texel centers (helps with NEAREST / tiny tiles)
+  vec2 wh = vec2(TILE_SIZE, TILE_SIZE);
+  f = (floor(f * wh) + 0.5) / wh;
+
+  int L = tileLayer(mat, variant, frame);
+  return texture(u_tiles, vec3(f, float(L))).rgb;
+}
+
+vec3 sampleCellAnimated(int mat, vec2 cell, vec2 uvT) {
+  int variant = variantForCell(cell);
+
+  float fps = 2.0;
   float tf  = u_time * fps;
   float a   = fract(tf);
   int f0    = int(mod(floor(tf), float(FRAMES)));
   int f1    = (f0 + 1) % FRAMES;
 
-  int L0 = tileLayer(mat, variant, f0);
-  int L1 = tileLayer(mat, variant, f1);
+  // local coords relative to THIS cell (can be negative; fract() wraps)
+  vec2 local = uvT - cell;
 
-  vec3 c0 = texture(u_tiles, vec3(f, float(L0))).rgb;
-  vec3 c1 = texture(u_tiles, vec3(f, float(L1))).rgb;
+  vec3 c0 = sampleTileLayer(mat, variant, f0, local);
+  vec3 c1 = sampleTileLayer(mat, variant, f1, local);
   return mix(c0, c1, a);
+}
+
+vec3 sampleMatAnimated(int mat, vec2 st) {
+  vec2 uvT  = st * u_tileScale;
+  vec2 cell = floor(uvT);
+  vec2 f    = fract(uvT);
+
+  // blend weights across cell boundaries
+  float fx = smooth01(f.x);
+  float fy = smooth01(f.y);
+
+  // 4 neighbor cells
+  vec2 c00 = cell;
+  vec2 c10 = cell + vec2(1.0, 0.0);
+  vec2 c01 = cell + vec2(0.0, 1.0);
+  vec2 c11 = cell + vec2(1.0, 1.0);
+
+  vec3 s00 = sampleCellAnimated(mat, c00, uvT);
+  vec3 s10 = sampleCellAnimated(mat, c10, uvT);
+  vec3 s01 = sampleCellAnimated(mat, c01, uvT);
+  vec3 s11 = sampleCellAnimated(mat, c11, uvT);
+
+  vec3 sx0 = mix(s00, s10, fx);
+  vec3 sx1 = mix(s01, s11, fx);
+  return mix(sx0, sx1, fy);
 }
 
 vec3 sampleMatStatic(int mat, vec2 st) {

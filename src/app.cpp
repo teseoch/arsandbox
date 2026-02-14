@@ -110,12 +110,12 @@ static Quad gU;
 #include "input.hpp"
 
 static bool use_animated = true;
-const static int VARIANTS = 2;
-const static int FRAMES = 4;
+const static int VARIANTS = 3;
+const static int FRAMES = 2;
 const static int MAT_COUNT = 3;
 
-const static int tileW = 128;
-const static int tileH = 128;
+const static int tileW = 64;
+const static int tileH = 64;
 // ----------------------------- Main -----------------------------------------
 int main() {
   std::srand(std::time(nullptr));
@@ -433,9 +433,13 @@ int main() {
     glfwSwapBuffers(win);
     glfwPollEvents();
 
-    auto err = glGetError();
-    if (err != GL_NO_ERROR)
-      std::cout << "GL error: " << err << "\n";
+    // GLint ws = 0;
+    // glGetTexParameteriv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, &ws);
+    // std::cout << "wrap_s=" << ws << "\n"; // should be GL_REPEAT
+
+    // auto err = glGetError();
+    // if (err != GL_NO_ERROR)
+    //   std::cout << "GL error: " << err << "\n";
   }
 
   glDeleteProgram_(prog);

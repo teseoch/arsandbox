@@ -8,6 +8,21 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+static void forceWrapEdgesRGB(std::vector<uint8_t> &data, int w, int h) {
+  auto px = [&](int x, int y) -> uint8_t * { return &data[3 * (y * w + x)]; };
+
+  // last column = first column
+  for (int y = 0; y < h; ++y) {
+    std::memcpy(px(w - 1, y), px(0, y), 3);
+  }
+  // last row = first row
+  for (int x = 0; x < w; ++x) {
+    std::memcpy(px(x, h - 1), px(x, 0), 3);
+  }
+
+  std::memcpy(px(w - 1, h - 1), px(0, 0), 3);
+}
+
 // Loads an image file and returns a 1D RGB byte array suitable for a 1D
 // texture. On success:  returns vector of size (width * 3) in RGB order. On
 // failure:  returns empty vector. Also returns the image width via outWidth.
@@ -82,5 +97,7 @@ std::vector<uint8_t> load_png(const std::string &filename, int &outWidth,
   }
 
   stbi_image_free(data);
+
+  forceWrapEdgesRGB(tex, outWidth, outHeight);
   return tex;
 }
