@@ -109,13 +109,16 @@ static Quad gU;
 #include "c_map_shaders.hpp"
 #include "input.hpp"
 
-static bool use_animated = true;
+static bool use_animated = false;
+const static bool fullscreen = true;
+
 const static int VARIANTS = 3;
 const static int FRAMES = 2;
 const static int MAT_COUNT = 3;
 
 const static int tileW = 64;
 const static int tileH = 64;
+
 // ----------------------------- Main -----------------------------------------
 int main() {
   std::srand(std::time(nullptr));
@@ -136,10 +139,21 @@ int main() {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
+  GLFWwindow *win;
+  int winW, winH;
+  if (fullscreen) {
+    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
-  int winW = 1280, winH = 720;
-  GLFWwindow *win =
-      glfwCreateWindow(winW, winH, "AR Sandbox", nullptr, nullptr);
+    winW = mode->width;
+    winH = mode->height;
+
+    win = glfwCreateWindow(winW, winH, "AR Sandbox", monitor, nullptr);
+  } else {
+    winW = 1280;
+    winH = 720;
+    win = glfwCreateWindow(winW, winH, "AR Sandbox", nullptr, nullptr);
+  }
   if (!win) {
     std::fprintf(stderr, "Failed to create window\n");
     glfwTerminate();

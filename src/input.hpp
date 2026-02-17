@@ -74,6 +74,8 @@ static void moveSelectedCorner(Quad &Q, int key, float step) {
   default:
     break;
   }
+
+  std::cout << "V: " << Q.v[gSelCorner].x << "," << Q.v[gSelCorner].y << "\n";
 }
 
 // Keyboard: calibration + knobs
@@ -177,6 +179,11 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
       else
         gCtl.gamma = 1.0f;
     }
+    return;
+  }
+
+  if (key == GLFW_KEY_ESCAPE) {
+    glfwSetWindowShouldClose(w, GLFW_TRUE);
     return;
   }
 }
