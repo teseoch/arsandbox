@@ -2,6 +2,9 @@
 
 #include "utils.hpp"
 
+#include <fstream>
+#include <iostream>
+
 // ----------------------------- Input Helpers --------------------------------
 static float stepScale(int mods, float base) {
   if (mods & GLFW_MOD_SHIFT)
@@ -74,8 +77,6 @@ static void moveSelectedCorner(Quad &Q, int key, float step) {
   default:
     break;
   }
-
-  std::cout << "V: " << Q.v[gSelCorner].x << "," << Q.v[gSelCorner].y << "\n";
 }
 
 // Keyboard: calibration + knobs
@@ -143,6 +144,12 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
       moveSelectedCorner(gU, key, uvStep);
       gU.v[gSelCorner] = clamp01(gU.v[gSelCorner]);
     }
+
+    std::ofstream log("calib.txt");
+    for (int i = 0; i < 4; i++)
+      log << gP.v[i].x << " " << gP.v[i].y << "\n";
+    for (int i = 0; i < 4; i++)
+      log << gU.v[i].x << " " << gU.v[i].y << "\n";
     return;
   }
 
