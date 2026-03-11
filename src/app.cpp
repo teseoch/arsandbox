@@ -79,9 +79,6 @@ struct Controls {
     depth.w = 320;
     depth.h = 240;
 #endif
-
-    depth.depthMinMm = 700.0f;
-    depth.depthMaxMm = 1700.0f;
     gamma = 1.0f;
     colormapIndex = 0;
     freezeDepth = false;
@@ -177,16 +174,30 @@ int main() {
   OverlayRenderer overlay = overlayInit();
 
   // Initial projector quad covers whole window
-  gP.v[0] = {0, 0};
-  gP.v[1] = {(float)winW, 0};
-  gP.v[2] = {(float)winW, (float)winH};
-  gP.v[3] = {0, (float)winH};
 
-  // Initial depth UV quad uses full depth image
-  gU.v[0] = {0, 0};
-  gU.v[1] = {1, 0};
-  gU.v[2] = {1, 1};
-  gU.v[3] = {0, 1};
+  std::cout << std::filesystem::exists("calib.txt") << "\n";
+
+  if (std::filesystem::exists("calib.txt")) {
+    std::ifstream logIn("calib.txt");
+    if (logIn) {
+      for (int i = 0; i < 4; i++)
+        logIn >> gP.v[i].x >> gP.v[i].y;
+      for (int i = 0; i < 4; i++)
+        logIn >> gU.v[i].x >> gU.v[i].y;
+    }
+  } else {
+    gP.v[0] = {0, 0};
+    gP.v[1] = {(float)winW, 0};
+    gP.v[2] = {(float)winW, (float)winH};
+    gP.v[3] = {0, (float)winH};
+    // Initial depth UV quad uses full depth image
+    gU.v[0] = {0, 0};
+    gU.v[1] = {1, 0};
+    gU.v[2] = {1, 1};
+    gU.v[3] = {0, 1};
+  }
+  gCtl.depth.depthMinMm = 700.0f;
+  gCtl.depth.depthMaxMm = 1700.0f;
 
   // Shaders
   GLuint vs, fs;
