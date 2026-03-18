@@ -5,8 +5,7 @@
 #include <string>
 #include <vector>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "utils.hpp"
 
 static void forceWrapEdgesRGB(std::vector<uint8_t> &data, int w, int h) {
   auto px = [&](int x, int y) -> uint8_t * { return &data[3 * (y * w + x)]; };

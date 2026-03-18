@@ -189,6 +189,11 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
     return;
   }
 
+  if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+    gCtl.depth.save_png("depth_debug.png");
+    std::cout << "Saved depth_debug.png\n";
+  }
+
   if (key == GLFW_KEY_ESCAPE) {
     glfwSetWindowShouldClose(w, GLFW_TRUE);
     return;
