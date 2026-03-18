@@ -6,8 +6,7 @@
 #include <vector>
 #include <cstring>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "utils.hpp"
 
 static void forceWrapEdgesRGB(std::vector<uint8_t> &data, int w, int h)
 {

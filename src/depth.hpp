@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -60,4 +61,6 @@ public:
     float gy = (zy1 - zy0) / (2 * dv);
     return {gx, gy}; // ∂z/∂u, ∂z/∂v
   }
+
+  void save_png(const std::string &filename) const;
 };

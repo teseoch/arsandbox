@@ -2,6 +2,9 @@
 
 #define GL_SILENCE_DEPRECATION
 
+#include "stb_image.h"
+#include "stb_image_write.h"
+
 #include <GLFW/glfw3.h>
 
 #include <algorithm>
