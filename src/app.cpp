@@ -40,26 +40,36 @@
 #include <filesystem>
 
 // ----------------------------- Tiny math types ------------------------------
-struct Vec2 {
+struct Vec2
+{
   float x = 0, y = 0;
 };
-struct Quad {
+struct Quad
+{
   Vec2 v[4];
 };
 
 // ----------------------------- Controls / State -----------------------------
-enum Mode { NONE, PROJ, UV };
+enum Mode
+{
+  NONE,
+  PROJ,
+  UV
+};
 
-struct ButtonEdge {
+struct ButtonEdge
+{
   bool prev = false;
-  bool pressed(bool now) {
+  bool pressed(bool now)
+  {
     bool r = (now && !prev);
     prev = now;
     return r;
   }
 };
 
-struct Controls {
+struct Controls
+{
   Depth depth;
 
   float gamma = 1.0f;
@@ -74,7 +84,8 @@ struct Controls {
   ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge;
   bool gamepadPresent = false;
 
-  void reset() {
+  void reset()
+  {
 #ifndef SANDBOX_WITH_REALSENSE
     depth.w = 320;
     depth.h = 240;
@@ -87,7 +98,8 @@ struct Controls {
 
 static Controls gCtl;
 
-static inline Vec2 clamp01(Vec2 p) {
+static inline Vec2 clamp01(Vec2 p)
+{
   p.x = std::max(0.0f, std::min(1.0f, p.x));
   p.y = std::max(0.0f, std::min(1.0f, p.y));
   return p;
@@ -117,11 +129,13 @@ const static int tileW = 64;
 const static int tileH = 64;
 
 // ----------------------------- Main -----------------------------------------
-int main() {
+int main()
+{
   std::srand(std::time(nullptr));
   // std::srand(42); // fixed seed for repeatable testing
 
-  if (!glfwInit()) {
+  if (!glfwInit())
+  {
     std::fprintf(stderr, "Failed to init GLFW\n");
     return 1;
   }
@@ -138,7 +152,8 @@ int main() {
 #endif
   GLFWwindow *win;
   int winW, winH;
-  if (fullscreen) {
+  if (fullscreen)
+  {
     GLFWmonitor *monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
@@ -146,12 +161,15 @@ int main() {
     winH = mode->height;
 
     win = glfwCreateWindow(winW, winH, "AR Sandbox", monitor, nullptr);
-  } else {
+  }
+  else
+  {
     winW = 1280;
     winH = 720;
     win = glfwCreateWindow(winW, winH, "AR Sandbox", nullptr, nullptr);
   }
-  if (!win) {
+  if (!win)
+  {
     std::fprintf(stderr, "Failed to create window\n");
     glfwTerminate();
     return 1;
@@ -159,7 +177,8 @@ int main() {
   glfwMakeContextCurrent(win);
   glfwSwapInterval(1);
 
-  if (!loadGL()) {
+  if (!loadGL())
+  {
     std::fprintf(stderr, "Failed to load required GL functions.\n");
     std::fprintf(stderr,
                  "Try updating drivers or adjusting GL version hints.\n");
@@ -177,15 +196,19 @@ int main() {
 
   std::cout << std::filesystem::exists("calib.txt") << "\n";
 
-  if (std::filesystem::exists("calib.txt")) {
+  if (std::filesystem::exists("calib.txt"))
+  {
     std::ifstream logIn("calib.txt");
-    if (logIn) {
+    if (logIn)
+    {
       for (int i = 0; i < 4; i++)
         logIn >> gP.v[i].x >> gP.v[i].y;
       for (int i = 0; i < 4; i++)
         logIn >> gU.v[i].x >> gU.v[i].y;
     }
-  } else {
+  }
+  else
+  {
     gP.v[0] = {0, 0};
     gP.v[1] = {(float)winW, 0};
     gP.v[2] = {(float)winW, (float)winH};
@@ -196,15 +219,18 @@ int main() {
     gU.v[2] = {1, 1};
     gU.v[3] = {0, 1};
   }
-  gCtl.depth.depthMinMm = 700.0f;
-  gCtl.depth.depthMaxMm = 1700.0f;
+  gCtl.depth.depthMinMm = 1875.0f;
+  gCtl.depth.depthMaxMm = 1950.0f;
 
   // Shaders
   GLuint vs, fs;
-  if (use_animated) {
+  if (use_animated)
+  {
     vs = compileShader(GL_VERTEX_SHADER, kVSa);
     fs = compileShader(GL_FRAGMENT_SHADER, kFSa);
-  } else {
+  }
+  else
+  {
     vs = compileShader(GL_VERTEX_SHADER, kVS);
     fs = compileShader(GL_FRAGMENT_SHADER, kFS);
   }
@@ -241,24 +267,30 @@ int main() {
   const std::string folder = AR_IMAGE_FOLDER;
   std::vector<GLuint> lutTex;
 
-  if (use_animated) {
-    auto tileLayer = [](int mat, int variant, int frame) {
+  if (use_animated)
+  {
+    auto tileLayer = [](int mat, int variant, int frame)
+    {
       return ((mat * VARIANTS + variant) * FRAMES + frame);
     };
 
     const int layers = MAT_COUNT * VARIANTS * FRAMES;
 
     for (const auto &entry :
-         std::filesystem::directory_iterator(folder + "/tiles")) {
+         std::filesystem::directory_iterator(folder + "/tiles"))
+    {
       if (!entry.is_directory())
         continue;
       std::cout << "Loading tile: " << entry.path().string() << std::endl;
 
       lutTex.push_back(createTilesArrayTex(tileW, tileH, layers));
 
-      for (int m = 0; m < MAT_COUNT; ++m) {
-        for (int v = 0; v < VARIANTS; ++v) {
-          for (int f = 0; f < FRAMES; ++f) {
+      for (int m = 0; m < MAT_COUNT; ++m)
+      {
+        for (int v = 0; v < VARIANTS; ++v)
+        {
+          for (int f = 0; f < FRAMES; ++f)
+          {
             const int layer = tileLayer(m, v, f);
 
             std::string path = entry.path().string() + "/m" +
@@ -267,11 +299,13 @@ int main() {
 
             int w = 0, h = 0, comp = 0;
             std::vector<uint8_t> data = load_png(path, w, h);
-            if (data.empty()) {
+            if (data.empty())
+            {
               std::cerr << "Failed to load tile: " << path << "\n";
               std::exit(1);
             }
-            if (w != tileW || h != tileH) {
+            if (w != tileW || h != tileH)
+            {
               std::cerr << "Tile size mismatch for " << path << ": got " << w
                         << "x" << h << " expected " << tileW << "x" << tileH
                         << "\n";
@@ -283,14 +317,19 @@ int main() {
         }
       }
     }
-  } else {
+  }
+  else
+  {
     // loop over *.png in folder images
     for (const auto &entry :
-         std::filesystem::directory_iterator(folder + "/cmaps")) {
-      if (entry.is_regular_file() && entry.path().extension() == ".png") {
+         std::filesystem::directory_iterator(folder + "/cmaps"))
+    {
+      if (entry.is_regular_file() && entry.path().extension() == ".png")
+      {
         int w = 0;
         auto data = load_png_as_1d_texture(entry.path().string(), w);
-        if (!data.empty()) {
+        if (!data.empty())
+        {
           lutTex.push_back(makeColormap1D(data, w));
           std::printf("Loaded colormap from %s\n",
                       entry.path().string().c_str());
@@ -314,18 +353,22 @@ int main() {
   GLint u_time = -1;
   GLint u_tileScale = -1;
 
-  if (use_animated) {
+  if (use_animated)
+  {
     loc_lutSampler = glGetUniformLocation_(prog, "u_tiles");
     u_time = glGetUniformLocation_(prog, "u_time");
     u_tileScale = glGetUniformLocation_(prog, "u_tileScale");
-  } else {
+  }
+  else
+  {
     loc_lutSampler = glGetUniformLocation_(prog, "u_colormapTex");
   }
 
   // Bind samplers once
   glUniform1i_(loc_depthSampler, 0);
   glUniform1i_(loc_lutSampler, 1);
-  if (use_animated) {
+  if (use_animated)
+  {
     glUniform1f_(u_tileScale, 14.0f);
     glUniform1f_(u_time, 0.0f);
   }
@@ -334,7 +377,8 @@ int main() {
   double tSim = 0.0;
 
   std::vector<Creature> creatures;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 10; i++)
+  {
     Creature c;
     c.u = ((float)std::rand()) / RAND_MAX;
     c.v = ((float)std::rand()) / RAND_MAX;
@@ -346,7 +390,8 @@ int main() {
   }
 
   std::vector<Drop> drops;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 10; i++)
+  {
     Drop d;
     d.u = ((float)std::rand()) / RAND_MAX;
     d.v = ((float)std::rand()) / RAND_MAX;
@@ -356,7 +401,8 @@ int main() {
     drops.push_back(d);
   }
 
-  while (!glfwWindowShouldClose(win)) {
+  while (!glfwWindowShouldClose(win))
+  {
     double tNow = glfwGetTime();
     float dt = (float)(tNow - tPrev);
     tPrev = tNow;
@@ -368,13 +414,15 @@ int main() {
     // Optional gamepad controls (always safe; if no pad, no effect)
     updateGamepad(gCtl, dt);
 
-    if (gCtl.makeItRain) {
+    if (gCtl.makeItRain)
+    {
       Drop d;
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 10; i++)
+      {
         Drop d;
         d.u = ((float)std::rand()) / RAND_MAX;
         d.v = ((float)std::rand()) / RAND_MAX;
-        d.life = 5.0f + 5.0f * (((float)std::rand()) / RAND_MAX);
+        d.life = 25.0f + 5.0f * (((float)std::rand()) / RAND_MAX);
         // d.u = 0.5f;
         // d.v = 0.5f;
         drops.push_back(d);
@@ -383,7 +431,8 @@ int main() {
     }
 
     // Update synthetic depth
-    if (!gCtl.freezeDepth) {
+    if (!gCtl.freezeDepth)
+    {
       tSim += dt;
 
 #ifdef SANDBOX_WITH_REALSENSE
@@ -391,6 +440,16 @@ int main() {
 #else
       generateDepthFrame(gCtl.depth, tSim);
 #endif
+      // uint16_t min = 10000;
+      // uint16_t max = 0;
+      // for (auto d : gCtl.depth.depth)
+      // {
+      //   if (d > 0)
+      //     min = std::min(d, min);
+      //   max = std::max(d, max);
+      // }
+      // std::cout << min << " " << max << std::endl;
+
       glActiveTexture_(GL_TEXTURE0);
       glBindTexture_(GL_TEXTURE_2D, depthTex);
       glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, gCtl.depth.w, gCtl.depth.h,
@@ -403,7 +462,8 @@ int main() {
     for (auto &d : drops)
       d.step(gCtl.depth, dt);
     drops.erase(std::remove_if(drops.begin(), drops.end(),
-                               [](const Drop &d) { return !d.isAlive(); }),
+                               [](const Drop &d)
+                               { return !d.isAlive(); }),
                 drops.end());
     // Clear to black
     glClearColor(0, 0, 0, 1);
@@ -430,13 +490,16 @@ int main() {
     glActiveTexture_(GL_TEXTURE0);
     glBindTexture_(GL_TEXTURE_2D, depthTex);
 
-    if (use_animated) {
+    if (use_animated)
+    {
       glUniform1f_(u_time, (float)tSim);
       glUniform1f_(u_tileScale, 14.0f);
 
       glActiveTexture_(GL_TEXTURE1);
       glBindTexture_(GL_TEXTURE_2D_ARRAY, lutTex[gCtl.colormapIndex]);
-    } else {
+    }
+    else
+    {
       glActiveTexture_(GL_TEXTURE1);
       glBindTexture_(GL_TEXTURE_1D, lutTex[gCtl.colormapIndex]);
     }
@@ -446,10 +509,12 @@ int main() {
     glDrawArrays_(GL_TRIANGLE_FAN, 0, 4);
 
     std::vector<OverlaySprite> sprites;
-    for (const auto &c : creatures) {
+    for (const auto &c : creatures)
+    {
       sprites.push_back({c.u, c.v, 10.0f, 1.0f, 1.0f, 1.0f, 0.9f});
     }
-    for (const auto &d : drops) {
+    for (const auto &d : drops)
+    {
       sprites.push_back({d.u, d.v, 14.0f, 0.2f, 0.8f, 1.0f, 0.8f});
     }
 
