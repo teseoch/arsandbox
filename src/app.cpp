@@ -94,6 +94,7 @@ static Quad gP;
 // Depth UV quad in *normalized* [0,1] coords (you warp this to match depth ROI)
 static Quad gU;
 
+#include "FlowMap.hpp"
 #include "animated_shaders.hpp"
 #include "c_map_shaders.hpp"
 #include "input.hpp"
@@ -164,6 +165,7 @@ int main() {
 
   // once
   OverlayRenderer overlay = overlayInit();
+  FlowMap flowMap;
 
   // Initial projector quad covers whole windows
 
@@ -220,6 +222,7 @@ int main() {
   gCtl.depth.blur();
   gCtl.depth.blur();
   gCtl.depth.uv_quad = gU;
+  flowMap.resize(gCtl.depth.w, gCtl.depth.h);
 
   glDisable(GL_DEPTH_TEST);
 
@@ -228,6 +231,16 @@ int main() {
   glBindTexture_(GL_TEXTURE_2D, depthTex);
   glTexImage2D_(GL_TEXTURE_2D, 0, GL_R32F, gCtl.depth.w, gCtl.depth.h, 0,
                 GL_RED, GL_FLOAT, gCtl.depth.depth.data());
+  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  GLuint flowTex = 0;
+  glGenTextures_(1, &flowTex);
+  glBindTexture_(GL_TEXTURE_2D, flowTex);
+  glTexImage2D_(GL_TEXTURE_2D, 0, GL_R32F, flowMap.w, flowMap.h, 0, GL_RED,
+                GL_FLOAT, flowMap.flow.data());
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -305,6 +318,7 @@ int main() {
   const GLint loc_depthMaxMm = glGetUniformLocation_(prog, "u_depthMaxMm");
   const GLint loc_gamma = glGetUniformLocation_(prog, "u_gamma");
   const GLint loc_depthSampler = glGetUniformLocation_(prog, "u_depthTex");
+  const GLint loc_flowSampler = glGetUniformLocation_(prog, "u_flowTex");
   GLint loc_lutSampler;
   GLint u_time = -1;
   GLint u_tileScale = -1;
@@ -320,6 +334,7 @@ int main() {
   // Bind samplers once
   glUniform1i_(loc_depthSampler, 0);
   glUniform1i_(loc_lutSampler, 1);
+  glUniform1i_(loc_flowSampler, 2);
   if (use_animated) {
     glUniform1f_(u_tileScale, 14.0f);
     glUniform1f_(u_time, 0.0f);
@@ -410,6 +425,33 @@ int main() {
     drops.erase(std::remove_if(drops.begin(), drops.end(),
                                [](const Drop &d) { return !d.isAlive(); }),
                 drops.end());
+
+    flowMap.decay(0.98f);
+
+    for (const auto &d : drops) {
+      float sp = 0.0f;
+      if (d.trail.size() >= 2) {
+        const auto &[u0, v0] = d.trail[d.trail.size() - 2];
+        const auto &[u1, v1] = d.trail[d.trail.size() - 1];
+        float du = u1 - u0;
+        float dv = v1 - v0;
+        sp = std::sqrt(du * du + dv * dv);
+      }
+
+      if (sp > 0.0005f) {
+        const auto &[u, v] = d.trail.empty() ? std::pair<float, float>{d.u, d.v}
+                                             : d.trail.back();
+        flowMap.splat(u, v, 5.0f);
+      }
+    }
+
+    flowMap.diffuse_once();
+
+    glActiveTexture_(GL_TEXTURE2);
+    glBindTexture_(GL_TEXTURE_2D, flowTex);
+    glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, flowMap.w, flowMap.h, GL_RED,
+                     GL_FLOAT, flowMap.flow.data());
+
     // Clear to black
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);

@@ -29,6 +29,7 @@ out vec4 FragColor;
 
 uniform sampler2D u_depthTex;   // GL_R32F, mm
 uniform sampler1D  u_colormapTex;
+uniform sampler2D u_flowTex;
 
 uniform vec2  u_depthUVQuad[4];  // normalized [0,1]
 
@@ -68,6 +69,14 @@ void main(){
   float t = clamp(h, 0.0, 1.0);
   t = pow(t, u_gamma);
   vec3 col = texture(u_colormapTex, t).rgb;
+
+  float flow = texture(u_flowTex, v_st).r;
+  flow = clamp(flow, 0.0, 1.0);
+  flow = smoothstep(0.10, 0.45, flow);
+
+  vec3 flowCol = texture(u_colormapTex, 0.08).rgb; // white for flow
+  col = mix(col, flowCol, 0.45 * flow);
+  col += 0.08 * flow * flowCol;
 
   FragColor = vec4(col, 1.0);
 }
