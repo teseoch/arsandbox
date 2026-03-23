@@ -9,24 +9,40 @@
 
 #include <iostream>
 
+#include "types.hpp"
+
 class Depth {
 public:
   int w, h;
   std::vector<float> depth; // millimeters, size w*h
   float depthMinMm, depthMaxMm;
+  Quad uv_quad;
+
+  inline std::pair<float, float> warp_uv(float u, float v) const {
+    u = std::clamp(u, 0.0f, 1.0f);
+    v = std::clamp(v, 0.0f, 1.0f);
+
+    const float ax = uv_quad.v[0].x * (1.0f - u) + uv_quad.v[1].x * u;
+    const float ay = uv_quad.v[0].y * (1.0f - u) + uv_quad.v[1].y * u;
+    const float bx = uv_quad.v[3].x * (1.0f - u) + uv_quad.v[2].x * u;
+    const float by = uv_quad.v[3].y * (1.0f - u) + uv_quad.v[2].y * u;
+
+    const float uu = ax * (1.0f - v) + bx * v;
+    const float vv = ay * (1.0f - v) + by * v;
+    return {uu, vv};
+  }
 
   inline float height(int xi, int yi) const {
     const float d = depth[yi * w + xi];
-    // std::cout << "height at xi=" << xi << " yi=" << yi << " => d=" << d <<
-    // "\n";
-    return std::clamp((d - depthMinMm) / (depthMaxMm - depthMinMm), 0.0f, 1.0f);
+    const float t =
+        std::clamp((d - depthMinMm) / (depthMaxMm - depthMinMm), 0.0f, 1.0f);
+    return 1.0f - t;
   }
 
   inline float sample_bilinear(float u, float v) const {
-    u = std::clamp(u, 0.0f, 1.0f);
-    v = std::clamp(v, 0.0f, 1.0f);
-    float x = u * (w - 1);
-    float y = v * (h - 1);
+    auto [uu, vv] = warp_uv(u, v);
+    float x = uu * (w - 1);
+    float y = vv * (h - 1);
     int x0 = (int)std::floor(x), y0 = (int)std::floor(y);
     int x1 = std::min(x0 + 1, w - 1);
     int y1 = std::min(y0 + 1, h - 1);
@@ -50,16 +66,18 @@ public:
   }
 
   inline std::pair<float, float> gradient_uv(float u, float v) const {
-    // finite differences in UV (choose eps as ~1 pixel in UV)
-    float du = 1.0f / std::max(1, w - 1);
-    float dv = 1.0f / std::max(1, h - 1);
+    // finite differences in sandbox UV
+    const float du = 1.0f / std::max(1, w - 1);
+    const float dv = 1.0f / std::max(1, h - 1);
+
     float zx1 = sample_bilinear(u + du, v);
     float zx0 = sample_bilinear(u - du, v);
     float zy1 = sample_bilinear(u, v + dv);
     float zy0 = sample_bilinear(u, v - dv);
-    float gx = (zx1 - zx0) / (2 * du);
-    float gy = (zy1 - zy0) / (2 * dv);
-    return {gx, gy}; // ∂z/∂u, ∂z/∂v
+
+    float gx = (zx1 - zx0) / (2.0f * du);
+    float gy = (zy1 - zy0) / (2.0f * dv);
+    return {gx, gy}; // ∂z/∂u, ∂z/∂v in sandbox space
   }
 
   void save_png(const std::string &filename) const;

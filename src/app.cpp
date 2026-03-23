@@ -39,14 +39,6 @@
 
 #include <filesystem>
 
-// ----------------------------- Tiny math types ------------------------------
-struct Vec2 {
-  float x = 0, y = 0;
-};
-struct Quad {
-  Vec2 v[4];
-};
-
 // ----------------------------- Controls / State -----------------------------
 enum Mode { NONE, PROJ, UV };
 
@@ -227,6 +219,7 @@ int main() {
 #endif
   gCtl.depth.blur();
   gCtl.depth.blur();
+  gCtl.depth.uv_quad = gU;
 
   glDisable(GL_DEPTH_TEST);
 
@@ -350,11 +343,8 @@ int main() {
   std::vector<Drop> drops;
   for (int i = 0; i < 10; i++) {
     Drop d;
-    d.u = ((float)std::rand()) / RAND_MAX;
-    d.v = ((float)std::rand()) / RAND_MAX;
-    d.life = 5.0f + 5.0f * (((float)std::rand()) / RAND_MAX);
-    // d.u = 0.5f;
-    // d.v = 0.5f;
+    d.reset(((float)std::rand()) / RAND_MAX, ((float)std::rand()) / RAND_MAX,
+            25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
     drops.push_back(d);
   }
 
@@ -374,11 +364,9 @@ int main() {
       Drop d;
       for (int i = 0; i < 10; i++) {
         Drop d;
-        d.u = ((float)std::rand()) / RAND_MAX;
-        d.v = ((float)std::rand()) / RAND_MAX;
-        d.life = 25.0f + 5.0f * (((float)std::rand()) / RAND_MAX);
-        // d.u = 0.5f;
-        // d.v = 0.5f;
+        d.reset(((float)std::rand()) / RAND_MAX,
+                ((float)std::rand()) / RAND_MAX,
+                25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
         drops.push_back(d);
       }
       gCtl.makeItRain = false;
@@ -397,6 +385,8 @@ int main() {
       // gCtl.depth.blur();
       // readDepthFrame(gCtl.depth, "depth_debug.txt");
 #endif
+      gCtl.depth.uv_quad = gU;
+
       // uint16_t min = 10000;
       // uint16_t max = 0;
       // for (auto d : gCtl.depth.depth)
@@ -465,7 +455,12 @@ int main() {
       sprites.push_back({c.u, c.v, 10.0f, 1.0f, 1.0f, 1.0f, 0.9f});
     }
     for (const auto &d : drops) {
-      sprites.push_back({d.u, d.v, 14.0f, 0.2f, 0.8f, 1.0f, 0.8f});
+      for (size_t i = 0; i < d.trail.size(); ++i) {
+        float t = float(i + 1) / float(d.trail.size());
+        const auto &[u, v] = d.trail[i];
+        sprites.push_back({u, v, 8.0f * t, 0.2f, 0.8f, 1.0f, 0.05f + 0.5f * t});
+      }
+      sprites.push_back({d.u, d.v, 10.0f, 0.2f, 0.8f, 1.0f, 0.9f});
     }
 
     overlayDraw(overlay, overlayProgram, winW, winH, P8, sprites);

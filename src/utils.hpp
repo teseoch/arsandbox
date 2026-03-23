@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "depth.hpp"
+#include "types.hpp"
 
 // ----------------------------- Minimal GL loader -----------------------------
 // We only load the GL entry points we actually use.

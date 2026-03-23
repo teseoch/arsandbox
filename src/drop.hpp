@@ -1,34 +1,41 @@
+#pragma once
+
 #include "depth.hpp"
+#include <deque>
+#include <utility>
 
 class Drop {
 public:
-  float u, v;
-  float life; // seconds
+  float u = 0.0f, v = 0.0f;
+  float life = 0.0f; // seconds
+  std::deque<std::pair<float, float>> trail;
+  int max_trail = 1000;
 
 private:
-  float du = 0, dv = 0; // velocity in UV
+  float du = 0.0f, dv = 0.0f; // velocity in UV
 public:
   void step(const Depth &hf, float dt) {
-    const float gravity = -0.35f; // tune
-    const float damping = 0.98f;  // tune
-    const float speed_cap = 0.08; // UV/sec
+    if (life <= 0.0f)
+      return;
+
+    const float gravity = 0.20f;
+    const float damping = 0.992f;
+    const float speed_cap = 0.06f;
 
     auto [gx, gy] = hf.gradient_uv(u, v);
     float g = std::sqrt(gx * gx + gy * gy);
 
-    if (g > 1e-5f) {
-      gx /= g;
-      gy /= g;
+    if (g < 0.03f) {
+      gx = 0.0f;
+      gy = 0.0f;
+      g = 0.0f;
     }
 
-    float force = std::max(g, 0.02f); // minimum drift on non-flat areas
+    du += -gravity * gx * dt;
+    dv += -gravity * gy * dt;
 
-    // downhill direction is -grad
-    du = 1 * du - gravity * force * gx * dt;
-    dv = 1 * dv - gravity * force * gy * dt;
-
-    // du *= std::pow(damping, dt * 60.0f);
-    // dv *= std::pow(damping, dt * 60.0f);
+    du *= std::pow(damping, dt * 60.0f);
+    dv *= std::pow(damping, dt * 60.0f);
 
     float sp = std::sqrt(du * du + dv * dv);
     if (sp > speed_cap) {
@@ -57,8 +64,24 @@ public:
       dv *= -0.5f;
     }
 
+    trail.emplace_back(u, v);
+    while ((int)trail.size() > max_trail)
+      trail.pop_front();
+
     life -= dt;
+    if (life <= 0.0f)
+      trail.clear();
   }
 
   inline bool isAlive() const { return life > 0; }
+
+  inline void reset(float u0, float v0, float life0) {
+    u = u0;
+    v = v0;
+    life = life0;
+    du = 0.0f;
+    dv = 0.0f;
+    trail.clear();
+    trail.emplace_back(u, v);
+  }
 };
