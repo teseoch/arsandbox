@@ -9,7 +9,7 @@ public:
   float u = 0.0f, v = 0.0f;
   float life = 0.0f; // seconds
   std::deque<std::pair<float, float>> trail;
-  int max_trail = 1000;
+  int max_trail = 30;
 
 private:
   float du = 0.0f, dv = 0.0f; // velocity in UV

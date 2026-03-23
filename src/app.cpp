@@ -458,7 +458,8 @@ int main() {
       for (size_t i = 0; i < d.trail.size(); ++i) {
         float t = float(i + 1) / float(d.trail.size());
         const auto &[u, v] = d.trail[i];
-        sprites.push_back({u, v, 8.0f * t, 0.2f, 0.8f, 1.0f, 0.05f + 0.5f * t});
+        sprites.push_back(
+            {u, v, 8.0f * t, 0.2f, 0.8f, 1.0f, 0.02f + 0.18f * t});
       }
       sprites.push_back({d.u, d.v, 10.0f, 0.2f, 0.8f, 1.0f, 0.9f});
     }
