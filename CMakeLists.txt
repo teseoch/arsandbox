@@ -40,6 +40,7 @@ add_executable(arsandbox
           src/depth.cpp
           src/overlay.cpp)
 target_compile_definitions(arsandbox PRIVATE AR_IMAGE_FOLDER=\"${PROJECT_SOURCE_DIR}/images\" )
+target_compile_definitions(arsandbox PRIVATE AR_DEPTH_FOLDER=\"${PROJECT_SOURCE_DIR}\" )
 target_link_libraries(arsandbox PRIVATE glfw::glfw imgui::imgui)
 
 if(LINUX)

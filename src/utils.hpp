@@ -13,6 +13,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -406,4 +408,52 @@ static void generateDepthFrame(Depth &depth, double t) {
       depth.depth[idx(x, y)] = (uint16_t)std::lround(d);
     }
   }
+}
+
+static void readDepthFrame(Depth &depth, const std::string &filename) {
+  std::ifstream input(filename);
+  if (!input) {
+    std::cerr << "Failed to open depth file: " << filename << "\n";
+    return;
+  }
+
+  std::vector<uint16_t> values;
+  std::string line;
+  int width = -1;
+  int height = 0;
+
+  while (std::getline(input, line)) {
+    std::istringstream row(line);
+    std::vector<uint16_t> rowValues;
+    unsigned int value = 0;
+    while (row >> value) {
+      rowValues.push_back(static_cast<uint16_t>(value));
+    }
+
+    if (width < 0) {
+      width = static_cast<int>(rowValues.size());
+    } else if (static_cast<int>(rowValues.size()) != width) {
+      std::cerr << "Inconsistent row width in " << filename << " at row "
+                << height << ": expected " << width << " values, got "
+                << rowValues.size() << "\n";
+      return;
+    }
+
+    values.insert(values.end(), rowValues.begin(), rowValues.end());
+    ++height;
+  }
+  if (width <= 0 || height <= 0) {
+    std::cerr << "Depth file is empty or invalid: " << filename << "\n";
+    return;
+  }
+
+  depth.w = width;
+  depth.h = height;
+
+  depth.depth = values;
+
+  // for (const auto v : depth.depth) {
+  //   std::cout << v << " ";
+  // }
+  // std::cout << "\n";
 }
