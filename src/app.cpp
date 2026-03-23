@@ -225,16 +225,18 @@ int main() {
   static const std::string depth_folder = AR_DEPTH_FOLDER;
   readDepthFrame(gCtl.depth, depth_folder + "/depth_debug.txt");
 #endif
+  gCtl.depth.blur();
+  gCtl.depth.blur();
 
   glDisable(GL_DEPTH_TEST);
 
   GLuint depthTex = 0;
   glGenTextures_(1, &depthTex);
   glBindTexture_(GL_TEXTURE_2D, depthTex);
-  glTexImage2D_(GL_TEXTURE_2D, 0, GL_R16UI, gCtl.depth.w, gCtl.depth.h, 0,
-                GL_RED_INTEGER, GL_UNSIGNED_SHORT, gCtl.depth.depth.data());
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexImage2D_(GL_TEXTURE_2D, 0, GL_R32F, gCtl.depth.w, gCtl.depth.h, 0,
+                GL_RED, GL_FLOAT, gCtl.depth.depth.data());
+  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -388,8 +390,11 @@ int main() {
 
 #ifdef SANDBOX_WITH_REALSENSE
       realsense.grab(gCtl.depth);
+      gCtl.depth.blur();
+      gCtl.depth.blur();
 #else
       // generateDepthFrame(gCtl.depth, tSim);
+      // gCtl.depth.blur();
       // readDepthFrame(gCtl.depth, "depth_debug.txt");
 #endif
       // uint16_t min = 10000;
@@ -405,8 +410,7 @@ int main() {
       glActiveTexture_(GL_TEXTURE0);
       glBindTexture_(GL_TEXTURE_2D, depthTex);
       glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, gCtl.depth.w, gCtl.depth.h,
-                       GL_RED_INTEGER, GL_UNSIGNED_SHORT,
-                       gCtl.depth.depth.data());
+                       GL_RED, GL_FLOAT, gCtl.depth.depth.data());
     }
 
     for (auto &c : creatures)

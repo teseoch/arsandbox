@@ -12,7 +12,7 @@
 class Depth {
 public:
   int w, h;
-  std::vector<uint16_t> depth; // millimeters, size w*h
+  std::vector<float> depth; // millimeters, size w*h
   float depthMinMm, depthMaxMm;
 
   inline float height(int xi, int yi) const {
@@ -63,4 +63,21 @@ public:
   }
 
   void save_png(const std::string &filename) const;
+
+  void blur() {
+    std::vector<float> tmp = depth;
+
+    for (int y = 1; y < h - 1; ++y) {
+      for (int x = 1; x < w - 1; ++x) {
+
+        float sum = 0.0f;
+
+        for (int j = -1; j <= 1; ++j)
+          for (int i = -1; i <= 1; ++i)
+            sum += tmp[(y + j) * w + (x + i)];
+
+        depth[y * w + x] = sum / 9.0f;
+      }
+    }
+  }
 };

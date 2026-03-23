@@ -27,7 +27,7 @@ static const char *kFS = R"GLSL(
 in vec2 v_st;
 out vec4 FragColor;
 
-uniform usampler2D u_depthTex;   // GL_R16UI, mm
+uniform sampler2D u_depthTex;   // GL_R32F, mm
 uniform sampler1D  u_colormapTex;
 
 uniform vec2  u_depthUVQuad[4];  // normalized [0,1]
@@ -56,8 +56,7 @@ vec3 addIsolines(vec3 baseColor, float h, float step){
 
 void main(){
   vec2 uv = warpUV(v_st);
-  uint d16 = texture(u_depthTex, uv).r;
-  float d = float(d16);
+  float d = texture(u_depthTex, uv).r;
   if(d < 1.0){
     FragColor = vec4(0,0,0,1);
     return;

@@ -417,17 +417,17 @@ static void readDepthFrame(Depth &depth, const std::string &filename) {
     return;
   }
 
-  std::vector<uint16_t> values;
+  std::vector<float> values;
   std::string line;
   int width = -1;
   int height = 0;
 
   while (std::getline(input, line)) {
     std::istringstream row(line);
-    std::vector<uint16_t> rowValues;
+    std::vector<float> rowValues;
     unsigned int value = 0;
     while (row >> value) {
-      rowValues.push_back(static_cast<uint16_t>(value));
+      rowValues.push_back(static_cast<float>(value));
     }
 
     if (width < 0) {
