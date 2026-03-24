@@ -11,12 +11,15 @@ public:
   float h0;
   float dir; // +1 or -1 (cw/ccw)
 
-  const float tangential_speed = 0.08f; // UV/sec
-  const float contour_gain = 3.0f;      // how strongly it returns to isoline
+  const float tangential_speed = 0.035f;
+  const float contour_gain = 1.4f;
 
   void step(const Depth &hf, float dt) {
     auto [gx, gy] = hf.gradient_uv(u, v);
     float gnorm = std::sqrt(gx * gx + gy * gy) + 1e-6f;
+
+    if (gnorm < 1e-4f)
+      return;
 
     // tangent = rotate(grad) by 90 deg
     float tx = dir * (-gy / gnorm);
@@ -32,7 +35,25 @@ public:
     u += (tangential_speed * tx + contour_gain * cx) * dt;
     v += (tangential_speed * ty + contour_gain * cy) * dt;
 
-    u = std::clamp(u, 0.0f, 1.0f);
-    v = std::clamp(v, 0.0f, 1.0f);
+    bool hit_wall = false;
+
+    if (u < 0.01f) {
+      u = 0.0f;
+      hit_wall = true;
+    } else if (u > 0.99f) {
+      u = 1.0f;
+      hit_wall = true;
+    }
+
+    if (v < 0.01f) {
+      v = 0.0f;
+      hit_wall = true;
+    } else if (v > 0.99f) {
+      v = 1.0f;
+      hit_wall = true;
+    }
+
+    if (hit_wall)
+      dir = -dir;
   }
 };

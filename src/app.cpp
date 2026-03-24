@@ -440,6 +440,18 @@ int main() {
       gCtl.megaRain = false;
     }
 
+    if (gCtl.spawnCreature) {
+      for (int i = 0; i < 5; i++) {
+        Creature c;
+        c.u = ((float)std::rand()) / RAND_MAX;
+        c.v = ((float)std::rand()) / RAND_MAX;
+        c.h0 = gCtl.depth.sample_bilinear(c.u, c.v);
+        c.dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+        creatures.push_back(c);
+      }
+      gCtl.spawnCreature = false;
+    }
+
     if (gCtl.clearMess) {
       drops.clear();
       creatures.clear();
