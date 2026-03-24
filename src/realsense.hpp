@@ -70,15 +70,26 @@ public:
     // dpth = temporal.process(dpth);
     // dpth = hole.process(dpth);
 
-    // outDepth = fs.get_depth_frame(); // Z16, aligned to color
-    // outColor = fs.get_color_frame(); // BGR8
+    rs2::video_frame outColor = fs.get_color_frame(); // BGR8
+
+    // std::cout << outColor.get_profile().format() << std::endl;
 
     // std::cout << "here" << dpth.get_profile().as<rs2::video_stream_profile>().width() << std::endl;
     // std::cout << dpth.get_profile().as<rs2::video_stream_profile>().height() << std::endl;
 
     const uint16_t *depthZ16 = (const uint16_t *)dpth.get_data(); // size w*h
     depth.depth.resize(w * h);
-    std::memcpy(depth.depth.data(), depthZ16, w * h * sizeof(uint16_t));
+
+    const uint8_t *rgb = (const uint8_t *)outColor.get_data(); // size w*h*3
+    depth.rgb.resize(w * h * 3);
+    for (int i = 0; i < w * h; ++i)
+    {
+      depth.rgb[3 * i + 0] = rgb[3 * i + 2];
+      depth.rgb[3 * i + 1] = rgb[3 * i + 1];
+      depth.rgb[3 * i + 2] = rgb[3 * i + 0];
+
+      depth.depth[i] = float(depthZ16[i]);
+    }
 
     return fs.get_depth_frame() && fs.get_color_frame();
   }

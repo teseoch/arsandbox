@@ -11,14 +11,18 @@
 
 #include "types.hpp"
 
-class Depth {
+class Depth
+{
 public:
   int w, h;
   std::vector<float> depth; // millimeters, size w*h
   float depthMinMm, depthMaxMm;
+
+  std::vector<uint8_t> rgb; // rgb
   Quad uv_quad;
 
-  inline std::pair<float, float> warp_uv(float u, float v) const {
+  inline std::pair<float, float> warp_uv(float u, float v) const
+  {
     u = std::clamp(u, 0.0f, 1.0f);
     v = std::clamp(v, 0.0f, 1.0f);
 
@@ -32,14 +36,16 @@ public:
     return {uu, vv};
   }
 
-  inline float height(int xi, int yi) const {
+  inline float height(int xi, int yi) const
+  {
     const float d = depth[yi * w + xi];
     const float t =
         std::clamp((d - depthMinMm) / (depthMaxMm - depthMinMm), 0.0f, 1.0f);
     return 1.0f - t;
   }
 
-  inline float sample_bilinear(float u, float v) const {
+  inline float sample_bilinear(float u, float v) const
+  {
     auto [uu, vv] = warp_uv(u, v);
     float x = uu * (w - 1);
     float y = vv * (h - 1);
@@ -65,7 +71,8 @@ public:
     return z0 * (1 - ty) + z1 * ty;
   }
 
-  inline std::pair<float, float> gradient_uv(float u, float v) const {
+  inline std::pair<float, float> gradient_uv(float u, float v) const
+  {
     // finite differences in sandbox UV
     const float du = 1.0f / std::max(1, w - 1);
     const float dv = 1.0f / std::max(1, h - 1);
@@ -82,11 +89,14 @@ public:
 
   void save_png(const std::string &filename) const;
 
-  void blur() {
+  void blur()
+  {
     std::vector<float> tmp = depth;
 
-    for (int y = 1; y < h - 1; ++y) {
-      for (int x = 1; x < w - 1; ++x) {
+    for (int y = 1; y < h - 1; ++y)
+    {
+      for (int x = 1; x < w - 1; ++x)
+      {
 
         float sum = 0.0f;
 
