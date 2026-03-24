@@ -6,9 +6,11 @@ static const char *kOverlayVert = R"GLSL(
 layout(location=0) in vec2 aPos;        // [-1,1] quad vertex positions
 layout(location=1) in vec2 iST;         // sandbox coords in [0,1]^2
 layout(location=2) in float iRadiusPx;  // sprite radius in pixels
-layout(location=3) in vec4 iColor;
-layout(location=4) in float iKind;      // 0 = soft circle, 1 = textured sprite
-layout(location=5) in vec4 iUVRect;     // uv0.xy, uv1.xy in [0,1]
+layout(location=3) in float iAngleRad;
+layout(location=4) in float iFlipX;  // sprite flip in x direction
+layout(location=5) in vec4 iColor;
+layout(location=6) in float iKind;      // 0 = soft circle, 1 = textured sprite
+layout(location=7) in vec4 iUVRect;     // uv0.xy, uv1.xy in [0,1]
 
 uniform vec2 u_screenSize;    // pixels
 uniform vec2 u_projQuad[4];   // pixels: 0 TL, 1 TR, 2 BR, 3 BL
@@ -33,11 +35,18 @@ vec2 pxToNDC(vec2 p){
 
 void main(){
     vec2 centerPx = warpScreenPx(iST);
-    vec2 p = centerPx + aPos * iRadiusPx;
+    // vec2 p = centerPx + aPos * iRadiusPx;
+    float c = cos(iAngleRad);
+    float s = sin(iAngleRad);
+    vec2 aPosRot = vec2(c * aPos.x - s * aPos.y,
+                        s * aPos.x + c * aPos.y);
+    vec2 p = centerPx + aPosRot * iRadiusPx;
 
     gl_Position = vec4(pxToNDC(p), 0.0, 1.0);
     vLocal = aPos;
     vec2 unitUV = aPos * 0.5 + 0.5;
+    if (iFlipX > 0.5)
+        unitUV.x = 1.0 - unitUV.x;
     vUV = mix(iUVRect.xy, iUVRect.zw, unitUV);
     vColor = iColor;
     vKind = iKind;
@@ -95,9 +104,9 @@ OverlayRenderer overlayInit() {
   glBufferData_(GL_ARRAY_BUFFER, 0, nullptr, GL_STREAM_DRAW);
 
   // Each instance:
-  // st_x, st_y, radius_px, r, g, b, a, kind, uv0_x, uv0_y, uv1_x, uv1_y
-  // (12 floats)
-  const GLsizei stride = 12 * sizeof(float);
+  // st_x, st_y, radius_px, angle_rad, r, g, b, a, kind, flip_x,
+  // uv0_x, uv0_y, uv1_x, uv1_y  (14 floats)
+  const GLsizei stride = 14 * sizeof(float);
 
   // location 1: iST (vec2)
   glEnableVertexAttribArray_(1);
@@ -110,23 +119,35 @@ OverlayRenderer overlayInit() {
                          (void *)(2 * sizeof(float)));
   glVertexAttribDivisor_(2, 1);
 
-  // location 3: iColor (vec4)
+  // location 3: iAngleRad (float)
   glEnableVertexAttribArray_(3);
-  glVertexAttribPointer_(3, 4, GL_FLOAT, GL_FALSE, stride,
+  glVertexAttribPointer_(3, 1, GL_FLOAT, GL_FALSE, stride,
                          (void *)(3 * sizeof(float)));
   glVertexAttribDivisor_(3, 1);
 
-  // location 4: iKind (float)
+  // location 4: iFlipX (float)
   glEnableVertexAttribArray_(4);
   glVertexAttribPointer_(4, 1, GL_FLOAT, GL_FALSE, stride,
-                         (void *)(7 * sizeof(float)));
+                         (void *)(4 * sizeof(float)));
   glVertexAttribDivisor_(4, 1);
 
-  // location 5: iUVRect (vec4)
+  // location 4: iColor (vec4)
   glEnableVertexAttribArray_(5);
   glVertexAttribPointer_(5, 4, GL_FLOAT, GL_FALSE, stride,
-                         (void *)(8 * sizeof(float)));
+                         (void *)(5 * sizeof(float)));
   glVertexAttribDivisor_(5, 1);
+
+  // location 5: iKind (float)
+  glEnableVertexAttribArray_(6);
+  glVertexAttribPointer_(6, 1, GL_FLOAT, GL_FALSE, stride,
+                         (void *)(9 * sizeof(float)));
+  glVertexAttribDivisor_(6, 1);
+
+  // location 6: iUVRect (vec4)
+  glEnableVertexAttribArray_(7);
+  glVertexAttribPointer_(7, 4, GL_FLOAT, GL_FALSE, stride,
+                         (void *)(10 * sizeof(float)));
+  glVertexAttribDivisor_(7, 1);
 
   glBindVertexArray_(0);
   glBindBuffer_(GL_ARRAY_BUFFER, 0);

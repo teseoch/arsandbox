@@ -585,7 +585,8 @@ int main() {
 
     std::vector<OverlaySprite> sprites;
     for (const auto &c : creatures) {
-      sprites.push_back({c.u, c.v, 20.0f, 1.0f, 1.0f, 1.0f, 0.9f, 1});
+      sprites.push_back(
+          {c.u, c.v, 30.0f, c.angle, c.flip_x, 1.0f, 1.0f, 1.0f, 0.9f, 1});
     }
     for (const auto &d : drops) {
       auto base = sampleCurrentCmap(0.1);
@@ -600,13 +601,14 @@ int main() {
         float rg = 0.65f * base[1] + 0.35f * 0.95f;
         float rb = 0.65f * base[2] + 0.35f * 1.00f;
 
-        sprites.push_back({u, v, 8.0f * t, rr, rg, rb, 0.02f + 0.18f * t});
+        sprites.push_back(
+            {u, v, 8.0f * t, 0.0f, 0.0f, rr, rg, rb, 0.02f + 0.18f * t});
       }
       float rr = 0.50f * base[0] + 0.50f * 0.75f;
       float rg = 0.50f * base[1] + 0.50f * 0.95f;
       float rb = 0.50f * base[2] + 0.50f * 1.00f;
 
-      sprites.push_back({d.u, d.v, 10.0f, rr, rg, rb, 0.9f});
+      sprites.push_back({d.u, d.v, 10.0f, 0.0f, 0.0f, rr, rg, rb, 0.9f});
     }
 
     overlayDraw(overlay, overlayProgram, winW, winH, P8, sprites);

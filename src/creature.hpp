@@ -10,6 +10,8 @@ public:
   float u, v;
   float h0;
   float dir; // +1 or -1 (cw/ccw)
+  float angle = 0.0f;
+  float flip_x = 0.0f;
 
   const float tangential_speed = 0.035f;
   const float contour_gain = 1.4f;
@@ -24,6 +26,23 @@ public:
     // tangent = rotate(grad) by 90 deg
     float tx = dir * (-gy / gnorm);
     float ty = dir * (gx / gnorm);
+
+    float fx = tx;
+    float fy = ty;
+    float nx = gx / gnorm;
+    float ny = gy / gnorm;
+
+    if (fy < 0.0f) {
+      fx = -fx;
+      fy = -fy;
+      nx = -nx;
+      ny = -ny;
+    }
+    angle = std::atan2(fy, fx);
+    // right vector of the rotated sprite
+    float rx = fy;
+    float ry = -fx;
+    flip_x = (rx * nx + ry * ny < 0.0f) ? 0.0f : 1.0f;
 
     float z = hf.sample_bilinear(u, v);
     float err = (z - h0); // >0 means above target height

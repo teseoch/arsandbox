@@ -6,10 +6,12 @@
 #include <vector>
 
 struct OverlaySprite {
-  float st_x;       // [0,1]
-  float st_y;       // [0,1]
-  float radius_px;  // pixels
-  float r, g, b, a; // [0,1]
+  float st_x;             // [0,1]
+  float st_y;             // [0,1]
+  float radius_px;        // pixels
+  float angle_rad = 0.0f; // sprite rotation in radians
+  float flip_x = 0.0f;    // sprite flip in x direction
+  float r, g, b, a;       // [0,1]
 
   // Optional textured-sprite support. Existing aggregate initializers that only
   // provide the first 7 floats will keep using the default circle sprite mode.
