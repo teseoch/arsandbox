@@ -39,54 +39,65 @@
 
 #include <array>
 #include <filesystem>
+#include <memory>
 
 // ----------------------------- Controls / State -----------------------------
-enum Mode { NONE, PROJ, UV };
-
-struct ButtonEdge {
-  bool prev = false;
-  bool pressed(bool now) {
-    bool r = (now && !prev);
-    prev = now;
-    return r;
-  }
+enum Mode
+{
+	NONE,
+	PROJ,
+	UV
 };
 
-struct Controls {
-  Depth depth;
+struct ButtonEdge
+{
+	bool prev = false;
+	bool pressed(bool now)
+	{
+		bool r = (now && !prev);
+		prev = now;
+		return r;
+	}
+};
 
-  float gamma = 1.0f;
+struct Controls
+{
+	Depth depth;
 
-  int colormapIndex = 0;
-  int colormapCount = 0;
+	float gamma = 1.0f;
 
-  bool freezeDepth = false;
-  bool makeItRain = false;
-  bool megaRain = false;
-  bool clearMess = false;
-  bool spawnCreature = false;
+	int colormapIndex = 0;
+	int colormapCount = 0;
 
-  // Gamepad edges
-  ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge;
-  bool gamepadPresent = false;
+	bool freezeDepth = false;
+	bool makeItRain = false;
+	bool megaRain = false;
+	bool clearMess = false;
+	bool spawnCreature = false;
 
-  void reset() {
+	// Gamepad edges
+	ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge;
+	bool gamepadPresent = false;
+
+	void reset()
+	{
 #ifndef SANDBOX_WITH_REALSENSE
-    depth.w = 320;
-    depth.h = 240;
+		depth.w = 320;
+		depth.h = 240;
 #endif
-    gamma = 1.0f;
-    colormapIndex = 0;
-    freezeDepth = false;
-  }
+		gamma = 1.0f;
+		colormapIndex = 0;
+		freezeDepth = false;
+	}
 };
 
 static Controls gCtl;
 
-static inline Vec2 clamp01(Vec2 p) {
-  p.x = std::max(0.0f, std::min(1.0f, p.x));
-  p.y = std::max(0.0f, std::min(1.0f, p.y));
-  return p;
+static inline Vec2 clamp01(Vec2 p)
+{
+	p.x = std::max(0.0f, std::min(1.0f, p.x));
+	p.y = std::max(0.0f, std::min(1.0f, p.y));
+	return p;
 }
 
 static Mode gMode = NONE;
@@ -114,520 +125,573 @@ const static int tileW = 64;
 const static int tileH = 64;
 
 // ----------------------------- Main -----------------------------------------
-int main() {
+int main()
+{
 
-  const std::string folder = AR_IMAGE_FOLDER;
+	const std::string folder = AR_IMAGE_FOLDER;
 
-  std::srand(std::time(nullptr));
-  // std::srand(42); // fixed seed for repeatable testing
+	std::srand(std::time(nullptr));
+	// std::srand(42); // fixed seed for repeatable testing
 
-  if (!glfwInit()) {
-    std::fprintf(stderr, "Failed to init GLFW\n");
-    return 1;
-  }
+	if (!glfwInit())
+	{
+		std::fprintf(stderr, "Failed to init GLFW\n");
+		return 1;
+	}
 
 #if defined(__APPLE__)
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #else
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
-  GLFWwindow *win;
-  int winW, winH;
-  if (fullscreen) {
-    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-    const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+	GLFWwindow *win;
+	int winW, winH;
+	if (fullscreen)
+	{
+		GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+		const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
-    winW = mode->width;
-    winH = mode->height;
+		winW = mode->width;
+		winH = mode->height;
 
-    win = glfwCreateWindow(winW, winH, "AR Sandbox", monitor, nullptr);
-  } else {
-    winW = 1280;
-    winH = 720;
-    win = glfwCreateWindow(winW, winH, "AR Sandbox", nullptr, nullptr);
-  }
-  if (!win) {
-    std::fprintf(stderr, "Failed to create window\n");
-    glfwTerminate();
-    return 1;
-  }
-  glfwMakeContextCurrent(win);
-  glfwSwapInterval(1);
+		win = glfwCreateWindow(winW, winH, "AR Sandbox", monitor, nullptr);
+	}
+	else
+	{
+		winW = 1280;
+		winH = 720;
+		win = glfwCreateWindow(winW, winH, "AR Sandbox", nullptr, nullptr);
+	}
+	if (!win)
+	{
+		std::fprintf(stderr, "Failed to create window\n");
+		glfwTerminate();
+		return 1;
+	}
+	glfwMakeContextCurrent(win);
+	glfwSwapInterval(1);
 
-  if (!loadGL()) {
-    std::fprintf(stderr, "Failed to load required GL functions.\n");
-    std::fprintf(stderr,
-                 "Try updating drivers or adjusting GL version hints.\n");
-    return 1;
-  }
+	if (!loadGL())
+	{
+		std::fprintf(stderr, "Failed to load required GL functions.\n");
+		std::fprintf(stderr,
+					 "Try updating drivers or adjusting GL version hints.\n");
+		return 1;
+	}
 
-  gCtl.reset();
+	gCtl.reset();
 
-  glfwSetKeyCallback(win, keyCallback);
+	glfwSetKeyCallback(win, keyCallback);
 
-  // once
-  OverlayRenderer overlay = overlayInit();
+	// once
+	OverlayRenderer overlay = overlayInit();
 
-  {
-    int cW = 0, cH = 0;
-    std::vector<uint8_t> creatureRGBA =
-        load_png_rgba(folder + "/creatures/creature.png", cW, cH);
-    if (!creatureRGBA.empty() && cW > 0 && cH > 0) {
-      GLuint creatureTex =
-          overlayCreateRGBA8Texture(creatureRGBA.data(), cW, cH);
-      overlaySetSpriteTexture(overlay, creatureTex);
-    } else {
-      std::cerr << "Failed to load creature sprite texture: "
-                << (folder + "/creatures/creature.png") << std::endl;
-    }
-  }
+	{
+		int cW = 0, cH = 0;
+		std::vector<uint8_t> creatureRGBA =
+			load_png_rgba(folder + "/creatures/creature.png", cW, cH);
+		if (!creatureRGBA.empty() && cW > 0 && cH > 0)
+		{
+			GLuint creatureTex =
+				overlayCreateRGBA8Texture(creatureRGBA.data(), cW, cH);
+			overlaySetSpriteTexture(overlay, creatureTex);
+		}
+		else
+		{
+			std::cerr << "Failed to load creature sprite texture: "
+					  << (folder + "/creatures/creature.png") << std::endl;
+		}
+	}
 
-  FlowMap flowMap;
+	FlowMap flowMap;
+	// TagDetector tagDetector;
 
-  // Initial projector quad covers whole windows
+	// Initial projector quad covers whole windows
 
-  if (std::filesystem::exists("calib.txt")) {
-    std::ifstream logIn("calib.txt");
-    if (logIn) {
-      for (int i = 0; i < 4; i++)
-        logIn >> gP.v[i].x >> gP.v[i].y;
-      for (int i = 0; i < 4; i++)
-        logIn >> gU.v[i].x >> gU.v[i].y;
-    }
-  } else {
-    gP.v[0] = {0, 0};
-    gP.v[1] = {(float)winW, 0};
-    gP.v[2] = {(float)winW, (float)winH};
-    gP.v[3] = {0, (float)winH};
-    // Initial depth UV quad uses full depth image
-    gU.v[0] = {0, 0};
-    gU.v[1] = {1, 0};
-    gU.v[2] = {1, 1};
-    gU.v[3] = {0, 1};
-  }
-  gCtl.depth.depthMinMm = 1875.0f;
-  gCtl.depth.depthMaxMm = 1950.0f;
+	if (std::filesystem::exists("calib.txt"))
+	{
+		std::ifstream logIn("calib.txt");
+		if (logIn)
+		{
+			for (int i = 0; i < 4; i++)
+				logIn >> gP.v[i].x >> gP.v[i].y;
+			for (int i = 0; i < 4; i++)
+				logIn >> gU.v[i].x >> gU.v[i].y;
+		}
+	}
+	else
+	{
+		gP.v[0] = {0, 0};
+		gP.v[1] = {(float)winW, 0};
+		gP.v[2] = {(float)winW, (float)winH};
+		gP.v[3] = {0, (float)winH};
+		// Initial depth UV quad uses full depth image
+		gU.v[0] = {0, 0};
+		gU.v[1] = {1, 0};
+		gU.v[2] = {1, 1};
+		gU.v[3] = {0, 1};
+	}
+	gCtl.depth.depthMinMm = 1875.0f;
+	gCtl.depth.depthMaxMm = 1950.0f;
 
-  // Shaders
-  GLuint vs, fs;
-  if (use_animated) {
-    vs = compileShader(GL_VERTEX_SHADER, kVSa);
-    fs = compileShader(GL_FRAGMENT_SHADER, kFSa);
-  } else {
-    vs = compileShader(GL_VERTEX_SHADER, kVS);
-    fs = compileShader(GL_FRAGMENT_SHADER, kFS);
-  }
-  GLuint prog = linkProgram(vs, fs);
-  glDeleteShader_(vs);
-  glDeleteShader_(fs);
+	// Shaders
+	GLuint vs, fs;
+	if (use_animated)
+	{
+		vs = compileShader(GL_VERTEX_SHADER, kVSa);
+		fs = compileShader(GL_FRAGMENT_SHADER, kFSa);
+	}
+	else
+	{
+		vs = compileShader(GL_VERTEX_SHADER, kVS);
+		fs = compileShader(GL_FRAGMENT_SHADER, kFS);
+	}
+	GLuint prog = linkProgram(vs, fs);
+	glDeleteShader_(vs);
+	glDeleteShader_(fs);
 
-  GLuint overlayProgram = createOverlayProgram();
+	GLuint overlayProgram = createOverlayProgram();
 
-  GLuint vao = 0;
-  glGenVertexArrays_(1, &vao);
-  glBindVertexArray_(vao);
+	GLuint vao = 0;
+	glGenVertexArrays_(1, &vao);
+	glBindVertexArray_(vao);
 
-  // Depth texture (synthetic)
+	// Depth texture (synthetic)
 #ifdef SANDBOX_WITH_REALSENSE
-  RSGrabber realsense;
-  realsense.start(gCtl.depth);
+	RSGrabber realsense;
+	realsense.start(gCtl.depth);
 #else
-  // generateDepthFrame(gCtl.depth, 0.0);
-  static const std::string depth_folder = AR_DEPTH_FOLDER;
-  readDepthFrame(gCtl.depth, depth_folder + "/depth_debug.txt");
+	// generateDepthFrame(gCtl.depth, 0.0);
+	static const std::string depth_folder = AR_DEPTH_FOLDER;
+	readDepthFrame(gCtl.depth, depth_folder + "/depth_debug.txt");
+	gCtl.depth.rgb = load_png(depth_folder + "/depth_debug.png", gCtl.depth.w, gCtl.depth.h);
 #endif
-  gCtl.depth.blur();
-  gCtl.depth.blur();
-  gCtl.depth.uv_quad = gU;
-  flowMap.resize(gCtl.depth.w, gCtl.depth.h);
+	gCtl.depth.blur();
+	gCtl.depth.blur();
+	gCtl.depth.uv_quad = gU;
+	flowMap.resize(gCtl.depth.w, gCtl.depth.h);
 
-  glDisable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
 
-  GLuint depthTex = 0;
-  glGenTextures_(1, &depthTex);
-  glBindTexture_(GL_TEXTURE_2D, depthTex);
-  glTexImage2D_(GL_TEXTURE_2D, 0, GL_R32F, gCtl.depth.w, gCtl.depth.h, 0,
-                GL_RED, GL_FLOAT, gCtl.depth.depth.data());
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	GLuint depthTex = 0;
+	glGenTextures_(1, &depthTex);
+	glBindTexture_(GL_TEXTURE_2D, depthTex);
+	glTexImage2D_(GL_TEXTURE_2D, 0, GL_R32F, gCtl.depth.w, gCtl.depth.h, 0, GL_RED, GL_FLOAT, gCtl.depth.depth.data());
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  GLuint flowTex = 0;
-  glGenTextures_(1, &flowTex);
-  glBindTexture_(GL_TEXTURE_2D, flowTex);
-  glTexImage2D_(GL_TEXTURE_2D, 0, GL_R32F, flowMap.w, flowMap.h, 0, GL_RED,
-                GL_FLOAT, flowMap.flow.data());
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	GLuint flowTex = 0;
+	glGenTextures_(1, &flowTex);
+	glBindTexture_(GL_TEXTURE_2D, flowTex);
+	glTexImage2D_(GL_TEXTURE_2D, 0, GL_R32F, flowMap.w, flowMap.h, 0, GL_RED, GL_FLOAT, flowMap.flow.data());
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  std::vector<GLuint> lutTex;
-  std::vector<std::vector<uint8_t>> lutCPU;
-  std::vector<int> lutCPUWidth;
+	std::vector<GLuint> lutTex;
+	std::vector<std::vector<uint8_t>> lutCPU;
+	std::vector<int> lutCPUWidth;
 
-  if (use_animated) {
-    auto tileLayer = [](int mat, int variant, int frame) {
-      return ((mat * VARIANTS + variant) * FRAMES + frame);
-    };
+	if (use_animated)
+	{
+		auto tileLayer = [](int mat, int variant, int frame) {
+			return ((mat * VARIANTS + variant) * FRAMES + frame);
+		};
 
-    const int layers = MAT_COUNT * VARIANTS * FRAMES;
+		const int layers = MAT_COUNT * VARIANTS * FRAMES;
 
-    for (const auto &entry :
-         std::filesystem::directory_iterator(folder + "/tiles")) {
-      if (!entry.is_directory())
-        continue;
-      std::cout << "Loading tile: " << entry.path().string() << std::endl;
+		for (const auto &entry :
+			 std::filesystem::directory_iterator(folder + "/tiles"))
+		{
+			if (!entry.is_directory())
+				continue;
+			std::cout << "Loading tile: " << entry.path().string() << std::endl;
 
-      lutTex.push_back(createTilesArrayTex(tileW, tileH, layers));
+			lutTex.push_back(createTilesArrayTex(tileW, tileH, layers));
 
-      for (int m = 0; m < MAT_COUNT; ++m) {
-        for (int v = 0; v < VARIANTS; ++v) {
-          for (int f = 0; f < FRAMES; ++f) {
-            const int layer = tileLayer(m, v, f);
+			for (int m = 0; m < MAT_COUNT; ++m)
+			{
+				for (int v = 0; v < VARIANTS; ++v)
+				{
+					for (int f = 0; f < FRAMES; ++f)
+					{
+						const int layer = tileLayer(m, v, f);
 
-            std::string path = entry.path().string() + "/m" +
-                               std::to_string(m) + "_v" + std::to_string(v) +
-                               "_f" + std::to_string(f) + ".png";
+						std::string path = entry.path().string() + "/m" + std::to_string(m) + "_v" + std::to_string(v) + "_f" + std::to_string(f) + ".png";
 
-            int w = 0, h = 0, comp = 0;
-            std::vector<uint8_t> data = load_png(path, w, h);
-            if (data.empty()) {
-              std::cerr << "Failed to load tile: " << path << "\n";
-              std::exit(1);
-            }
-            if (w != tileW || h != tileH) {
-              std::cerr << "Tile size mismatch for " << path << ": got " << w
-                        << "x" << h << " expected " << tileW << "x" << tileH
-                        << "\n";
-              std::exit(1);
-            }
+						int w = 0, h = 0, comp = 0;
+						std::vector<uint8_t> data = load_png(path, w, h);
+						if (data.empty())
+						{
+							std::cerr << "Failed to load tile: " << path << "\n";
+							std::exit(1);
+						}
+						if (w != tileW || h != tileH)
+						{
+							std::cerr << "Tile size mismatch for " << path << ": got " << w
+									  << "x" << h << " expected " << tileW << "x" << tileH
+									  << "\n";
+							std::exit(1);
+						}
 
-            uploadTileLayer(lutTex.back(), layer, tileW, tileH, data.data());
-          }
-        }
-      }
-    }
-  } else {
-    // loop over *.png in folder images
-    for (const auto &entry :
-         std::filesystem::directory_iterator(folder + "/cmaps")) {
-      if (entry.is_regular_file() && entry.path().extension() == ".png") {
-        int w = 0;
-        auto data = load_png_as_1d_texture(entry.path().string(), w);
-        if (!data.empty()) {
-          lutCPU.push_back(data);
-          lutCPUWidth.push_back(w);
-          lutTex.push_back(makeColormap1D(data, w));
-          std::printf("Loaded colormap from %s\n",
-                      entry.path().string().c_str());
-        }
-      }
-    }
-  }
+						uploadTileLayer(lutTex.back(), layer, tileW, tileH, data.data());
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		// loop over *.png in folder images
+		for (const auto &entry :
+			 std::filesystem::directory_iterator(folder + "/cmaps"))
+		{
+			if (entry.is_regular_file() && entry.path().extension() == ".png")
+			{
+				int w = 0;
+				auto data = load_png_as_1d_texture(entry.path().string(), w);
+				if (!data.empty())
+				{
+					lutCPU.push_back(data);
+					lutCPUWidth.push_back(w);
+					lutTex.push_back(makeColormap1D(data, w));
+					std::printf("Loaded colormap from %s\n", entry.path().string().c_str());
+				}
+			}
+		}
+	}
 
-  gCtl.colormapCount = (int)lutTex.size();
+	gCtl.colormapCount = (int)lutTex.size();
 
-  auto sampleCurrentCmap = [&](float t) {
-    t = std::clamp(t, 0.0f, 1.0f);
-    if (lutCPU.empty() || gCtl.colormapIndex < 0 ||
-        gCtl.colormapIndex >= (int)lutCPU.size()) {
-      return std::array<float, 3>{0.2f, 0.8f, 1.0f};
-    }
+	auto sampleCurrentCmap = [&](float t) {
+		t = std::clamp(t, 0.0f, 1.0f);
+		if (lutCPU.empty() || gCtl.colormapIndex < 0 || gCtl.colormapIndex >= (int)lutCPU.size())
+		{
+			return std::array<float, 3>{0.2f, 0.8f, 1.0f};
+		}
 
-    const auto &img = lutCPU[gCtl.colormapIndex];
-    const int w = lutCPUWidth[gCtl.colormapIndex];
-    if (w <= 0 || img.size() < size_t(3 * w)) {
-      return std::array<float, 3>{0.2f, 0.8f, 1.0f};
-    }
+		const auto &img = lutCPU[gCtl.colormapIndex];
+		const int w = lutCPUWidth[gCtl.colormapIndex];
+		if (w <= 0 || img.size() < size_t(3 * w))
+		{
+			return std::array<float, 3>{0.2f, 0.8f, 1.0f};
+		}
 
-    float x = t * float(w - 1);
-    int x0 = std::clamp(int(std::floor(x)), 0, w - 1);
-    int x1 = std::clamp(x0 + 1, 0, w - 1);
-    float a = x - float(x0);
+		float x = t * float(w - 1);
+		int x0 = std::clamp(int(std::floor(x)), 0, w - 1);
+		int x1 = std::clamp(x0 + 1, 0, w - 1);
+		float a = x - float(x0);
 
-    auto c0r = img[3 * x0 + 0] / 255.0f;
-    auto c0g = img[3 * x0 + 1] / 255.0f;
-    auto c0b = img[3 * x0 + 2] / 255.0f;
-    auto c1r = img[3 * x1 + 0] / 255.0f;
-    auto c1g = img[3 * x1 + 1] / 255.0f;
-    auto c1b = img[3 * x1 + 2] / 255.0f;
+		auto c0r = img[3 * x0 + 0] / 255.0f;
+		auto c0g = img[3 * x0 + 1] / 255.0f;
+		auto c0b = img[3 * x0 + 2] / 255.0f;
+		auto c1r = img[3 * x1 + 0] / 255.0f;
+		auto c1g = img[3 * x1 + 1] / 255.0f;
+		auto c1b = img[3 * x1 + 2] / 255.0f;
 
-    return std::array<float, 3>{
-        c0r * (1.0f - a) + c1r * a,
-        c0g * (1.0f - a) + c1g * a,
-        c0b * (1.0f - a) + c1b * a,
-    };
-  };
+		return std::array<float, 3>{
+			c0r * (1.0f - a) + c1r * a,
+			c0g * (1.0f - a) + c1g * a,
+			c0b * (1.0f - a) + c1b * a,
+		};
+	};
 
-  // Uniform locations
-  glUseProgram_(prog);
-  const GLint loc_projQuad = glGetUniformLocation_(prog, "u_projQuad");
-  const GLint loc_screenSize = glGetUniformLocation_(prog, "u_screenSize");
-  const GLint loc_depthUVQuad = glGetUniformLocation_(prog, "u_depthUVQuad");
-  const GLint loc_depthMinMm = glGetUniformLocation_(prog, "u_depthMinMm");
-  const GLint loc_depthMaxMm = glGetUniformLocation_(prog, "u_depthMaxMm");
-  const GLint loc_gamma = glGetUniformLocation_(prog, "u_gamma");
-  const GLint loc_depthSampler = glGetUniformLocation_(prog, "u_depthTex");
-  const GLint loc_flowSampler = glGetUniformLocation_(prog, "u_flowTex");
-  GLint loc_lutSampler;
-  GLint u_time = -1;
-  GLint u_tileScale = -1;
+	// Uniform locations
+	glUseProgram_(prog);
+	const GLint loc_projQuad = glGetUniformLocation_(prog, "u_projQuad");
+	const GLint loc_screenSize = glGetUniformLocation_(prog, "u_screenSize");
+	const GLint loc_depthUVQuad = glGetUniformLocation_(prog, "u_depthUVQuad");
+	const GLint loc_depthMinMm = glGetUniformLocation_(prog, "u_depthMinMm");
+	const GLint loc_depthMaxMm = glGetUniformLocation_(prog, "u_depthMaxMm");
+	const GLint loc_gamma = glGetUniformLocation_(prog, "u_gamma");
+	const GLint loc_depthSampler = glGetUniformLocation_(prog, "u_depthTex");
+	const GLint loc_flowSampler = glGetUniformLocation_(prog, "u_flowTex");
+	GLint loc_lutSampler;
+	GLint u_time = -1;
+	GLint u_tileScale = -1;
 
-  if (use_animated) {
-    loc_lutSampler = glGetUniformLocation_(prog, "u_tiles");
-    u_time = glGetUniformLocation_(prog, "u_time");
-    u_tileScale = glGetUniformLocation_(prog, "u_tileScale");
-  } else {
-    loc_lutSampler = glGetUniformLocation_(prog, "u_colormapTex");
-  }
+	if (use_animated)
+	{
+		loc_lutSampler = glGetUniformLocation_(prog, "u_tiles");
+		u_time = glGetUniformLocation_(prog, "u_time");
+		u_tileScale = glGetUniformLocation_(prog, "u_tileScale");
+	}
+	else
+	{
+		loc_lutSampler = glGetUniformLocation_(prog, "u_colormapTex");
+	}
 
-  // Bind samplers once
-  glUniform1i_(loc_depthSampler, 0);
-  glUniform1i_(loc_lutSampler, 1);
-  glUniform1i_(loc_flowSampler, 2);
-  if (use_animated) {
-    glUniform1f_(u_tileScale, 14.0f);
-    glUniform1f_(u_time, 0.0f);
-  }
+	// Bind samplers once
+	glUniform1i_(loc_depthSampler, 0);
+	glUniform1i_(loc_lutSampler, 1);
+	glUniform1i_(loc_flowSampler, 2);
+	if (use_animated)
+	{
+		glUniform1f_(u_tileScale, 14.0f);
+		glUniform1f_(u_time, 0.0f);
+	}
 
-  double tPrev = glfwGetTime();
-  double tSim = 0.0;
+	double tPrev = glfwGetTime();
+	double tSim = 0.0;
 
-  std::vector<Creature> creatures;
-  for (int i = 0; i < 10; i++) {
-    Creature c;
-    c.u = ((float)std::rand()) / RAND_MAX;
-    c.v = ((float)std::rand()) / RAND_MAX;
-    // c.u = 0.5f;
-    // c.v = 0.5f;
-    c.h0 = gCtl.depth.sample_bilinear(c.u, c.v);
-    c.dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
-    creatures.push_back(c);
-  }
+	std::vector<Creature> creatures;
+	for (int i = 0; i < 10; i++)
+	{
+		Creature c;
+		c.u = ((float)std::rand()) / RAND_MAX;
+		c.v = ((float)std::rand()) / RAND_MAX;
+		// c.u = 0.5f;
+		// c.v = 0.5f;
+		c.h0 = gCtl.depth.sample_bilinear(c.u, c.v);
+		c.dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+		creatures.push_back(c);
+	}
 
-  std::vector<Drop> drops;
-  for (int i = 0; i < 10; i++) {
-    Drop d;
-    d.reset(((float)std::rand()) / RAND_MAX, ((float)std::rand()) / RAND_MAX,
-            25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
-    drops.push_back(d);
-  }
+	std::vector<Drop> drops;
+	for (int i = 0; i < 10; i++)
+	{
+		Drop d;
+		d.reset(
+			((float)std::rand()) / RAND_MAX,
+			((float)std::rand()) / RAND_MAX,
+			25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
+		drops.push_back(d);
+	}
 
-  while (!glfwWindowShouldClose(win)) {
-    double tNow = glfwGetTime();
-    float dt = (float)(tNow - tPrev);
-    tPrev = tNow;
+	while (!glfwWindowShouldClose(win))
+	{
+		double tNow = glfwGetTime();
+		float dt = (float)(tNow - tPrev);
+		tPrev = tNow;
 
-    // update window size (in case of resize)
-    glfwGetFramebufferSize(win, &winW, &winH);
-    glViewport(0, 0, winW, winH);
+		// update window size (in case of resize)
+		glfwGetFramebufferSize(win, &winW, &winH);
+		glViewport(0, 0, winW, winH);
 
-    // Optional gamepad controls (always safe; if no pad, no effect)
-    updateGamepad(gCtl, dt);
+		// Optional gamepad controls (always safe; if no pad, no effect)
+		updateGamepad(gCtl, dt);
 
-    if (gCtl.makeItRain) {
-      for (int i = 0; i < 5; i++) {
-        Drop d;
-        d.reset(((float)std::rand()) / RAND_MAX,
-                ((float)std::rand()) / RAND_MAX,
-                25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
-        drops.push_back(d);
-      }
-      gCtl.makeItRain = false;
-    }
+		if (gCtl.makeItRain)
+		{
+			for (int i = 0; i < 5; i++)
+			{
+				Drop d;
+				d.reset(
+					((float)std::rand()) / RAND_MAX,
+					((float)std::rand()) / RAND_MAX,
+					25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
+				drops.push_back(d);
+			}
+			gCtl.makeItRain = false;
+		}
 
-    if (gCtl.megaRain) {
-      float centerX = ((float)std::rand()) / RAND_MAX;
-      float centerY = ((float)std::rand()) / RAND_MAX;
-      for (int i = 0; i < 500; i++) {
-        Drop d;
-        float r = 0.1f * (((float)std::rand()) / RAND_MAX - 0.5f);
-        float angle = 2 * 3.14159f * (((float)std::rand()) / RAND_MAX);
-        d.reset(centerX + r * std::cos(angle), centerY + r * std::sin(angle),
-                25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
-        drops.push_back(d);
-      }
-      gCtl.megaRain = false;
-    }
+		if (gCtl.megaRain)
+		{
+			float centerX = ((float)std::rand()) / RAND_MAX;
+			float centerY = ((float)std::rand()) / RAND_MAX;
+			for (int i = 0; i < 500; i++)
+			{
+				Drop d;
+				float r = 0.1f * (((float)std::rand()) / RAND_MAX - 0.5f);
+				float angle = 2 * 3.14159f * (((float)std::rand()) / RAND_MAX);
+				d.reset(
+					centerX + r * std::cos(angle),
+					centerY + r * std::sin(angle),
+					25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
+				drops.push_back(d);
+			}
+			gCtl.megaRain = false;
+		}
 
-    if (gCtl.spawnCreature) {
-      for (int i = 0; i < 5; i++) {
-        Creature c;
-        c.u = ((float)std::rand()) / RAND_MAX;
-        c.v = ((float)std::rand()) / RAND_MAX;
-        c.h0 = gCtl.depth.sample_bilinear(c.u, c.v);
-        c.dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
-        creatures.push_back(c);
-      }
-      gCtl.spawnCreature = false;
-    }
+		if (gCtl.spawnCreature)
+		{
+			for (int i = 0; i < 5; i++)
+			{
+				Creature c;
+				c.u = ((float)std::rand()) / RAND_MAX;
+				c.v = ((float)std::rand()) / RAND_MAX;
+				c.h0 = gCtl.depth.sample_bilinear(c.u, c.v);
+				c.dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+				creatures.push_back(c);
+			}
+			gCtl.spawnCreature = false;
+		}
 
-    if (gCtl.clearMess) {
-      drops.clear();
-      creatures.clear();
-      flowMap.clear();
-      gCtl.clearMess = false;
-    }
+		if (gCtl.clearMess)
+		{
+			drops.clear();
+			creatures.clear();
+			flowMap.clear();
+			gCtl.clearMess = false;
+		}
 
-    // Update synthetic depth
-    if (!gCtl.freezeDepth) {
-      tSim += dt;
+		// Update synthetic depth
+		if (!gCtl.freezeDepth)
+		{
+			tSim += dt;
 
 #ifdef SANDBOX_WITH_REALSENSE
-      realsense.grab(gCtl.depth);
-      gCtl.depth.blur();
-      gCtl.depth.blur();
+			realsense.grab(gCtl.depth);
+			gCtl.depth.blur();
+			gCtl.depth.blur();
 #else
-      // generateDepthFrame(gCtl.depth, tSim);
-      // gCtl.depth.blur();
-      // readDepthFrame(gCtl.depth, "depth_debug.txt");
+			// generateDepthFrame(gCtl.depth, tSim);
+			// gCtl.depth.blur();
+			// readDepthFrame(gCtl.depth, "depth_debug.txt");
 #endif
-      gCtl.depth.uv_quad = gU;
+			gCtl.depth.uv_quad = gU;
 
-      // uint16_t min = 10000;
-      // uint16_t max = 0;
-      // for (auto d : gCtl.depth.depth)
-      // {
-      //   if (d > 0)
-      //     min = std::min(d, min);
-      //   max = std::max(d, max);
-      // }
-      // std::cout << min << " " << max << std::endl;
+			// uint16_t min = 10000;
+			// uint16_t max = 0;
+			// for (auto d : gCtl.depth.depth)
+			// {
+			//   if (d > 0)
+			//     min = std::min(d, min);
+			//   max = std::max(d, max);
+			// }
+			// std::cout << min << " " << max << std::endl;
 
-      glActiveTexture_(GL_TEXTURE0);
-      glBindTexture_(GL_TEXTURE_2D, depthTex);
-      glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, gCtl.depth.w, gCtl.depth.h,
-                       GL_RED, GL_FLOAT, gCtl.depth.depth.data());
-    }
+			glActiveTexture_(GL_TEXTURE0);
+			glBindTexture_(GL_TEXTURE_2D, depthTex);
+			glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, gCtl.depth.w, gCtl.depth.h, GL_RED, GL_FLOAT, gCtl.depth.depth.data());
+		}
 
-    for (auto &c : creatures)
-      c.step(gCtl.depth, dt);
-    for (auto &d : drops)
-      d.step(gCtl.depth, dt);
-    drops.erase(std::remove_if(drops.begin(), drops.end(),
-                               [](const Drop &d) { return !d.isAlive(); }),
-                drops.end());
+		for (auto &c : creatures)
+			c.step(gCtl.depth, dt);
+		for (auto &d : drops)
+			d.step(gCtl.depth, dt);
+		drops.erase(std::remove_if(drops.begin(), drops.end(), [](const Drop &d) { return !d.isAlive(); }), drops.end());
 
-    flowMap.decay(0.98f);
+		flowMap.decay(0.98f);
 
-    for (const auto &d : drops) {
-      float sp = 0.0f;
-      if (d.trail.size() >= 2) {
-        const auto &[u0, v0] = d.trail[d.trail.size() - 2];
-        const auto &[u1, v1] = d.trail[d.trail.size() - 1];
-        float du = u1 - u0;
-        float dv = v1 - v0;
-        sp = std::sqrt(du * du + dv * dv);
-      }
+		for (const auto &d : drops)
+		{
+			float sp = 0.0f;
+			if (d.trail.size() >= 2)
+			{
+				const auto &[u0, v0] = d.trail[d.trail.size() - 2];
+				const auto &[u1, v1] = d.trail[d.trail.size() - 1];
+				float du = u1 - u0;
+				float dv = v1 - v0;
+				sp = std::sqrt(du * du + dv * dv);
+			}
 
-      if (sp > 0.0005f) {
-        const auto &[u, v] = d.trail.empty() ? std::pair<float, float>{d.u, d.v}
-                                             : d.trail.back();
-        flowMap.splat(u, v, 5.0f);
-      }
-    }
+			if (sp > 0.0005f)
+			{
+				const auto &[u, v] = d.trail.empty() ? std::pair<float, float>{d.u, d.v} : d.trail.back();
+				flowMap.splat(u, v, 5.0f);
+			}
+		}
 
-    flowMap.diffuse_once();
+		flowMap.diffuse_once();
 
-    glActiveTexture_(GL_TEXTURE2);
-    glBindTexture_(GL_TEXTURE_2D, flowTex);
-    glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, flowMap.w, flowMap.h, GL_RED,
-                     GL_FLOAT, flowMap.flow.data());
+		// auto detectedTags = tagDetector.detect(gCtl.depth);
 
-    // Clear to black
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+		glActiveTexture_(GL_TEXTURE2);
+		glBindTexture_(GL_TEXTURE_2D, flowTex);
+		glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, flowMap.w, flowMap.h, GL_RED, GL_FLOAT, flowMap.flow.data());
 
-    glUseProgram_(prog);
+		// Clear to black
+		glClearColor(0, 0, 0, 1);
+		glClear(GL_COLOR_BUFFER_BIT);
 
-    // upload uniforms
-    // proj quad: 4 vec2 => 8 floats
-    float P8[8] = {gP.v[0].x, gP.v[0].y, gP.v[1].x, gP.v[1].y,
-                   gP.v[2].x, gP.v[2].y, gP.v[3].x, gP.v[3].y};
-    float U8[8] = {gU.v[0].x, gU.v[0].y, gU.v[1].x, gU.v[1].y,
-                   gU.v[2].x, gU.v[2].y, gU.v[3].x, gU.v[3].y};
+		glUseProgram_(prog);
 
-    glUniform2fv_(loc_projQuad, 4, P8);
-    glUniform2f_(loc_screenSize, (float)winW, (float)winH);
-    glUniform2fv_(loc_depthUVQuad, 4, U8);
+		// upload uniforms
+		// proj quad: 4 vec2 => 8 floats
+		float P8[8] = {gP.v[0].x, gP.v[0].y, gP.v[1].x, gP.v[1].y,
+					   gP.v[2].x, gP.v[2].y, gP.v[3].x, gP.v[3].y};
+		float U8[8] = {gU.v[0].x, gU.v[0].y, gU.v[1].x, gU.v[1].y,
+					   gU.v[2].x, gU.v[2].y, gU.v[3].x, gU.v[3].y};
 
-    glUniform1f_(loc_depthMinMm, gCtl.depth.depthMinMm);
-    glUniform1f_(loc_depthMaxMm, gCtl.depth.depthMaxMm);
-    glUniform1f_(loc_gamma, gCtl.gamma);
+		glUniform2fv_(loc_projQuad, 4, P8);
+		glUniform2f_(loc_screenSize, (float)winW, (float)winH);
+		glUniform2fv_(loc_depthUVQuad, 4, U8);
 
-    // bind textures
-    glActiveTexture_(GL_TEXTURE0);
-    glBindTexture_(GL_TEXTURE_2D, depthTex);
-    glActiveTexture_(GL_TEXTURE2);
-    glBindTexture_(GL_TEXTURE_2D, flowTex);
+		glUniform1f_(loc_depthMinMm, gCtl.depth.depthMinMm);
+		glUniform1f_(loc_depthMaxMm, gCtl.depth.depthMaxMm);
+		glUniform1f_(loc_gamma, gCtl.gamma);
 
-    if (use_animated) {
-      glUniform1f_(u_time, (float)tSim);
-      glUniform1f_(u_tileScale, 14.0f);
+		// bind textures
+		glActiveTexture_(GL_TEXTURE0);
+		glBindTexture_(GL_TEXTURE_2D, depthTex);
+		glActiveTexture_(GL_TEXTURE2);
+		glBindTexture_(GL_TEXTURE_2D, flowTex);
 
-      glActiveTexture_(GL_TEXTURE1);
-      glBindTexture_(GL_TEXTURE_2D_ARRAY, lutTex[gCtl.colormapIndex]);
-    } else {
-      glActiveTexture_(GL_TEXTURE1);
-      glBindTexture_(GL_TEXTURE_1D, lutTex[gCtl.colormapIndex]);
-    }
+		if (use_animated)
+		{
+			glUniform1f_(u_time, (float)tSim);
+			glUniform1f_(u_tileScale, 14.0f);
 
-    // draw the warped quad
-    glBindVertexArray_(vao);
-    glDrawArrays_(GL_TRIANGLE_FAN, 0, 4);
+			glActiveTexture_(GL_TEXTURE1);
+			glBindTexture_(GL_TEXTURE_2D_ARRAY, lutTex[gCtl.colormapIndex]);
+		}
+		else
+		{
+			glActiveTexture_(GL_TEXTURE1);
+			glBindTexture_(GL_TEXTURE_1D, lutTex[gCtl.colormapIndex]);
+		}
 
-    std::vector<OverlaySprite> sprites;
-    for (const auto &c : creatures) {
-      sprites.push_back(
-          {c.u, c.v, 30.0f, c.angle, c.flip_x, 1.0f, 1.0f, 1.0f, 0.9f, 1});
-    }
-    for (const auto &d : drops) {
-      auto base = sampleCurrentCmap(0.1);
+		// draw the warped quad
+		glBindVertexArray_(vao);
+		glDrawArrays_(GL_TRIANGLE_FAN, 0, 4);
 
-      for (size_t i = 0; i < d.trail.size(); ++i) {
-        float t = float(i + 1) / float(d.trail.size());
-        const auto &[u, v] = d.trail[i];
+		std::vector<OverlaySprite> sprites;
+		for (const auto &c : creatures)
+		{
+			sprites.push_back(
+				{c.u, c.v, 30.0f, c.angle, c.flip_x, 1.0f, 1.0f, 1.0f, 0.9f, 1});
+		}
+		for (const auto &d : drops)
+		{
+			auto base = sampleCurrentCmap(0.1);
 
-        // Push trail color slightly toward cyan/white so it still reads as
-        // water.
-        float rr = 0.65f * base[0] + 0.35f * 0.75f;
-        float rg = 0.65f * base[1] + 0.35f * 0.95f;
-        float rb = 0.65f * base[2] + 0.35f * 1.00f;
+			for (size_t i = 0; i < d.trail.size(); ++i)
+			{
+				float t = float(i + 1) / float(d.trail.size());
+				const auto &[u, v] = d.trail[i];
 
-        sprites.push_back(
-            {u, v, 8.0f * t, 0.0f, 0.0f, rr, rg, rb, 0.02f + 0.18f * t});
-      }
-      float rr = 0.50f * base[0] + 0.50f * 0.75f;
-      float rg = 0.50f * base[1] + 0.50f * 0.95f;
-      float rb = 0.50f * base[2] + 0.50f * 1.00f;
+				// Push trail color slightly toward cyan/white so it still reads as
+				// water.
+				float rr = 0.65f * base[0] + 0.35f * 0.75f;
+				float rg = 0.65f * base[1] + 0.35f * 0.95f;
+				float rb = 0.65f * base[2] + 0.35f * 1.00f;
 
-      sprites.push_back({d.u, d.v, 10.0f, 0.0f, 0.0f, rr, rg, rb, 0.9f});
-    }
+				sprites.push_back(
+					{u, v, 8.0f * t, 0.0f, 0.0f, rr, rg, rb, 0.02f + 0.18f * t});
+			}
+			float rr = 0.50f * base[0] + 0.50f * 0.75f;
+			float rg = 0.50f * base[1] + 0.50f * 0.95f;
+			float rb = 0.50f * base[2] + 0.50f * 1.00f;
 
-    overlayDraw(overlay, overlayProgram, winW, winH, P8, sprites);
+			sprites.push_back({d.u, d.v, 10.0f, 0.0f, 0.0f, rr, rg, rb, 0.9f});
+		}
 
-    glfwSwapBuffers(win);
-    glfwPollEvents();
+		overlayDraw(overlay, overlayProgram, winW, winH, P8, sprites);
 
-    // GLint ws = 0;
-    // glGetTexParameteriv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, &ws);
-    // std::cout << "wrap_s=" << ws << "\n"; // should be GL_REPEAT
+		glfwSwapBuffers(win);
+		glfwPollEvents();
 
-    // auto err = glGetError();
-    // if (err != GL_NO_ERROR)
-    //   std::cout << "GL error: " << err << "\n";
-  }
+		// GLint ws = 0;
+		// glGetTexParameteriv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, &ws);
+		// std::cout << "wrap_s=" << ws << "\n"; // should be GL_REPEAT
 
-  glDeleteProgram_(prog);
-  glfwTerminate();
-  return 0;
+		// auto err = glGetError();
+		// if (err != GL_NO_ERROR)
+		//   std::cout << "GL error: " << err << "\n";
+	}
+
+	glDeleteProgram_(prog);
+	glfwTerminate();
+	return 0;
 }
 
 /*
