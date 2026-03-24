@@ -7,12 +7,16 @@ layout(location=0) in vec2 aPos;        // [-1,1] quad vertex positions
 layout(location=1) in vec2 iST;         // sandbox coords in [0,1]^2
 layout(location=2) in float iRadiusPx;  // sprite radius in pixels
 layout(location=3) in vec4 iColor;
+layout(location=4) in float iKind;      // 0 = soft circle, 1 = textured sprite
+layout(location=5) in vec4 iUVRect;     // uv0.xy, uv1.xy in [0,1]
 
 uniform vec2 u_screenSize;    // pixels
 uniform vec2 u_projQuad[4];   // pixels: 0 TL, 1 TR, 2 BR, 3 BL
 
 out vec2 vLocal;
+out vec2 vUV;
 out vec4 vColor;
+out float vKind;
 
 vec2 warpScreenPx(vec2 st){
     vec2 top = mix(u_projQuad[0], u_projQuad[1], st.x);
@@ -33,7 +37,10 @@ void main(){
 
     gl_Position = vec4(pxToNDC(p), 0.0, 1.0);
     vLocal = aPos;
+    vec2 unitUV = aPos * 0.5 + 0.5;
+    vUV = mix(iUVRect.xy, iUVRect.zw, unitUV);
     vColor = iColor;
+    vKind = iKind;
 }
 )GLSL";
 
@@ -41,24 +48,33 @@ static const char *kOverlayFrag = R"GLSL(
 #version 330 core
 
 in vec2 vLocal;
+in vec2 vUV;
 in vec4 vColor;
+in float vKind;
+
+uniform sampler2D u_spriteTex;
 
 out vec4 FragColor;
 
 void main(){
-    float r = length(vLocal);
-    float alpha = 1.0 - smoothstep(0.85, 1.0, r);
-    FragColor = vec4(vColor.rgb, vColor.a * alpha);
+    if (vKind < 0.5) {
+        float r = length(vLocal);
+        float alpha = 1.0 - smoothstep(0.85, 1.0, r);
+        FragColor = vec4(vColor.rgb, vColor.a * alpha);
+        return;
+    }
+
+    vec4 texel = texture(u_spriteTex, vUV);
+    FragColor = vec4(vColor.rgb * texel.rgb, vColor.a * texel.a);
 }
 )GLSL";
 
-OverlayRenderer overlayInit()
-{
+OverlayRenderer overlayInit() {
   OverlayRenderer R;
 
   // Two triangles (6 verts), aPos in [-1,1]
-  const float quadVerts[] = {-1.f, -1.f, 1.f, -1.f, 1.f, 1.f,
-                             -1.f, -1.f, 1.f, 1.f, -1.f, 1.f};
+  const float quadVerts[] = {-1.f, -1.f, 1.f, -1.f, 1.f,  1.f,
+                             -1.f, -1.f, 1.f, 1.f,  -1.f, 1.f};
 
   glGenVertexArrays_(1, &R.vao);
   glBindVertexArray_(R.vao);
@@ -70,15 +86,18 @@ OverlayRenderer overlayInit()
 
   // location 0: aPos
   glEnableVertexAttribArray_(0);
-  glVertexAttribPointer_(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+  glVertexAttribPointer_(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
+                         (void *)0);
 
   // Instance buffer (streamed every frame)
   glGenBuffers_(1, &R.instVBO);
   glBindBuffer_(GL_ARRAY_BUFFER, R.instVBO);
   glBufferData_(GL_ARRAY_BUFFER, 0, nullptr, GL_STREAM_DRAW);
 
-  // Each instance: st_x, st_y, radius_px, r, g, b, a  (7 floats)
-  const GLsizei stride = 7 * sizeof(float);
+  // Each instance:
+  // st_x, st_y, radius_px, r, g, b, a, kind, uv0_x, uv0_y, uv1_x, uv1_y
+  // (12 floats)
+  const GLsizei stride = 12 * sizeof(float);
 
   // location 1: iST (vec2)
   glEnableVertexAttribArray_(1);
@@ -97,17 +116,49 @@ OverlayRenderer overlayInit()
                          (void *)(3 * sizeof(float)));
   glVertexAttribDivisor_(3, 1);
 
+  // location 4: iKind (float)
+  glEnableVertexAttribArray_(4);
+  glVertexAttribPointer_(4, 1, GL_FLOAT, GL_FALSE, stride,
+                         (void *)(7 * sizeof(float)));
+  glVertexAttribDivisor_(4, 1);
+
+  // location 5: iUVRect (vec4)
+  glEnableVertexAttribArray_(5);
+  glVertexAttribPointer_(5, 4, GL_FLOAT, GL_FALSE, stride,
+                         (void *)(8 * sizeof(float)));
+  glVertexAttribDivisor_(5, 1);
+
   glBindVertexArray_(0);
   glBindBuffer_(GL_ARRAY_BUFFER, 0);
 
+  const uint8_t white[4] = {255, 255, 255, 255};
+  R.spriteTex = overlayCreateRGBA8Texture(white, 1, 1);
+
   return R;
+}
+
+void overlaySetSpriteTexture(OverlayRenderer &R, GLuint tex) {
+  R.spriteTex = tex;
+}
+
+GLuint overlayCreateRGBA8Texture(const uint8_t *rgba, int w, int h) {
+  GLuint tex = 0;
+  glGenTextures_(1, &tex);
+  glBindTexture_(GL_TEXTURE_2D, tex);
+  glTexImage2D_(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                rgba);
+  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glBindTexture_(GL_TEXTURE_2D, 0);
+  return tex;
 }
 
 void overlayDraw(
     const OverlayRenderer &R, GLuint overlayProgram, int screenW, int screenH,
     const float projQuadPx[8], // [x0,y0, x1,y1, x2,y2, x3,y3] TL,TR,BR,BL
-    const std::vector<OverlaySprite> &sprites)
-{
+    const std::vector<OverlaySprite> &sprites) {
   if (sprites.empty())
     return;
 
@@ -120,6 +171,11 @@ void overlayDraw(
   // u_projQuad is an array of vec2 => upload 4 vec2 as 8 floats
   GLint locQuad = glGetUniformLocation_(overlayProgram, "u_projQuad");
   glUniform2fv_(locQuad, 4, projQuadPx);
+
+  GLint locSpriteTex = glGetUniformLocation_(overlayProgram, "u_spriteTex");
+  glUniform1i_(locSpriteTex, 3);
+  glActiveTexture_(GL_TEXTURE3);
+  glBindTexture_(GL_TEXTURE_2D, R.spriteTex);
 
   // Enable alpha blending
   glEnable(GL_BLEND);
@@ -141,14 +197,12 @@ void overlayDraw(
 }
 
 // Returns 0 on failure.
-GLuint createOverlayProgram()
-{
+GLuint createOverlayProgram() {
   GLuint vs = compileShader(GL_VERTEX_SHADER, kOverlayVert);
   if (!vs)
     return 0;
   GLuint fs = compileShader(GL_FRAGMENT_SHADER, kOverlayFrag);
-  if (!fs)
-  {
+  if (!fs) {
     glDeleteShader_(vs);
     return 0;
   }

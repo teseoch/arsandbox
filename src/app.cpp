@@ -115,6 +115,9 @@ const static int tileH = 64;
 
 // ----------------------------- Main -----------------------------------------
 int main() {
+
+  const std::string folder = AR_IMAGE_FOLDER;
+
   std::srand(std::time(nullptr));
   // std::srand(42); // fixed seed for repeatable testing
 
@@ -169,6 +172,21 @@ int main() {
 
   // once
   OverlayRenderer overlay = overlayInit();
+
+  {
+    int cW = 0, cH = 0;
+    std::vector<uint8_t> creatureRGBA =
+        load_png_rgba(folder + "/creatures/creature.png", cW, cH);
+    if (!creatureRGBA.empty() && cW > 0 && cH > 0) {
+      GLuint creatureTex =
+          overlayCreateRGBA8Texture(creatureRGBA.data(), cW, cH);
+      overlaySetSpriteTexture(overlay, creatureTex);
+    } else {
+      std::cerr << "Failed to load creature sprite texture: "
+                << (folder + "/creatures/creature.png") << std::endl;
+    }
+  }
+
   FlowMap flowMap;
 
   // Initial projector quad covers whole windows
@@ -250,7 +268,6 @@ int main() {
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  const std::string folder = AR_IMAGE_FOLDER;
   std::vector<GLuint> lutTex;
   std::vector<std::vector<uint8_t>> lutCPU;
   std::vector<int> lutCPUWidth;
@@ -548,6 +565,8 @@ int main() {
     // bind textures
     glActiveTexture_(GL_TEXTURE0);
     glBindTexture_(GL_TEXTURE_2D, depthTex);
+    glActiveTexture_(GL_TEXTURE2);
+    glBindTexture_(GL_TEXTURE_2D, flowTex);
 
     if (use_animated) {
       glUniform1f_(u_time, (float)tSim);
@@ -566,7 +585,7 @@ int main() {
 
     std::vector<OverlaySprite> sprites;
     for (const auto &c : creatures) {
-      sprites.push_back({c.u, c.v, 10.0f, 1.0f, 1.0f, 1.0f, 0.9f});
+      sprites.push_back({c.u, c.v, 20.0f, 1.0f, 1.0f, 1.0f, 0.9f, 1});
     }
     for (const auto &d : drops) {
       auto base = sampleCurrentCmap(0.1);
