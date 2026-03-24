@@ -37,6 +37,7 @@
 #include "realsense.hpp"
 #endif
 
+#include <array>
 #include <filesystem>
 
 // ----------------------------- Controls / State -----------------------------
@@ -248,6 +249,8 @@ int main() {
 
   const std::string folder = AR_IMAGE_FOLDER;
   std::vector<GLuint> lutTex;
+  std::vector<std::vector<uint8_t>> lutCPU;
+  std::vector<int> lutCPUWidth;
 
   if (use_animated) {
     auto tileLayer = [](int mat, int variant, int frame) {
@@ -299,6 +302,8 @@ int main() {
         int w = 0;
         auto data = load_png_as_1d_texture(entry.path().string(), w);
         if (!data.empty()) {
+          lutCPU.push_back(data);
+          lutCPUWidth.push_back(w);
           lutTex.push_back(makeColormap1D(data, w));
           std::printf("Loaded colormap from %s\n",
                       entry.path().string().c_str());
@@ -308,6 +313,38 @@ int main() {
   }
 
   gCtl.colormapCount = (int)lutTex.size();
+
+  auto sampleCurrentCmap = [&](float t) {
+    t = std::clamp(t, 0.0f, 1.0f);
+    if (lutCPU.empty() || gCtl.colormapIndex < 0 ||
+        gCtl.colormapIndex >= (int)lutCPU.size()) {
+      return std::array<float, 3>{0.2f, 0.8f, 1.0f};
+    }
+
+    const auto &img = lutCPU[gCtl.colormapIndex];
+    const int w = lutCPUWidth[gCtl.colormapIndex];
+    if (w <= 0 || img.size() < size_t(3 * w)) {
+      return std::array<float, 3>{0.2f, 0.8f, 1.0f};
+    }
+
+    float x = t * float(w - 1);
+    int x0 = std::clamp(int(std::floor(x)), 0, w - 1);
+    int x1 = std::clamp(x0 + 1, 0, w - 1);
+    float a = x - float(x0);
+
+    auto c0r = img[3 * x0 + 0] / 255.0f;
+    auto c0g = img[3 * x0 + 1] / 255.0f;
+    auto c0b = img[3 * x0 + 2] / 255.0f;
+    auto c1r = img[3 * x1 + 0] / 255.0f;
+    auto c1g = img[3 * x1 + 1] / 255.0f;
+    auto c1b = img[3 * x1 + 2] / 255.0f;
+
+    return std::array<float, 3>{
+        c0r * (1.0f - a) + c1r * a,
+        c0g * (1.0f - a) + c1g * a,
+        c0b * (1.0f - a) + c1b * a,
+    };
+  };
 
   // Uniform locations
   glUseProgram_(prog);
@@ -497,13 +534,25 @@ int main() {
       sprites.push_back({c.u, c.v, 10.0f, 1.0f, 1.0f, 1.0f, 0.9f});
     }
     for (const auto &d : drops) {
+      auto base = sampleCurrentCmap(0.1);
+
       for (size_t i = 0; i < d.trail.size(); ++i) {
         float t = float(i + 1) / float(d.trail.size());
         const auto &[u, v] = d.trail[i];
-        sprites.push_back(
-            {u, v, 8.0f * t, 0.2f, 0.8f, 1.0f, 0.02f + 0.18f * t});
+
+        // Push trail color slightly toward cyan/white so it still reads as
+        // water.
+        float rr = 0.65f * base[0] + 0.35f * 0.75f;
+        float rg = 0.65f * base[1] + 0.35f * 0.95f;
+        float rb = 0.65f * base[2] + 0.35f * 1.00f;
+
+        sprites.push_back({u, v, 8.0f * t, rr, rg, rb, 0.02f + 0.18f * t});
       }
-      sprites.push_back({d.u, d.v, 10.0f, 0.2f, 0.8f, 1.0f, 0.9f});
+      float rr = 0.50f * base[0] + 0.50f * 0.75f;
+      float rg = 0.50f * base[1] + 0.50f * 0.95f;
+      float rb = 0.50f * base[2] + 0.50f * 1.00f;
+
+      sprites.push_back({d.u, d.v, 10.0f, rr, rg, rb, 0.9f});
     }
 
     overlayDraw(overlay, overlayProgram, winW, winH, P8, sprites);
