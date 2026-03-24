@@ -37,18 +37,18 @@ public:
 
     bool hit_wall = false;
 
-    if (u < 0.01f) {
+    if (u < 0.0f) {
       u = 0.0f;
       hit_wall = true;
-    } else if (u > 0.99f) {
+    } else if (u > 1.0f) {
       u = 1.0f;
       hit_wall = true;
     }
 
-    if (v < 0.01f) {
+    if (v < 0.0f) {
       v = 0.0f;
       hit_wall = true;
-    } else if (v > 0.99f) {
+    } else if (v > 1.0f) {
       v = 1.0f;
       hit_wall = true;
     }
