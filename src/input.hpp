@@ -34,12 +34,13 @@ static void updateGamepad(Controls &c, float dt) {
   float RT = std::clamp((rt + 1.0f) * 0.5f, 0.0f, 1.0f);
   float LT = std::clamp((lt + 1.0f) * 0.5f, 0.0f, 1.0f);
 
-  // gamma with left Y
-  c.gamma += (-ly) * (0.8f * dt);
-  c.gamma = std::clamp(c.gamma, 0.2f, 3.0f);
+  // // gamma with left Y
+  // c.gamma += (-ly) * (0.8f * dt);
+  // c.gamma = std::clamp(c.gamma, 0.2f, 3.0f);
 
   // buttons
-  bool A = (s.buttons[GLFW_GAMEPAD_BUTTON_A] == GLFW_PRESS);
+  bool A = (s.buttons[GLFW_GAMEPAD_BUTTON_A] == GLFW_PRESS ||
+            s.buttons[GLFW_GAMEPAD_BUTTON_A] == GLFW_REPEAT);
   bool B = (s.buttons[GLFW_GAMEPAD_BUTTON_B] == GLFW_PRESS ||
             s.buttons[GLFW_GAMEPAD_BUTTON_B] == GLFW_REPEAT);
   bool X = (s.buttons[GLFW_GAMEPAD_BUTTON_X] == GLFW_PRESS);
@@ -49,11 +50,19 @@ static void updateGamepad(Controls &c, float dt) {
 
   if (c.bEdge.pressed(B))
     c.makeItRain = true;
+  if (c.aEdge.pressed(X))
+    c.megaRain = true;
+
+  if (c.yEdge.pressed(Y))
+    c.clearMess = true;
 
   if (c.aEdge.pressed(A))
-    c.colormapIndex = (c.colormapIndex + 1) % std::max(1, c.colormapCount);
-  if (c.yEdge.pressed(Y))
-    c.reset();
+    c.spawnCreature = true;
+  // spawn creature
+  // if (c.yEdge.pressed(Y))
+  //   clear rain and creatures
+  // 	X = mega rain burst
+
   if (c.lbEdge.pressed(LB))
     c.colormapIndex =
         (c.colormapIndex - 1 + c.colormapCount) % std::max(1, c.colormapCount);
@@ -94,6 +103,19 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 
   // mode toggles (press only)
   if (action == GLFW_PRESS) {
+    if (key == GLFW_KEY_K) {
+      gCtl.megaRain = true;
+      return;
+    }
+    if (key == GLFW_KEY_Y) {
+      gCtl.clearMess = true;
+      return;
+    }
+    if (key == GLFW_KEY_L) {
+      gCtl.spawnCreature = true;
+      return;
+    }
+
     if (key == GLFW_KEY_C) {
       gMode = (gMode == PROJ) ? NONE : PROJ;
       return;

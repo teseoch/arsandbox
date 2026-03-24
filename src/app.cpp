@@ -62,6 +62,9 @@ struct Controls {
 
   bool freezeDepth = false;
   bool makeItRain = false;
+  bool megaRain = false;
+  bool clearMess = false;
+  bool spawnCreature = false;
 
   // Gamepad edges
   ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge;
@@ -413,8 +416,7 @@ int main() {
     updateGamepad(gCtl, dt);
 
     if (gCtl.makeItRain) {
-      Drop d;
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 5; i++) {
         Drop d;
         d.reset(((float)std::rand()) / RAND_MAX,
                 ((float)std::rand()) / RAND_MAX,
@@ -422,6 +424,27 @@ int main() {
         drops.push_back(d);
       }
       gCtl.makeItRain = false;
+    }
+
+    if (gCtl.megaRain) {
+      float centerX = ((float)std::rand()) / RAND_MAX;
+      float centerY = ((float)std::rand()) / RAND_MAX;
+      for (int i = 0; i < 500; i++) {
+        Drop d;
+        float r = 0.1f * (((float)std::rand()) / RAND_MAX - 0.5f);
+        float angle = 2 * 3.14159f * (((float)std::rand()) / RAND_MAX);
+        d.reset(centerX + r * std::cos(angle), centerY + r * std::sin(angle),
+                25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
+        drops.push_back(d);
+      }
+      gCtl.megaRain = false;
+    }
+
+    if (gCtl.clearMess) {
+      drops.clear();
+      creatures.clear();
+      flowMap.clear();
+      gCtl.clearMess = false;
     }
 
     // Update synthetic depth
