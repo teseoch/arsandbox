@@ -32,6 +32,8 @@
 #include "image.hpp"
 #include "overlay.hpp"
 #include "utils.hpp"
+#include "types.hpp"
+#include "TagDetector.hpp"
 
 #ifdef SANDBOX_WITH_REALSENSE
 #include "realsense.hpp"
@@ -209,7 +211,7 @@ int main()
 	}
 
 	FlowMap flowMap;
-	// TagDetector tagDetector;
+	TagDetector tagDetector;
 
 	// Initial projector quad covers whole windows
 
@@ -593,8 +595,13 @@ int main()
 
 		flowMap.diffuse_once();
 
-		// auto detectedTags = tagDetector.detect(gCtl.depth);
-
+		auto detectedTags = tagDetector.detect(gCtl.depth);
+		for (const auto &t : detectedTags)
+		{
+			std::cout << "id=" << t.id
+					  << " margin=" << t.decision_margin
+					  << " uv=(" << t.uv.x << "," << t.uv.y << ")\n";
+		}
 		glActiveTexture_(GL_TEXTURE2);
 		glBindTexture_(GL_TEXTURE_2D, flowTex);
 		glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, flowMap.w, flowMap.h, GL_RED, GL_FLOAT, flowMap.flow.data());

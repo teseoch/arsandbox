@@ -30,6 +30,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 include(imgui)
 include(GLFW)
+include(apriltag)
 
 
 
@@ -41,7 +42,7 @@ add_executable(arsandbox
           src/overlay.cpp)
 target_compile_definitions(arsandbox PRIVATE AR_IMAGE_FOLDER=\"${PROJECT_SOURCE_DIR}/images\" )
 target_compile_definitions(arsandbox PRIVATE AR_DEPTH_FOLDER=\"${PROJECT_SOURCE_DIR}\" )
-target_link_libraries(arsandbox PRIVATE glfw::glfw imgui::imgui)
+target_link_libraries(arsandbox PRIVATE glfw::glfw imgui::imgui apriltag::apriltag)
 
 if(LINUX)
   find_package(OpenGL REQUIRED)
