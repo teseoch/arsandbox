@@ -428,7 +428,7 @@ static void readDepthFrame(Depth &depth, const std::string &filename)
 	{
 		std::istringstream row(line);
 		std::vector<float> rowValues;
-		unsigned int value = 0;
+		float value = 0;
 		while (row >> value)
 		{
 			rowValues.push_back(static_cast<float>(value));
