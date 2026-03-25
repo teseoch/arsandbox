@@ -602,6 +602,7 @@ int main()
 					  << " margin=" << t.decision_margin
 					  << " uv=(" << t.uv.x << "," << t.uv.y << ")\n";
 		}
+		std::cout << std::endl;
 		glActiveTexture_(GL_TEXTURE2);
 		glBindTexture_(GL_TEXTURE_2D, flowTex);
 		glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, flowMap.w, flowMap.h, GL_RED, GL_FLOAT, flowMap.flow.data());
