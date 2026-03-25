@@ -130,6 +130,7 @@ const static int tileH = 64;
 int main()
 {
 
+	double lastMegaRainTime = 0.0;
 	const std::string folder = AR_IMAGE_FOLDER;
 
 	std::srand(std::time(nullptr));
@@ -273,8 +274,6 @@ int main()
 	readDepthFrame(gCtl.depth, depth_folder + "/depth_debug.txt");
 	gCtl.depth.rgb = load_png(depth_folder + "/depth_debug.png", gCtl.depth.w, gCtl.depth.h);
 #endif
-	gCtl.depth.blur();
-	gCtl.depth.blur();
 	gCtl.depth.uv_quad = gU;
 	flowMap.resize(gCtl.depth.w, gCtl.depth.h);
 
@@ -595,14 +594,6 @@ int main()
 
 		flowMap.diffuse_once();
 
-		auto detectedTags = tagDetector.detect(gCtl.depth);
-		for (const auto &t : detectedTags)
-		{
-			std::cout << "id=" << t.id
-					  << " margin=" << t.decision_margin
-					  << " uv=(" << t.uv.x << "," << t.uv.y << ")\n";
-		}
-		std::cout << std::endl;
 		glActiveTexture_(GL_TEXTURE2);
 		glBindTexture_(GL_TEXTURE_2D, flowTex);
 		glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, flowMap.w, flowMap.h, GL_RED, GL_FLOAT, flowMap.flow.data());
@@ -653,6 +644,71 @@ int main()
 		glDrawArrays_(GL_TRIANGLE_FAN, 0, 4);
 
 		std::vector<OverlaySprite> sprites;
+
+		auto detectedTags = tagDetector.detect(gCtl.depth);
+		for (const auto &t : detectedTags)
+		{
+			auto [u, v] = gCtl.depth.inverse_warp_uv(t.uv.x, t.uv.y);
+
+			const float ru = 0.5;
+			const float rv = 1.0f;
+
+			if (t.id == 8 && t.decision_margin > 30.0f && tNow - lastMegaRainTime > 0.5)
+			{
+				lastMegaRainTime = tNow;
+
+				for (int i = 0; i < 100; i++)
+				{
+					Drop d;
+
+					float r = 0.05f * (((float)std::rand()) / RAND_MAX) + 0.01f;
+					float angle = 2 * 3.14159f * (((float)std::rand()) / RAND_MAX);
+
+					float du = ru * r * std::cos(angle);
+					float dv = rv * r * std::sin(angle);
+
+					d.reset(
+						std::clamp(u + du, 0.0f, 1.0f),
+						std::clamp(v + dv, 0.0f, 1.0f),
+						25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
+
+					drops.push_back(d);
+				}
+			}
+			else if (t.id == 9 && t.decision_margin > 30.0f)
+			{
+				for (int i = 0; i < 5; i++)
+				{
+					float r = 0.35f * (((float)std::rand()) / RAND_MAX) + 0.01f;
+					float angle = 2 * 3.14159f * (((float)std::rand()) / RAND_MAX);
+
+					float du = ru * r * std::cos(angle);
+					float dv = rv * r * std::sin(angle);
+
+					Drop d;
+					d.reset(
+						std::clamp(u + du, 0.0f, 1.0f),
+						std::clamp(v + dv, 0.0f, 1.0f),
+						25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
+					drops.push_back(d);
+				}
+
+				sprites.push_back({
+					u, v,
+					1000.0f, // size
+					0.0f,
+					0.0f,
+					0.7f, 0.7f, 0.7f, // gray
+					0.4f              // alpha
+				});
+			}
+
+			std::cout << "id=" << t.id
+					  << " margin=" << t.decision_margin
+					  << " uv=(" << t.uv.x << "," << t.uv.y << ")\n";
+		}
+		std::cout << std::endl;
+
 		for (const auto &c : creatures)
 		{
 			sprites.push_back(
