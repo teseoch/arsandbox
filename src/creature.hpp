@@ -13,9 +13,16 @@ public:
 	float dir; // +1 or -1 (cw/ccw)
 	float angle = 0.0f;
 	float flip_x = 0.0f;
+	float init_dx = 0.0f;
+	float init_dy = 0.0f;
+	float init_timer = 5.0f; // seconds of initial directed motion
 
-	const float tangential_speed = 0.035f;
-	const float contour_gain = 1.4f;
+	int life = 10; // frames
+
+	float tangential_speed = 0.035f;
+	float contour_gain = 1.4f;
+
+	bool alive() const { return life > 0; }
 
 	void step(const Depth &hf, float dt)
 	{
@@ -29,8 +36,17 @@ public:
 		float tx = dir * (-gy / gnorm);
 		float ty = dir * (gx / gnorm);
 
+		// initial push from spawn direction
+		if (init_timer > 0.0f)
+		{
+			tx = tx / 4 + init_dx;
+			ty = ty / 4 + init_dy;
+			init_timer -= dt;
+		}
+
 		float fx = tx;
 		float fy = ty;
+
 		float nx = gx / gnorm;
 		float ny = gy / gnorm;
 

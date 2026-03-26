@@ -9,7 +9,7 @@ class Drop
 public:
 	float u = 0.0f, v = 0.0f;
 	float life = 0.0f; // seconds
-	std::deque<std::pair<float, float>> trail;
+	std::deque<Vec2> trail;
 	int max_trail = 30;
 
 private:

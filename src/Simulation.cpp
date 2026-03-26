@@ -140,24 +140,41 @@ void Simulation::mega2(float t, float u, float v)
 	float centerX, centerY;
 }
 
-void Simulation::spawnGoat(const Depth &depth, float x, float y, float h0, float dirx, float diry)
+void Simulation::spawnGoat(const Depth &depth, float t, float x, float y, float dirx, float diry)
 {
-	for (int i = 0; i < 5; i++)
+
+	if (t - lastGoatTime < 2.0f)
+		return;
+
+	lastGoatTime = t;
+
+	Creature c;
+	c.u = x;
+	c.v = y;
+	c.h0 = depth.sample_bilinear(c.u, c.v);
+	c.dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+
+	// store initial direction (normalized)
+	float n = std::sqrt(dirx * dirx + diry * diry);
+	if (n > 1e-6f)
 	{
-		Creature c;
-		c.u = ((float)std::rand()) / RAND_MAX;
-		c.v = ((float)std::rand()) / RAND_MAX;
-		c.h0 = depth.sample_bilinear(c.u, c.v);
-		c.dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
-		creatures.push_back(c);
+		c.init_dx = dirx / n;
+		c.init_dy = diry / n;
 	}
+	else
+	{
+		c.init_dx = 0.0f;
+		c.init_dy = 0.0f;
+	}
+
+	creatures.push_back(c);
 }
 
-void Simulation::spawnPig(const Depth &depth, float x, float y, float h0, float dirx, float diry)
+void Simulation::spawnPig(const Depth &depth, float t, float x, float y, float dirx, float diry)
 {
 }
 
-void Simulation::spawnFish(const Depth &depth, float x, float y, float h0, float dirx, float diry)
+void Simulation::spawnFish(const Depth &depth, float t, float x, float y, float dirx, float diry)
 {
 }
 
@@ -176,6 +193,8 @@ void Simulation::step(const Depth &depth, float dt)
 {
 	for (auto &c : creatures)
 		c.step(depth, dt);
+
+	creatures.erase(std::remove_if(creatures.begin(), creatures.end(), [](const Creature &c) { return !c.alive(); }), creatures.end());
 
 	for (auto &d : rain_)
 		d.step(depth, dt);

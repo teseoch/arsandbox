@@ -21,9 +21,9 @@ public:
 	void mega1(float t = -1, float x = -1.0f, float y = -1.0f);
 	void mega2(float t = -1, float x = -1.0f, float y = -1.0f);
 
-	void spawnGoat(const Depth &depth, float x = -1.0f, float y = -1.0f, float h0 = -1.0f, float dirx = 0.0f, float diry = 0.0f);
-	void spawnPig(const Depth &depth, float x = -1.0f, float y = -1.0f, float h0 = -1.0f, float dirx = 0.0f, float diry = 0.0f);
-	void spawnFish(const Depth &depth, float x = -1.0f, float y = -1.0f, float h0 = -1.0f, float dirx = 0.0f, float diry = 0.0f);
+	void spawnGoat(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
+	void spawnPig(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
+	void spawnFish(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
 
 	void step(const Depth &depth, float dt);
 
@@ -65,8 +65,12 @@ private:
 	std::vector<Creature> creatures;
 	std::shared_ptr<Biome> currentBiome;
 
-	double lastMega1Time = 0.0;
-	double lastMega2Time = 0.0;
+	float lastMega1Time = 0.0f;
+	float lastMega2Time = 0.0f;
+
+	float lastGoatTime = 0.0f;
+	float lastPigTime = 0.0f;
+	float lastFishTime = 0.0f;
 
 	constexpr static const float ru = 0.5f;
 	constexpr static const float rv = 1.0f;

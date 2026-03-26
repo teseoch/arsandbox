@@ -86,7 +86,7 @@ public:
 
 			if (sp > 0.0005f)
 			{
-				const auto &[u, v] = d.trail.empty() ? std::pair<float, float>{d.u, d.v} : d.trail.back();
+				const auto &[u, v] = d.trail.empty() ? Vec2{d.u, d.v} : d.trail.back();
 				splat(u, v, 5.0f);
 			}
 		}

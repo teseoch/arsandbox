@@ -419,13 +419,17 @@ int main()
 		{
 			auto [u, v] = gCtl.depth.inverse_warp_uv(t.uv.x, t.uv.y);
 
-			if (t.id == 8 && t.decision_margin > 30.0f)
+			if (t.id == 10 && t.decision_margin > 30.0f)
+			{
+				// sim.mega2(tNow, u, v);
+			}
+			else if (t.id == 8 && t.decision_margin > 30.0f)
 			{
 				// sim.mega1(tNow, u, v);
 			}
-			else if (t.id == 9 && t.decision_margin > 30.0f)
+			else if (t.id == 8 && t.decision_margin > 30.0f)
 			{
-				sim.rain(tNow, u, v);
+				// sim.rain(tNow, u, v);
 
 				// sprites.push_back({
 				// 	u, v,
@@ -435,6 +439,11 @@ int main()
 				// 	0.7f, 0.7f, 0.7f, // gray
 				// 	0.4f              // alpha
 				// });
+			}
+			else if (t.id == 7 && t.decision_margin > 30.0f)
+			{
+				const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
+				sim.spawnGoat(gCtl.depth, tNow, u, v, dir.x, dir.y);
 			}
 
 			std::cout << "id=" << t.id
