@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "drop.hpp"
+
 class FlowMap
 {
 public:
@@ -64,6 +66,28 @@ public:
 				float e = tmp[y * w + (x + 1)];
 				float wv = tmp[y * w + (x - 1)];
 				flow[y * w + x] = 0.86f * c + 0.035f * (n + s + e + wv);
+			}
+		}
+	}
+
+	void flowDrops(const std::vector<Drop> &drops)
+	{
+		for (const auto &d : drops)
+		{
+			float sp = 0.0f;
+			if (d.trail.size() >= 2)
+			{
+				const auto &[u0, v0] = d.trail[d.trail.size() - 2];
+				const auto &[u1, v1] = d.trail[d.trail.size() - 1];
+				float du = u1 - u0;
+				float dv = v1 - v0;
+				sp = std::sqrt(du * du + dv * dv);
+			}
+
+			if (sp > 0.0005f)
+			{
+				const auto &[u, v] = d.trail.empty() ? std::pair<float, float>{d.u, d.v} : d.trail.back();
+				splat(u, v, 5.0f);
 			}
 		}
 	}

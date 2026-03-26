@@ -34,6 +34,11 @@
 #include "utils.hpp"
 #include "types.hpp"
 #include "TagDetector.hpp"
+#include "input.hpp"
+#include "Simulation.hpp"
+
+#include "animated_shaders.hpp"
+#include "c_map_shaders.hpp"
 
 #ifdef SANDBOX_WITH_REALSENSE
 #include "realsense.hpp"
@@ -42,79 +47,6 @@
 #include <array>
 #include <filesystem>
 #include <memory>
-
-// ----------------------------- Controls / State -----------------------------
-enum Mode
-{
-	NONE,
-	PROJ,
-	UV
-};
-
-struct ButtonEdge
-{
-	bool prev = false;
-	bool pressed(bool now)
-	{
-		bool r = (now && !prev);
-		prev = now;
-		return r;
-	}
-};
-
-struct Controls
-{
-	Depth depth;
-
-	float gamma = 1.0f;
-
-	int colormapIndex = 0;
-	int colormapCount = 0;
-
-	bool freezeDepth = false;
-	bool makeItRain = false;
-	bool megaRain = false;
-	bool clearMess = false;
-	bool spawnCreature = false;
-
-	// Gamepad edges
-	ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge;
-	bool gamepadPresent = false;
-
-	void reset()
-	{
-#ifndef SANDBOX_WITH_REALSENSE
-		depth.w = 320;
-		depth.h = 240;
-#endif
-		gamma = 1.0f;
-		colormapIndex = 0;
-		freezeDepth = false;
-	}
-};
-
-static Controls gCtl;
-
-static inline Vec2 clamp01(Vec2 p)
-{
-	p.x = std::max(0.0f, std::min(1.0f, p.x));
-	p.y = std::max(0.0f, std::min(1.0f, p.y));
-	return p;
-}
-
-static Mode gMode = NONE;
-static int gSelCorner = 0;
-
-// Projector quad in *window pixel coords* (you warp this to match box corners)
-static Quad gP;
-
-// Depth UV quad in *normalized* [0,1] coords (you warp this to match depth ROI)
-static Quad gU;
-
-#include "FlowMap.hpp"
-#include "animated_shaders.hpp"
-#include "c_map_shaders.hpp"
-#include "input.hpp"
 
 static bool use_animated = false;
 const static bool fullscreen = true;
@@ -126,11 +58,39 @@ const static int MAT_COUNT = 3;
 const static int tileW = 64;
 const static int tileH = 64;
 
+void render_particles(
+	const std::vector<Drop> &parts,
+	const std::array<float, 3> &col,
+	const std::array<float, 2> &sizes,
+	std::vector<OverlaySprite> &sprites)
+{
+	for (const auto &d : parts)
+	{
+		for (size_t i = 0; i < d.trail.size(); ++i)
+		{
+			float t = float(i + 1) / float(d.trail.size());
+			const auto &[u, v] = d.trail[i];
+
+			// Push trail color slightly toward cyan/white so it still reads as
+			// water.
+			float rr = 0.65f * col[0] + 0.35f * 0.75f;
+			float rg = 0.65f * col[1] + 0.35f * 0.95f;
+			float rb = 0.65f * col[2] + 0.35f * 1.00f;
+
+			sprites.push_back(
+				{u, v, sizes[0] * t, 0.0f, 0.0f, rr, rg, rb, 0.02f + 0.18f * t});
+		}
+		float rr = 0.50f * col[0] + 0.50f * 0.75f;
+		float rg = 0.50f * col[1] + 0.50f * 0.95f;
+		float rb = 0.50f * col[2] + 0.50f * 1.00f;
+
+		sprites.push_back({d.u, d.v, sizes[1], 0.0f, 0.0f, rr, rg, rb, 0.9f});
+	}
+}
+
 // ----------------------------- Main -----------------------------------------
 int main()
 {
-
-	double lastMegaRainTime = 0.0;
 	const std::string folder = AR_IMAGE_FOLDER;
 
 	std::srand(std::time(nullptr));
@@ -196,6 +156,7 @@ int main()
 
 	{
 		int cW = 0, cH = 0;
+		// TODO
 		std::vector<uint8_t> creatureRGBA =
 			load_png_rgba(folder + "/creatures/creature.png", cW, cH);
 		if (!creatureRGBA.empty() && cW > 0 && cH > 0)
@@ -209,11 +170,9 @@ int main()
 		}
 	}
 
-	FlowMap flowMap;
 	TagDetector tagDetector;
 
 	// Initial projector quad covers whole windows
-
 	if (std::filesystem::exists("calib.txt"))
 	{
 		std::ifstream logIn("calib.txt");
@@ -273,7 +232,9 @@ int main()
 	gCtl.depth.rgb = load_png(depth_folder + "/depth_debug.png", gCtl.depth.w, gCtl.depth.h);
 #endif
 	gCtl.depth.uv_quad = gU;
-	flowMap.resize(gCtl.depth.w, gCtl.depth.h);
+
+	Simulation sim;
+	sim.init(gCtl.depth.w, gCtl.depth.h);
 
 	glDisable(GL_DEPTH_TEST);
 
@@ -289,11 +250,13 @@ int main()
 	GLuint flowTex = 0;
 	glGenTextures_(1, &flowTex);
 	glBindTexture_(GL_TEXTURE_2D, flowTex);
-	glTexImage2D_(GL_TEXTURE_2D, 0, GL_R32F, flowMap.w, flowMap.h, 0, GL_RED, GL_FLOAT, flowMap.flow.data());
+	glTexImage2D_(GL_TEXTURE_2D, 0, GL_R32F, sim.getFlowMap1().w, sim.getFlowMap1().h, 0, GL_RED, GL_FLOAT, sim.getFlowMap1().flow.data());
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	// TODO floawmap2
 
 	std::vector<GLuint> lutTex;
 	std::vector<std::vector<uint8_t>> lutCPU;
@@ -370,39 +333,6 @@ int main()
 
 	gCtl.colormapCount = (int)lutTex.size();
 
-	auto sampleCurrentCmap = [&](float t) {
-		t = std::clamp(t, 0.0f, 1.0f);
-		if (lutCPU.empty() || gCtl.colormapIndex < 0 || gCtl.colormapIndex >= (int)lutCPU.size())
-		{
-			return std::array<float, 3>{0.2f, 0.8f, 1.0f};
-		}
-
-		const auto &img = lutCPU[gCtl.colormapIndex];
-		const int w = lutCPUWidth[gCtl.colormapIndex];
-		if (w <= 0 || img.size() < size_t(3 * w))
-		{
-			return std::array<float, 3>{0.2f, 0.8f, 1.0f};
-		}
-
-		float x = t * float(w - 1);
-		int x0 = std::clamp(int(std::floor(x)), 0, w - 1);
-		int x1 = std::clamp(x0 + 1, 0, w - 1);
-		float a = x - float(x0);
-
-		auto c0r = img[3 * x0 + 0] / 255.0f;
-		auto c0g = img[3 * x0 + 1] / 255.0f;
-		auto c0b = img[3 * x0 + 2] / 255.0f;
-		auto c1r = img[3 * x1 + 0] / 255.0f;
-		auto c1g = img[3 * x1 + 1] / 255.0f;
-		auto c1b = img[3 * x1 + 2] / 255.0f;
-
-		return std::array<float, 3>{
-			c0r * (1.0f - a) + c1r * a,
-			c0g * (1.0f - a) + c1g * a,
-			c0b * (1.0f - a) + c1b * a,
-		};
-	};
-
 	// Uniform locations
 	glUseProgram_(prog);
 	const GLint loc_projQuad = glGetUniformLocation_(prog, "u_projQuad");
@@ -439,31 +369,6 @@ int main()
 	}
 
 	double tPrev = glfwGetTime();
-	double tSim = 0.0;
-
-	std::vector<Creature> creatures;
-	for (int i = 0; i < 10; i++)
-	{
-		Creature c;
-		c.u = ((float)std::rand()) / RAND_MAX;
-		c.v = ((float)std::rand()) / RAND_MAX;
-		// c.u = 0.5f;
-		// c.v = 0.5f;
-		c.h0 = gCtl.depth.sample_bilinear(c.u, c.v);
-		c.dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
-		creatures.push_back(c);
-	}
-
-	std::vector<Drop> drops;
-	for (int i = 0; i < 10; i++)
-	{
-		Drop d;
-		d.reset(
-			((float)std::rand()) / RAND_MAX,
-			((float)std::rand()) / RAND_MAX,
-			25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
-		drops.push_back(d);
-	}
 
 	while (!glfwWindowShouldClose(win))
 	{
@@ -480,69 +385,39 @@ int main()
 
 		if (gCtl.makeItRain)
 		{
-			for (int i = 0; i < 5; i++)
-			{
-				Drop d;
-				d.reset(
-					((float)std::rand()) / RAND_MAX,
-					((float)std::rand()) / RAND_MAX,
-					25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
-				drops.push_back(d);
-			}
+			sim.randomRain();
 			gCtl.makeItRain = false;
 		}
 
+		// todo
 		if (gCtl.megaRain)
 		{
-			float centerX = ((float)std::rand()) / RAND_MAX;
-			float centerY = ((float)std::rand()) / RAND_MAX;
-			for (int i = 0; i < 500; i++)
-			{
-				Drop d;
-				float r = 0.1f * (((float)std::rand()) / RAND_MAX - 0.5f);
-				float angle = 2 * 3.14159f * (((float)std::rand()) / RAND_MAX);
-				d.reset(
-					centerX + r * std::cos(angle),
-					centerY + r * std::sin(angle),
-					25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
-				drops.push_back(d);
-			}
+			sim.mega1(); // random center
 			gCtl.megaRain = false;
 		}
 
 		if (gCtl.spawnCreature)
 		{
-			for (int i = 0; i < 5; i++)
-			{
-				Creature c;
-				c.u = ((float)std::rand()) / RAND_MAX;
-				c.v = ((float)std::rand()) / RAND_MAX;
-				c.h0 = gCtl.depth.sample_bilinear(c.u, c.v);
-				c.dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
-				creatures.push_back(c);
-			}
+			sim.spawnGoat(gCtl.depth); // random pos and params
 			gCtl.spawnCreature = false;
 		}
 
 		if (gCtl.clearMess)
 		{
-			drops.clear();
-			creatures.clear();
-			flowMap.clear();
+			sim.clear();
 			gCtl.clearMess = false;
 		}
 
 		// Update synthetic depth
 		if (!gCtl.freezeDepth)
 		{
-			tSim += dt;
-
 #ifdef SANDBOX_WITH_REALSENSE
 			realsense.grab(gCtl.depth);
 			gCtl.depth.blur();
 			gCtl.depth.blur();
 #else
-			// generateDepthFrame(gCtl.depth, tSim);
+			// generateDepthFrame(gCtl.depth, tNow);
+			// gCtl.depth.blur();
 			// gCtl.depth.blur();
 			// readDepthFrame(gCtl.depth, "depth_debug.txt");
 #endif
@@ -563,38 +438,13 @@ int main()
 			glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, gCtl.depth.w, gCtl.depth.h, GL_RED, GL_FLOAT, gCtl.depth.depth.data());
 		}
 
-		for (auto &c : creatures)
-			c.step(gCtl.depth, dt);
-		for (auto &d : drops)
-			d.step(gCtl.depth, dt);
-		drops.erase(std::remove_if(drops.begin(), drops.end(), [](const Drop &d) { return !d.isAlive(); }), drops.end());
-
-		flowMap.decay(0.98f);
-
-		for (const auto &d : drops)
-		{
-			float sp = 0.0f;
-			if (d.trail.size() >= 2)
-			{
-				const auto &[u0, v0] = d.trail[d.trail.size() - 2];
-				const auto &[u1, v1] = d.trail[d.trail.size() - 1];
-				float du = u1 - u0;
-				float dv = v1 - v0;
-				sp = std::sqrt(du * du + dv * dv);
-			}
-
-			if (sp > 0.0005f)
-			{
-				const auto &[u, v] = d.trail.empty() ? std::pair<float, float>{d.u, d.v} : d.trail.back();
-				flowMap.splat(u, v, 5.0f);
-			}
-		}
-
-		flowMap.diffuse_once();
+		sim.step(gCtl.depth, dt);
 
 		glActiveTexture_(GL_TEXTURE2);
 		glBindTexture_(GL_TEXTURE_2D, flowTex);
-		glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, flowMap.w, flowMap.h, GL_RED, GL_FLOAT, flowMap.flow.data());
+		glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, sim.getFlowMap1().w, sim.getFlowMap1().h, GL_RED, GL_FLOAT, sim.getFlowMap1().flow.data());
+
+		// todo update flowmap2
 
 		// Clear to black
 		glClearColor(0, 0, 0, 1);
@@ -625,7 +475,7 @@ int main()
 
 		if (use_animated)
 		{
-			glUniform1f_(u_time, (float)tSim);
+			glUniform1f_(u_time, (float)tNow);
 			glUniform1f_(u_tileScale, 14.0f);
 
 			glActiveTexture_(GL_TEXTURE1);
@@ -648,57 +498,22 @@ int main()
 		{
 			auto [u, v] = gCtl.depth.inverse_warp_uv(t.uv.x, t.uv.y);
 
-			const float ru = 0.5;
-			const float rv = 1.0f;
-
-			if (t.id == 8 && t.decision_margin > 30.0f && tNow - lastMegaRainTime > 0.5)
+			if (t.id == 8 && t.decision_margin > 30.0f)
 			{
-				lastMegaRainTime = tNow;
-
-				for (int i = 0; i < 100; i++)
-				{
-					Drop d;
-
-					float r = 0.05f * (((float)std::rand()) / RAND_MAX) + 0.01f;
-					float angle = 2 * 3.14159f * (((float)std::rand()) / RAND_MAX);
-
-					float du = ru * r * std::cos(angle);
-					float dv = rv * r * std::sin(angle);
-
-					d.reset(
-						std::clamp(u + du, 0.0f, 1.0f),
-						std::clamp(v + dv, 0.0f, 1.0f),
-						25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
-
-					drops.push_back(d);
-				}
+				// sim.mega1(tNow, u, v);
 			}
 			else if (t.id == 9 && t.decision_margin > 30.0f)
 			{
-				for (int i = 0; i < 5; i++)
-				{
-					float r = 0.35f * (((float)std::rand()) / RAND_MAX) + 0.01f;
-					float angle = 2 * 3.14159f * (((float)std::rand()) / RAND_MAX);
+				sim.rain(tNow, u, v);
 
-					float du = ru * r * std::cos(angle);
-					float dv = rv * r * std::sin(angle);
-
-					Drop d;
-					d.reset(
-						std::clamp(u + du, 0.0f, 1.0f),
-						std::clamp(v + dv, 0.0f, 1.0f),
-						25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
-					drops.push_back(d);
-				}
-
-				sprites.push_back({
-					u, v,
-					1000.0f, // size
-					0.0f,
-					0.0f,
-					0.7f, 0.7f, 0.7f, // gray
-					0.4f              // alpha
-				});
+				// sprites.push_back({
+				// 	u, v,
+				// 	1000.0f, // size
+				// 	0.0f,
+				// 	0.0f,
+				// 	0.7f, 0.7f, 0.7f, // gray
+				// 	0.4f              // alpha
+				// });
 			}
 
 			std::cout << "id=" << t.id
@@ -707,44 +522,20 @@ int main()
 		}
 		std::cout << std::endl;
 
-		for (const auto &c : creatures)
+		for (const auto &c : sim.getCreatures())
 		{
 			sprites.push_back(
 				{c.u, c.v, 30.0f, c.angle, c.flip_x, 1.0f, 1.0f, 1.0f, 0.9f, 1});
 		}
-		for (const auto &d : drops)
-		{
-			auto base = sampleCurrentCmap(0.1);
 
-			for (size_t i = 0; i < d.trail.size(); ++i)
-			{
-				float t = float(i + 1) / float(d.trail.size());
-				const auto &[u, v] = d.trail[i];
-
-				// Push trail color slightly toward cyan/white so it still reads as
-				// water.
-				float rr = 0.65f * base[0] + 0.35f * 0.75f;
-				float rg = 0.65f * base[1] + 0.35f * 0.95f;
-				float rb = 0.65f * base[2] + 0.35f * 1.00f;
-
-				sprites.push_back(
-					{u, v, 8.0f * t, 0.0f, 0.0f, rr, rg, rb, 0.02f + 0.18f * t});
-			}
-			float rr = 0.50f * base[0] + 0.50f * 0.75f;
-			float rg = 0.50f * base[1] + 0.50f * 0.95f;
-			float rb = 0.50f * base[2] + 0.50f * 1.00f;
-
-			sprites.push_back({d.u, d.v, 10.0f, 0.0f, 0.0f, rr, rg, rb, 0.9f});
-		}
+		render_particles(sim.getRain(), sim.rainColor(), sim.rainSize(), sprites);
+		render_particles(sim.getMega1(), sim.mega1Color(), sim.mega1Size(), sprites);
+		render_particles(sim.getMega2(), sim.mega2Color(), sim.mega2Size(), sprites);
 
 		overlay.draw(overlayProgram, winW, winH, P8, sprites);
 
 		glfwSwapBuffers(win);
 		glfwPollEvents();
-
-		// GLint ws = 0;
-		// glGetTexParameteriv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, &ws);
-		// std::cout << "wrap_s=" << ws << "\n"; // should be GL_REPEAT
 
 		// auto err = glGetError();
 		// if (err != GL_NO_ERROR)

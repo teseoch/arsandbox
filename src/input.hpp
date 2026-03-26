@@ -5,6 +5,56 @@
 #include <fstream>
 #include <iostream>
 
+// ----------------------------- Controls / State -----------------------------
+enum Mode
+{
+	NONE,
+	PROJ,
+	UV
+};
+
+struct ButtonEdge
+{
+	bool prev = false;
+	bool pressed(bool now)
+	{
+		bool r = (now && !prev);
+		prev = now;
+		return r;
+	}
+};
+
+struct Controls
+{
+	Depth depth;
+
+	float gamma = 1.0f;
+
+	int colormapIndex = 0;
+	int colormapCount = 0;
+
+	bool freezeDepth = false;
+	bool makeItRain = false;
+	bool megaRain = false;
+	bool clearMess = false;
+	bool spawnCreature = false;
+
+	// Gamepad edges
+	ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge;
+	bool gamepadPresent = false;
+
+	void reset()
+	{
+#ifndef SANDBOX_WITH_REALSENSE
+		depth.w = 320;
+		depth.h = 240;
+#endif
+		gamma = 1.0f;
+		colormapIndex = 0;
+		freezeDepth = false;
+	}
+};
+
 // ----------------------------- Input Helpers --------------------------------
 static float stepScale(int mods, float base)
 {
@@ -14,6 +64,23 @@ static float stepScale(int mods, float base)
 		return base * 5.0f; // coarse
 	return base;
 }
+
+static inline Vec2 clamp01(Vec2 p)
+{
+	p.x = std::max(0.0f, std::min(1.0f, p.x));
+	p.y = std::max(0.0f, std::min(1.0f, p.y));
+	return p;
+}
+
+static Mode gMode = NONE;
+static int gSelCorner = 0;
+
+static Controls gCtl;
+
+// Projector quad in *window pixel coords* (you warp this to match box corners)
+static Quad gP;
+// Depth UV quad in *normalized* [0,1] coords (you warp this to match depth ROI)
+static Quad gU;
 
 static void updateGamepad(Controls &c, float dt)
 {
