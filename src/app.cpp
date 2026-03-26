@@ -192,7 +192,7 @@ int main()
 	glfwSetKeyCallback(win, keyCallback);
 
 	// once
-	OverlayRenderer overlay = overlayInit();
+	OverlayRenderer overlay;
 
 	{
 		int cW = 0, cH = 0;
@@ -200,9 +200,7 @@ int main()
 			load_png_rgba(folder + "/creatures/creature.png", cW, cH);
 		if (!creatureRGBA.empty() && cW > 0 && cH > 0)
 		{
-			GLuint creatureTex =
-				overlayCreateRGBA8Texture(creatureRGBA.data(), cW, cH);
-			overlaySetSpriteTexture(overlay, creatureTex);
+			overlay.createRGBA8Texture(creatureRGBA.data(), cW, cH);
 		}
 		else
 		{
@@ -258,7 +256,7 @@ int main()
 	glDeleteShader_(vs);
 	glDeleteShader_(fs);
 
-	GLuint overlayProgram = createOverlayProgram();
+	GLuint overlayProgram = overlay.createProgram();
 
 	GLuint vao = 0;
 	glGenVertexArrays_(1, &vao);
@@ -739,7 +737,7 @@ int main()
 			sprites.push_back({d.u, d.v, 10.0f, 0.0f, 0.0f, rr, rg, rb, 0.9f});
 		}
 
-		overlayDraw(overlay, overlayProgram, winW, winH, P8, sprites);
+		overlay.draw(overlayProgram, winW, winH, P8, sprites);
 
 		glfwSwapBuffers(win);
 		glfwPollEvents();

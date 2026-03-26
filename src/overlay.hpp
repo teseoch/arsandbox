@@ -23,22 +23,22 @@ struct OverlaySprite
 	float uv1_y = 1.0f;
 };
 
-struct OverlayRenderer
+class OverlayRenderer
 {
+public:
 	GLuint vao = 0;
 	GLuint quadVBO = 0;
 	GLuint instVBO = 0;
 	GLuint spriteTex = 0;
+
+	OverlayRenderer();
+
+	void createRGBA8Texture(const uint8_t *rgba, int w, int h);
+
+	void draw(
+		GLuint overlayProgram, int screenW, int screenH,
+		const float projQuadPx[8], // [x0,y0, x1,y1, x2,y2, x3,y3] TL,TR,BR,BL
+		const std::vector<OverlaySprite> &sprites);
+
+	GLuint createProgram();
 };
-
-OverlayRenderer overlayInit();
-
-void overlaySetSpriteTexture(OverlayRenderer &R, GLuint tex);
-GLuint overlayCreateRGBA8Texture(const unsigned char *rgba, int w, int h);
-
-void overlayDraw(
-	const OverlayRenderer &R, GLuint overlayProgram, int screenW, int screenH,
-	const float projQuadPx[8], // [x0,y0, x1,y1, x2,y2, x3,y3] TL,TR,BR,BL
-	const std::vector<OverlaySprite> &sprites);
-
-GLuint createOverlayProgram();

@@ -78,20 +78,18 @@ void main(){
 }
 )GLSL";
 
-OverlayRenderer overlayInit()
+OverlayRenderer::OverlayRenderer()
 {
-	OverlayRenderer R;
-
 	// Two triangles (6 verts), aPos in [-1,1]
 	const float quadVerts[] = {-1.f, -1.f, 1.f, -1.f, 1.f, 1.f,
 							   -1.f, -1.f, 1.f, 1.f, -1.f, 1.f};
 
-	glGenVertexArrays_(1, &R.vao);
-	glBindVertexArray_(R.vao);
+	glGenVertexArrays_(1, &vao);
+	glBindVertexArray_(vao);
 
 	// Quad vertex buffer
-	glGenBuffers_(1, &R.quadVBO);
-	glBindBuffer_(GL_ARRAY_BUFFER, R.quadVBO);
+	glGenBuffers_(1, &quadVBO);
+	glBindBuffer_(GL_ARRAY_BUFFER, quadVBO);
 	glBufferData_(GL_ARRAY_BUFFER, sizeof(quadVerts), quadVerts, GL_STATIC_DRAW);
 
 	// location 0: aPos
@@ -100,8 +98,8 @@ OverlayRenderer overlayInit()
 						   (void *)0);
 
 	// Instance buffer (streamed every frame)
-	glGenBuffers_(1, &R.instVBO);
-	glBindBuffer_(GL_ARRAY_BUFFER, R.instVBO);
+	glGenBuffers_(1, &instVBO);
+	glBindBuffer_(GL_ARRAY_BUFFER, instVBO);
 	glBufferData_(GL_ARRAY_BUFFER, 0, nullptr, GL_STREAM_DRAW);
 
 	// Each instance:
@@ -154,17 +152,10 @@ OverlayRenderer overlayInit()
 	glBindBuffer_(GL_ARRAY_BUFFER, 0);
 
 	const uint8_t white[4] = {255, 255, 255, 255};
-	R.spriteTex = overlayCreateRGBA8Texture(white, 1, 1);
-
-	return R;
+	createRGBA8Texture(white, 1, 1);
 }
 
-void overlaySetSpriteTexture(OverlayRenderer &R, GLuint tex)
-{
-	R.spriteTex = tex;
-}
-
-GLuint overlayCreateRGBA8Texture(const uint8_t *rgba, int w, int h)
+void OverlayRenderer::createRGBA8Texture(const uint8_t *rgba, int w, int h)
 {
 	GLuint tex = 0;
 	glGenTextures_(1, &tex);
@@ -176,11 +167,12 @@ GLuint overlayCreateRGBA8Texture(const uint8_t *rgba, int w, int h)
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glBindTexture_(GL_TEXTURE_2D, 0);
-	return tex;
+
+	spriteTex = tex;
 }
 
-void overlayDraw(
-	const OverlayRenderer &R, GLuint overlayProgram, int screenW, int screenH,
+void OverlayRenderer::draw(
+	GLuint overlayProgram, int screenW, int screenH,
 	const float projQuadPx[8], // [x0,y0, x1,y1, x2,y2, x3,y3] TL,TR,BR,BL
 	const std::vector<OverlaySprite> &sprites)
 {
@@ -200,16 +192,16 @@ void overlayDraw(
 	GLint locSpriteTex = glGetUniformLocation_(overlayProgram, "u_spriteTex");
 	glUniform1i_(locSpriteTex, 3);
 	glActiveTexture_(GL_TEXTURE3);
-	glBindTexture_(GL_TEXTURE_2D, R.spriteTex);
+	glBindTexture_(GL_TEXTURE_2D, spriteTex);
 
 	// Enable alpha blending
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glBindVertexArray_(R.vao);
+	glBindVertexArray_(vao);
 
 	// Upload instance buffer as raw floats
-	glBindBuffer_(GL_ARRAY_BUFFER, R.instVBO);
+	glBindBuffer_(GL_ARRAY_BUFFER, instVBO);
 	glBufferData_(GL_ARRAY_BUFFER,
 				  (GLsizeiptr)(sprites.size() * sizeof(OverlaySprite)),
 				  sprites.data(), GL_STREAM_DRAW);
@@ -222,7 +214,7 @@ void overlayDraw(
 }
 
 // Returns 0 on failure.
-GLuint createOverlayProgram()
+GLuint OverlayRenderer::createProgram()
 {
 	GLuint vs = compileShader(GL_VERTEX_SHADER, kOverlayVert);
 	if (!vs)
