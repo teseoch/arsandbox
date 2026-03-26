@@ -78,161 +78,167 @@ void main(){
 }
 )GLSL";
 
-OverlayRenderer overlayInit() {
-  OverlayRenderer R;
+OverlayRenderer overlayInit()
+{
+	OverlayRenderer R;
 
-  // Two triangles (6 verts), aPos in [-1,1]
-  const float quadVerts[] = {-1.f, -1.f, 1.f, -1.f, 1.f,  1.f,
-                             -1.f, -1.f, 1.f, 1.f,  -1.f, 1.f};
+	// Two triangles (6 verts), aPos in [-1,1]
+	const float quadVerts[] = {-1.f, -1.f, 1.f, -1.f, 1.f, 1.f,
+							   -1.f, -1.f, 1.f, 1.f, -1.f, 1.f};
 
-  glGenVertexArrays_(1, &R.vao);
-  glBindVertexArray_(R.vao);
+	glGenVertexArrays_(1, &R.vao);
+	glBindVertexArray_(R.vao);
 
-  // Quad vertex buffer
-  glGenBuffers_(1, &R.quadVBO);
-  glBindBuffer_(GL_ARRAY_BUFFER, R.quadVBO);
-  glBufferData_(GL_ARRAY_BUFFER, sizeof(quadVerts), quadVerts, GL_STATIC_DRAW);
+	// Quad vertex buffer
+	glGenBuffers_(1, &R.quadVBO);
+	glBindBuffer_(GL_ARRAY_BUFFER, R.quadVBO);
+	glBufferData_(GL_ARRAY_BUFFER, sizeof(quadVerts), quadVerts, GL_STATIC_DRAW);
 
-  // location 0: aPos
-  glEnableVertexAttribArray_(0);
-  glVertexAttribPointer_(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
-                         (void *)0);
+	// location 0: aPos
+	glEnableVertexAttribArray_(0);
+	glVertexAttribPointer_(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
+						   (void *)0);
 
-  // Instance buffer (streamed every frame)
-  glGenBuffers_(1, &R.instVBO);
-  glBindBuffer_(GL_ARRAY_BUFFER, R.instVBO);
-  glBufferData_(GL_ARRAY_BUFFER, 0, nullptr, GL_STREAM_DRAW);
+	// Instance buffer (streamed every frame)
+	glGenBuffers_(1, &R.instVBO);
+	glBindBuffer_(GL_ARRAY_BUFFER, R.instVBO);
+	glBufferData_(GL_ARRAY_BUFFER, 0, nullptr, GL_STREAM_DRAW);
 
-  // Each instance:
-  // st_x, st_y, radius_px, angle_rad, r, g, b, a, kind, flip_x,
-  // uv0_x, uv0_y, uv1_x, uv1_y  (14 floats)
-  const GLsizei stride = 14 * sizeof(float);
+	// Each instance:
+	// st_x, st_y, radius_px, angle_rad, r, g, b, a, kind, flip_x,
+	// uv0_x, uv0_y, uv1_x, uv1_y  (14 floats)
+	const GLsizei stride = 14 * sizeof(float);
 
-  // location 1: iST (vec2)
-  glEnableVertexAttribArray_(1);
-  glVertexAttribPointer_(1, 2, GL_FLOAT, GL_FALSE, stride, (void *)(0));
-  glVertexAttribDivisor_(1, 1);
+	// location 1: iST (vec2)
+	glEnableVertexAttribArray_(1);
+	glVertexAttribPointer_(1, 2, GL_FLOAT, GL_FALSE, stride, (void *)(0));
+	glVertexAttribDivisor_(1, 1);
 
-  // location 2: iRadiusPx (float)
-  glEnableVertexAttribArray_(2);
-  glVertexAttribPointer_(2, 1, GL_FLOAT, GL_FALSE, stride,
-                         (void *)(2 * sizeof(float)));
-  glVertexAttribDivisor_(2, 1);
+	// location 2: iRadiusPx (float)
+	glEnableVertexAttribArray_(2);
+	glVertexAttribPointer_(2, 1, GL_FLOAT, GL_FALSE, stride,
+						   (void *)(2 * sizeof(float)));
+	glVertexAttribDivisor_(2, 1);
 
-  // location 3: iAngleRad (float)
-  glEnableVertexAttribArray_(3);
-  glVertexAttribPointer_(3, 1, GL_FLOAT, GL_FALSE, stride,
-                         (void *)(3 * sizeof(float)));
-  glVertexAttribDivisor_(3, 1);
+	// location 3: iAngleRad (float)
+	glEnableVertexAttribArray_(3);
+	glVertexAttribPointer_(3, 1, GL_FLOAT, GL_FALSE, stride,
+						   (void *)(3 * sizeof(float)));
+	glVertexAttribDivisor_(3, 1);
 
-  // location 4: iFlipX (float)
-  glEnableVertexAttribArray_(4);
-  glVertexAttribPointer_(4, 1, GL_FLOAT, GL_FALSE, stride,
-                         (void *)(4 * sizeof(float)));
-  glVertexAttribDivisor_(4, 1);
+	// location 4: iFlipX (float)
+	glEnableVertexAttribArray_(4);
+	glVertexAttribPointer_(4, 1, GL_FLOAT, GL_FALSE, stride,
+						   (void *)(4 * sizeof(float)));
+	glVertexAttribDivisor_(4, 1);
 
-  // location 4: iColor (vec4)
-  glEnableVertexAttribArray_(5);
-  glVertexAttribPointer_(5, 4, GL_FLOAT, GL_FALSE, stride,
-                         (void *)(5 * sizeof(float)));
-  glVertexAttribDivisor_(5, 1);
+	// location 4: iColor (vec4)
+	glEnableVertexAttribArray_(5);
+	glVertexAttribPointer_(5, 4, GL_FLOAT, GL_FALSE, stride,
+						   (void *)(5 * sizeof(float)));
+	glVertexAttribDivisor_(5, 1);
 
-  // location 5: iKind (float)
-  glEnableVertexAttribArray_(6);
-  glVertexAttribPointer_(6, 1, GL_FLOAT, GL_FALSE, stride,
-                         (void *)(9 * sizeof(float)));
-  glVertexAttribDivisor_(6, 1);
+	// location 5: iKind (float)
+	glEnableVertexAttribArray_(6);
+	glVertexAttribPointer_(6, 1, GL_FLOAT, GL_FALSE, stride,
+						   (void *)(9 * sizeof(float)));
+	glVertexAttribDivisor_(6, 1);
 
-  // location 6: iUVRect (vec4)
-  glEnableVertexAttribArray_(7);
-  glVertexAttribPointer_(7, 4, GL_FLOAT, GL_FALSE, stride,
-                         (void *)(10 * sizeof(float)));
-  glVertexAttribDivisor_(7, 1);
+	// location 6: iUVRect (vec4)
+	glEnableVertexAttribArray_(7);
+	glVertexAttribPointer_(7, 4, GL_FLOAT, GL_FALSE, stride,
+						   (void *)(10 * sizeof(float)));
+	glVertexAttribDivisor_(7, 1);
 
-  glBindVertexArray_(0);
-  glBindBuffer_(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray_(0);
+	glBindBuffer_(GL_ARRAY_BUFFER, 0);
 
-  const uint8_t white[4] = {255, 255, 255, 255};
-  R.spriteTex = overlayCreateRGBA8Texture(white, 1, 1);
+	const uint8_t white[4] = {255, 255, 255, 255};
+	R.spriteTex = overlayCreateRGBA8Texture(white, 1, 1);
 
-  return R;
+	return R;
 }
 
-void overlaySetSpriteTexture(OverlayRenderer &R, GLuint tex) {
-  R.spriteTex = tex;
+void overlaySetSpriteTexture(OverlayRenderer &R, GLuint tex)
+{
+	R.spriteTex = tex;
 }
 
-GLuint overlayCreateRGBA8Texture(const uint8_t *rgba, int w, int h) {
-  GLuint tex = 0;
-  glGenTextures_(1, &tex);
-  glBindTexture_(GL_TEXTURE_2D, tex);
-  glTexImage2D_(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                rgba);
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glBindTexture_(GL_TEXTURE_2D, 0);
-  return tex;
+GLuint overlayCreateRGBA8Texture(const uint8_t *rgba, int w, int h)
+{
+	GLuint tex = 0;
+	glGenTextures_(1, &tex);
+	glBindTexture_(GL_TEXTURE_2D, tex);
+	glTexImage2D_(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+				  rgba);
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBindTexture_(GL_TEXTURE_2D, 0);
+	return tex;
 }
 
 void overlayDraw(
-    const OverlayRenderer &R, GLuint overlayProgram, int screenW, int screenH,
-    const float projQuadPx[8], // [x0,y0, x1,y1, x2,y2, x3,y3] TL,TR,BR,BL
-    const std::vector<OverlaySprite> &sprites) {
-  if (sprites.empty())
-    return;
+	const OverlayRenderer &R, GLuint overlayProgram, int screenW, int screenH,
+	const float projQuadPx[8], // [x0,y0, x1,y1, x2,y2, x3,y3] TL,TR,BR,BL
+	const std::vector<OverlaySprite> &sprites)
+{
+	if (sprites.empty())
+		return;
 
-  glUseProgram_(overlayProgram);
+	glUseProgram_(overlayProgram);
 
-  // uniforms
-  GLint locSize = glGetUniformLocation_(overlayProgram, "u_screenSize");
-  glUniform2f_(locSize, (float)screenW, (float)screenH);
+	// uniforms
+	GLint locSize = glGetUniformLocation_(overlayProgram, "u_screenSize");
+	glUniform2f_(locSize, (float)screenW, (float)screenH);
 
-  // u_projQuad is an array of vec2 => upload 4 vec2 as 8 floats
-  GLint locQuad = glGetUniformLocation_(overlayProgram, "u_projQuad");
-  glUniform2fv_(locQuad, 4, projQuadPx);
+	// u_projQuad is an array of vec2 => upload 4 vec2 as 8 floats
+	GLint locQuad = glGetUniformLocation_(overlayProgram, "u_projQuad");
+	glUniform2fv_(locQuad, 4, projQuadPx);
 
-  GLint locSpriteTex = glGetUniformLocation_(overlayProgram, "u_spriteTex");
-  glUniform1i_(locSpriteTex, 3);
-  glActiveTexture_(GL_TEXTURE3);
-  glBindTexture_(GL_TEXTURE_2D, R.spriteTex);
+	GLint locSpriteTex = glGetUniformLocation_(overlayProgram, "u_spriteTex");
+	glUniform1i_(locSpriteTex, 3);
+	glActiveTexture_(GL_TEXTURE3);
+	glBindTexture_(GL_TEXTURE_2D, R.spriteTex);
 
-  // Enable alpha blending
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	// Enable alpha blending
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-  glBindVertexArray_(R.vao);
+	glBindVertexArray_(R.vao);
 
-  // Upload instance buffer as raw floats
-  glBindBuffer_(GL_ARRAY_BUFFER, R.instVBO);
-  glBufferData_(GL_ARRAY_BUFFER,
-                (GLsizeiptr)(sprites.size() * sizeof(OverlaySprite)),
-                sprites.data(), GL_STREAM_DRAW);
+	// Upload instance buffer as raw floats
+	glBindBuffer_(GL_ARRAY_BUFFER, R.instVBO);
+	glBufferData_(GL_ARRAY_BUFFER,
+				  (GLsizeiptr)(sprites.size() * sizeof(OverlaySprite)),
+				  sprites.data(), GL_STREAM_DRAW);
 
-  // Draw 6 vertices per quad, instanced
-  glDrawArraysInstanced_(GL_TRIANGLES, 0, 6, (GLsizei)sprites.size());
+	// Draw 6 vertices per quad, instanced
+	glDrawArraysInstanced_(GL_TRIANGLES, 0, 6, (GLsizei)sprites.size());
 
-  glBindVertexArray_(0);
-  glBindBuffer_(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray_(0);
+	glBindBuffer_(GL_ARRAY_BUFFER, 0);
 }
 
 // Returns 0 on failure.
-GLuint createOverlayProgram() {
-  GLuint vs = compileShader(GL_VERTEX_SHADER, kOverlayVert);
-  if (!vs)
-    return 0;
-  GLuint fs = compileShader(GL_FRAGMENT_SHADER, kOverlayFrag);
-  if (!fs) {
-    glDeleteShader_(vs);
-    return 0;
-  }
+GLuint createOverlayProgram()
+{
+	GLuint vs = compileShader(GL_VERTEX_SHADER, kOverlayVert);
+	if (!vs)
+		return 0;
+	GLuint fs = compileShader(GL_FRAGMENT_SHADER, kOverlayFrag);
+	if (!fs)
+	{
+		glDeleteShader_(vs);
+		return 0;
+	}
 
-  GLuint prog = linkProgram(vs, fs);
+	GLuint prog = linkProgram(vs, fs);
 
-  // shaders can be deleted after linking
-  glDeleteShader_(vs);
-  glDeleteShader_(fs);
+	// shaders can be deleted after linking
+	glDeleteShader_(vs);
+	glDeleteShader_(fs);
 
-  return prog;
+	return prog;
 }
