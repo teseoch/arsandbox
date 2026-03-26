@@ -1,13 +1,35 @@
 #pragma once
 
 #include <string>
+#include <array>
+
+#include "CMap.hpp"
 
 class Biome
 {
 public:
 	virtual ~Biome() = default;
 
-	virtual const std::string &texture() const = 0;
+	const GLuint &texture() const { return cmap.lutTex; }
+
+	inline const std::array<float, 2> &rainSize() const { return rainSize_; }
+	inline const std::array<float, 3> &rainColor() const { return rainColor_; }
+
+	inline const std::array<float, 2> &mega1Size() const { return mega1Size_; }
+	inline const std::array<float, 3> &mega1Color() const { return mega1Color_; }
+
+	inline const std::array<float, 2> &mega2Size() const { return mega2Size_; }
+	inline const std::array<float, 3> &mega2Color() const { return mega2Color_; }
+
+protected:
+	CMap cmap;
+
+	std::array<float, 2> rainSize_;
+	std::array<float, 3> rainColor_;
+	std::array<float, 2> mega1Size_;
+	std::array<float, 3> mega1Color_;
+	std::array<float, 2> mega2Size_;
+	std::array<float, 3> mega2Color_;
 };
 
 // auto base = sampleCurrentCmap(0.1);

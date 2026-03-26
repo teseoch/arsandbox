@@ -13,6 +13,8 @@ class Depth;
 class Simulation
 {
 public:
+	Simulation();
+
 	void rain(const float t, const float u, const float v);
 	void randomRain();
 
@@ -29,47 +31,28 @@ public:
 
 	void clear();
 
+	void nextBiome();
+	void prevBiome();
+
 	inline const std::vector<Creature> &getCreatures() const { return creatures; }
 
 	inline const std::vector<Drop> &getRain() const { return rain_; }
 	inline const std::vector<Drop> &getMega1() const { return drops1; }
 	inline const std::vector<Drop> &getMega2() const { return drops2; }
 
-	inline const std::array<float, 2> &rainSize() const
-	{
-		static std::array<float, 2> size{3.0f, 6.0f};
-		return size;
-	}
-	inline const std::array<float, 3> &rainColor() const
-	{
-		static std::array<float, 3> color{0.0f, 0.314118f, 0.643529f};
-		return color;
-	}
+	inline const std::array<float, 2> &rainSize() const { return currentBiome->rainSize(); }
+	inline const std::array<float, 3> &rainColor() const { return currentBiome->rainColor(); }
 
-	inline const std::array<float, 2> &mega1Size() const
-	{
-		static std::array<float, 2> size{8.0f, 10.0f};
-		return size;
-	}
-	inline const std::array<float, 3> &mega1Color() const
-	{
-		static std::array<float, 3> color{0.0f, 0.314118f, 0.643529f};
-		return color;
-	}
+	inline const std::array<float, 2> &mega1Size() const { return currentBiome->mega1Size(); }
+	inline const std::array<float, 3> &mega1Color() const { return currentBiome->mega1Color(); }
 
-	inline const std::array<float, 2> &mega2Size() const
-	{
-		static std::array<float, 2> size{8.0f, 10.0f};
-		return size;
-	}
-	inline const std::array<float, 3> &mega2Color() const
-	{
-		static std::array<float, 3> color{0.0f, 0.314118f, 0.643529f};
-		return color;
-	}
+	inline const std::array<float, 2> &mega2Size() const { return currentBiome->mega2Size(); }
+	inline const std::array<float, 3> &mega2Color() const { return currentBiome->mega2Color(); }
 
 	inline const FlowMap &getFlowMap1() const { return flowMap1; }
 	inline const FlowMap &getFlowMap2() const { return flowMap2; }
+
+	inline const GLuint &texture() const { return currentBiome->texture(); }
 
 private:
 	FlowMap flowMap1;

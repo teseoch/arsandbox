@@ -30,6 +30,8 @@ struct Controls
 
 	float gamma = 1.0f;
 
+	int nextBiome = 0;
+	bool useCMap = false;
 	int colormapIndex = 0;
 	int colormapCount = 0;
 
@@ -129,11 +131,27 @@ static void updateGamepad(Controls &c, float dt)
 	//   clear rain and creatures
 	// 	X = mega rain burst
 
-	if (c.lbEdge.pressed(LB))
-		c.colormapIndex =
-			(c.colormapIndex - 1 + c.colormapCount) % std::max(1, c.colormapCount);
-	if (c.rbEdge.pressed(RB))
+	if (c.lbEdge.pressed(LT))
+	{
+		c.colormapIndex = (c.colormapIndex - 1 + c.colormapCount) % std::max(1, c.colormapCount);
+		c.useCMap = true;
+	}
+	if (c.rbEdge.pressed(RT))
+	{
 		c.colormapIndex = (c.colormapIndex + 1) % std::max(1, c.colormapCount);
+		c.useCMap = true;
+	}
+
+	if (c.rbEdge.pressed(LB))
+	{
+		c.nextBiome = -1;
+		c.useCMap = false;
+	}
+	if (c.lbEdge.pressed(RB))
+	{
+		c.nextBiome = 1;
+		c.useCMap = false;
+	}
 }
 
 static void moveSelectedCorner(Quad &Q, int key, float step)
@@ -208,15 +226,31 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 		}
 
 		// colormap cycle
+		if (key == GLFW_KEY_N)
+		{
+			gCtl.nextBiome = -1;
+			gCtl.useCMap = false;
+			return;
+		}
 		if (key == GLFW_KEY_M)
+		{
+			gCtl.nextBiome = -1;
+			gCtl.useCMap = false;
+			return;
+		}
+
+		// colormap cycle
+		if (key == GLFW_KEY_I)
 		{
 			gCtl.colormapIndex =
 				(gCtl.colormapIndex + 1) % std::max(1, gCtl.colormapCount);
+			gCtl.useCMap = true;
 			return;
 		}
-		if (key == GLFW_KEY_N)
+		if (key == GLFW_KEY_O)
 		{
 			gCtl.colormapIndex = (gCtl.colormapIndex - 1 + gCtl.colormapCount) % std::max(1, gCtl.colormapCount);
+			gCtl.useCMap = true;
 			return;
 		}
 

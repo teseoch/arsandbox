@@ -36,6 +36,7 @@
 #include "TagDetector.hpp"
 #include "input.hpp"
 #include "Simulation.hpp"
+#include "CMap.hpp"
 
 #include "animated_shaders.hpp"
 #include "c_map_shaders.hpp"
@@ -249,29 +250,21 @@ int main()
 
 	// TODO floawmap2
 
-	std::vector<GLuint> lutTex;
-	std::vector<std::vector<uint8_t>> lutCPU;
-	std::vector<int> lutCPUWidth;
-
+	std::vector<CMap> colormaps;
 	// loop over *.png in folder images
-	for (const auto &entry :
-		 std::filesystem::directory_iterator(folder + "/cmaps"))
+	for (const auto &entry : std::filesystem::directory_iterator(folder + "/cmaps"))
 	{
 		if (entry.is_regular_file() && entry.path().extension() == ".png")
 		{
-			int w = 0;
-			auto data = load_png_as_1d_texture(entry.path().string(), w);
-			if (!data.empty())
-			{
-				lutCPU.push_back(data);
-				lutCPUWidth.push_back(w);
-				lutTex.push_back(makeColormap1D(data, w));
-				std::printf("Loaded colormap from %s\n", entry.path().string().c_str());
-			}
+			CMap cmap;
+			if (cmap.load(entry.path().string()))
+				colormaps.push_back(std::move(cmap));
+			else
+				std::cerr << "Failed to load colormap: " << entry.path() << std::endl;
 		}
 	}
 
-	gCtl.colormapCount = (int)lutTex.size();
+	gCtl.colormapCount = (int)colormaps.size();
 
 	// Uniform locations
 	glUseProgram_(prog);
@@ -332,6 +325,16 @@ int main()
 		{
 			sim.clear();
 			gCtl.clearMess = false;
+		}
+
+		if (gCtl.nextBiome != 0)
+		{
+			if (gCtl.nextBiome > 0)
+				sim.nextBiome();
+			else
+				sim.prevBiome();
+
+			gCtl.nextBiome = 0;
 		}
 
 		// Update synthetic depth
@@ -400,7 +403,10 @@ int main()
 		glBindTexture_(GL_TEXTURE_2D, flowTex);
 
 		glActiveTexture_(GL_TEXTURE1);
-		glBindTexture_(GL_TEXTURE_1D, lutTex[gCtl.colormapIndex]);
+		if (gCtl.useCMap)
+			glBindTexture_(GL_TEXTURE_1D, colormaps[gCtl.colormapIndex].lutTex);
+		else
+			glBindTexture_(GL_TEXTURE_1D, sim.texture());
 
 		// draw the warped quad
 		glBindVertexArray_(vao);

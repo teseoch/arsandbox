@@ -1,8 +1,15 @@
 #include "Simulation.hpp"
 
+#include "PlainBiome.hpp"
+
 float random_float(float a, float b)
 {
 	return a + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (b - a)));
+}
+
+Simulation::Simulation()
+{
+	currentBiome = std::make_shared<PlainBiome>();
 }
 
 void Simulation::rain(const float t, const float u, const float v)
@@ -196,4 +203,14 @@ void Simulation::init(const int w, const int h)
 {
 	flowMap1.resize(w, h);
 	flowMap2.resize(w, h);
+}
+
+void Simulation::nextBiome()
+{
+	// TODO
+}
+
+void Simulation::prevBiome()
+{
+	// TODO
 }
