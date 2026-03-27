@@ -425,7 +425,7 @@ int main()
 			}
 			else if (t.id == 8 && t.decision_margin > 30.0f)
 			{
-				// sim.mega1(tNow, u, v);
+				sim.mega1(tNow, u, v);
 			}
 			else if (t.id == 8 && t.decision_margin > 30.0f)
 			{

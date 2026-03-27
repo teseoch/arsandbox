@@ -1,6 +1,7 @@
 #pragma once
 
 #include "depth.hpp"
+#include "FlowMap.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -21,10 +22,14 @@ public:
 
 	float tangential_speed = 0.035f;
 	float contour_gain = 1.4f;
+	float wash_gain = 0.18f;
+	float water_panic_gain = 0.12f;
+
+	// float panic_cooldown = 0.0f;
 
 	bool alive() const { return life > 0; }
 
-	void step(const Depth &hf, float dt)
+	void step(const Depth &hf, const FlowMap &water, float dt)
 	{
 		auto [gx, gy] = hf.gradient_uv(u, v);
 		float gnorm = std::sqrt(gx * gx + gy * gy) + 1e-6f;
@@ -99,5 +104,30 @@ public:
 
 		if (hit_wall)
 			dir = -dir;
+
+		// Water makes goats panic a bit and pushes them downhill.
+		float wet = water.sample_bilinear(u, v);
+		wet = std::clamp((wet - 0.08f) / 0.30f, 0.0f, 1.0f);
+		if (wet > 0.0f)
+		{
+
+			// Add a little random-ish panic by biasing direction away from the current
+			// contour motion and drift slightly downhill.
+			float downhill_x = -gx / gnorm;
+			float downhill_y = -gy / gnorm;
+			float speed_scale = 1.0f + 0.8f * wet;
+			float contour_scale = 1.0f - 0.7f * wet;
+
+			u += (speed_scale * tangential_speed * tx + contour_scale * contour_gain * cx) * dt;
+			v += (speed_scale * tangential_speed * ty + contour_scale * contour_gain * cy) * dt;
+			// panic_cooldown -= dt;
+
+			// Strong water makes the goat more likely to flip contour direction.
+			// if (wet > 0.6f && panic_cooldown <= 0.0f && std::rand() / float(RAND_MAX) < 0.4f)
+			// {
+			// 	dir = -dir;
+			// 	panic_cooldown = 0.5f; // half a second
+			// }
+		}
 	}
 };

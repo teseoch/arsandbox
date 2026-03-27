@@ -91,4 +91,33 @@ public:
 			}
 		}
 	}
+
+	float sample_bilinear(float u, float v) const
+	{
+		if (w <= 0 || h <= 0 || flow.empty())
+			return 0.0f;
+
+		u = std::clamp(u, 0.0f, 1.0f);
+		v = std::clamp(v, 0.0f, 1.0f);
+
+		float x = u * float(w - 1);
+		float y = v * float(h - 1);
+
+		int x0 = int(x);
+		int y0 = int(y);
+		int x1 = std::min(x0 + 1, w - 1);
+		int y1 = std::min(y0 + 1, h - 1);
+
+		float tx = x - float(x0);
+		float ty = y - float(y0);
+
+		float f00 = flow[y0 * w + x0];
+		float f10 = flow[y0 * w + x1];
+		float f01 = flow[y1 * w + x0];
+		float f11 = flow[y1 * w + x1];
+
+		float f0 = f00 * (1.0f - tx) + f10 * tx;
+		float f1 = f01 * (1.0f - tx) + f11 * tx;
+		return f0 * (1.0f - ty) + f1 * ty;
+	}
 };

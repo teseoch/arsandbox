@@ -192,7 +192,7 @@ void Simulation::clear()
 void Simulation::step(const Depth &depth, float dt)
 {
 	for (auto &c : creatures)
-		c.step(depth, dt);
+		c.step(depth, flowMap1, dt);
 
 	creatures.erase(std::remove_if(creatures.begin(), creatures.end(), [](const Creature &c) { return !c.alive(); }), creatures.end());
 
