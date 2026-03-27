@@ -34,6 +34,11 @@ public:
 	float wash_gain = 0.18f;
 	float water_panic_gain = 0.12f;
 
+	float low_altitude_threshold = 0.72f;
+	float low_altitude_gain = 0.1f;
+	float low_altitude_cooldown = 0.0f;
+	float low_altitude_cooldown_time = 1.0f;
+
 	// float panic_cooldown = 0.0f;
 	float lava_cooldown = 0.0f;
 
@@ -53,9 +58,19 @@ public:
 		float gnorm = std::sqrt(gx * gx + gy * gy) + 1e-6f;
 
 		if (gnorm < 1e-4f)
+		{
+			stuck_timer += dt;
+
+			if (stuck_timer > 5.0f)
+			{
+				life = 0;
+				state = CreatureState::DEAD;
+			}
 			return;
+		}
 
 		state = CreatureState::NORMAL;
+		low_altitude_cooldown = low_altitude_cooldown - dt;
 
 		const float old_u = u;
 		const float old_v = v;
@@ -98,6 +113,24 @@ public:
 		float cx = -(err) * (gx / (gnorm * gnorm));
 		float cy = -(err) * (gy / (gnorm * gnorm));
 
+		float wet = water.sample_bilinear(u, v);
+		wet = std::clamp((wet - 0.08f) / 0.30f, 0.0f, 1.0f);
+
+		float hot = lava.sample_bilinear(u, v);
+		hot = std::clamp((hot - 0.04f) / 0.18f, 0.0f, 1.0f);
+
+		if (wet <= 0.0f && hot <= 0.0f && low_altitude_cooldown <= 0.0f)
+		{
+			// Goats dislike low altitude and try to climb uphill out of valleys/basins.
+			float low_altitude = std::clamp((low_altitude_threshold - z) / 0.18f, 0.0f, 1.0f);
+			if (low_altitude > 0.0f)
+			{
+				state = CreatureState::PANIC;
+				cx += low_altitude_gain * low_altitude * (gx / gnorm);
+				cy += low_altitude_gain * low_altitude * (gy / gnorm);
+			}
+		}
+
 		u += (tangential_speed * tx + contour_gain * cx) * dt;
 		v += (tangential_speed * ty + contour_gain * cy) * dt;
 
@@ -129,11 +162,10 @@ public:
 			dir = -dir;
 
 		// Water makes goats panic a bit and pushes them downhill.
-		float wet = water.sample_bilinear(u, v);
-		wet = std::clamp((wet - 0.08f) / 0.30f, 0.0f, 1.0f);
 		if (wet > 0.0f)
 		{
 			state = CreatureState::PANIC;
+			low_altitude_cooldown = low_altitude_cooldown_time;
 			// Add a little random-ish panic by biasing direction away from the current
 			// contour motion and drift slightly downhill.
 			float downhill_x = -gx / gnorm;
@@ -155,11 +187,10 @@ public:
 
 		// Lava is a much stronger hazard than water, but keep the response smooth:
 		// modify the motion instead of applying a second strong movement step.
-		float hot = lava.sample_bilinear(u, v);
-		hot = std::clamp((hot - 0.04f) / 0.18f, 0.0f, 1.0f);
 		if (hot > 0.0f)
 		{
 			state = CreatureState::PANIC;
+			low_altitude_cooldown = low_altitude_cooldown_time;
 
 			float downhill_x = -gx / gnorm;
 			float downhill_y = -gy / gnorm;
@@ -183,12 +214,12 @@ public:
 		float dv = v - old_v;
 		float moved2 = du * du + dv * dv;
 
-		if (moved2 < 1e-7f)
+		if (moved2 < 1e-5f)
 			stuck_timer += dt;
 		else
 			stuck_timer = 0.0f;
 
-		if (stuck_timer > 1.5f)
+		if (stuck_timer > 5.0f)
 		{
 			life = 0;
 			state = CreatureState::DEAD;
