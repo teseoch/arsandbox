@@ -1,6 +1,8 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
+#include <utility>
 #include <vector>
 
 #include "drop.hpp"
@@ -119,5 +121,21 @@ public:
 		float f0 = f00 * (1.0f - tx) + f10 * tx;
 		float f1 = f01 * (1.0f - tx) + f11 * tx;
 		return f0 * (1.0f - ty) + f1 * ty;
+	}
+
+	std::pair<float, float> gradient_uv(float u, float v) const
+	{
+		if (w <= 1 || h <= 1 || flow.empty())
+			return {0.0f, 0.0f};
+
+		const float du = 1.0f / std::max(1, w - 1);
+		const float dv = 1.0f / std::max(1, h - 1);
+
+		float fx1 = sample_bilinear(u + du, v);
+		float fx0 = sample_bilinear(u - du, v);
+		float fy1 = sample_bilinear(u, v + dv);
+		float fy0 = sample_bilinear(u, v - dv);
+
+		return {(fx1 - fx0) / (2.0f * du), (fy1 - fy0) / (2.0f * dv)};
 	}
 };

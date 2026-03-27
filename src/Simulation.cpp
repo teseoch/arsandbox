@@ -207,11 +207,11 @@ void Simulation::step(const Depth &depth, float dt)
 	creatures.erase(std::remove_if(creatures.begin(), creatures.end(), [](const Creature &c) { return !c.alive(); }), creatures.end());
 
 	for (auto &d : rain_)
-		d.step(depth, dt, gravity1, damping1, speed_cap1, bounce1);
+		d.step(depth, dt, gravity1, damping1, speed_cap1, bounce1, flowMap2, 0.15f);
 	for (auto &d : drops1)
-		d.step(depth, dt, gravity1, damping1, speed_cap1, bounce1);
+		d.step(depth, dt, gravity1, damping1, speed_cap1, bounce1, flowMap2, 0.15f);
 	for (auto &d : drops2)
-		d.step(depth, dt, gravity2, damping2, speed_cap2, bounce2);
+		d.step(depth, dt, gravity2, damping2, speed_cap2, bounce2, flowMap1, 0.15f);
 
 	rain_.erase(std::remove_if(rain_.begin(), rain_.end(), [](const Drop &d) { return !d.isAlive(); }), rain_.end());
 	drops1.erase(std::remove_if(drops1.begin(), drops1.end(), [](const Drop &d) { return !d.isAlive(); }), drops1.end());
