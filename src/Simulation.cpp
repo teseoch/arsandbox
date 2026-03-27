@@ -182,7 +182,6 @@ void Simulation::spawnPig(const Depth &depth, float t, float x, float y, float d
 	std::shared_ptr<Pig> c = std::make_shared<Pig>();
 	c->u = x;
 	c->v = y;
-	c->h0 = depth.sample_bilinear(c->u, c->v);
 	c->dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
 
 	// store initial direction (normalized)

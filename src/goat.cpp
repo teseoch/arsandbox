@@ -1,5 +1,3 @@
-#pragma once
-
 #include "goat.hpp"
 
 void Goat::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float dt)
