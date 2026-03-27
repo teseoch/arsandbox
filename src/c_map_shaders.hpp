@@ -3,9 +3,11 @@
 // ----------------------------- GLSL Shaders --------------------------------
 static const char *kVS = R"GLSL(
 #version 330 core
+
 uniform vec2 u_projQuad[4];
 uniform vec2 u_screenSize;
 out vec2 v_st;
+
 void main(){
   int i = gl_VertexID;
   vec2 p = u_projQuad[i];
@@ -44,16 +46,6 @@ vec2 warpUV(vec2 st){
   vec2 a = mix(u_depthUVQuad[0], u_depthUVQuad[1], st.x);
   vec2 b = mix(u_depthUVQuad[3], u_depthUVQuad[2], st.x);
   return mix(a, b, st.y);
-}
-
-// isolines
-vec3 addIsolines(vec3 baseColor, float h, float step){
-  if(step <= 0.0) return baseColor;
-  float x = h / step;
-  float f = abs(fract(x) - 0.5);
-  float line = smoothstep(0.48, 0.50, f);
-  line = 1.0 - line;
-  return mix(baseColor, vec3(1.0), 0.65 * line);
 }
 
 void main(){

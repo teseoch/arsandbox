@@ -38,7 +38,6 @@
 #include "Simulation.hpp"
 #include "CMap.hpp"
 
-#include "animated_shaders.hpp"
 #include "c_map_shaders.hpp"
 
 #ifdef SANDBOX_WITH_REALSENSE
