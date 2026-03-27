@@ -120,6 +120,18 @@ public:
 		float hot = lava.sample_bilinear(u, v);
 		hot = std::clamp((hot - 0.04f) / 0.18f, 0.0f, 1.0f);
 
+		float low_altitude = std::clamp((0.35f - z) / 0.15f, 0.0f, 1.0f);
+		if (low_altitude > 0.0f)
+		{
+			state = CreatureState::PANIC;
+			low_altitude_cooldown -= dt;
+			if (low_altitude_cooldown <= 0.0f)
+			{
+				life--;
+				low_altitude_cooldown = 0.5f;
+			}
+		}
+
 		// if (wet <= 0.0f && hot <= 0.0f && low_altitude_cooldown <= 0.0f)
 		// {
 		// 	// Goats dislike low altitude and try to climb uphill out of valleys/basins.
