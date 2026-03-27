@@ -15,14 +15,14 @@ public:
 private:
 	float du = 0.0f, dv = 0.0f; // velocity in UV
 public:
-	void step(const Depth &hf, float dt)
+	void step(const Depth &hf, float dt,
+			  float gravity,
+			  float damping,
+			  float speed_cap,
+			  float bounce)
 	{
 		if (life <= 0.0f)
 			return;
-
-		const float gravity = 0.20f;
-		const float damping = 0.992f;
-		const float speed_cap = 0.06f;
 
 		auto [gx, gy] = hf.gradient_uv(u, v);
 		float g = std::sqrt(gx * gx + gy * gy);
@@ -54,22 +54,22 @@ public:
 		if (u < 0)
 		{
 			u = 0;
-			du *= -0.5f;
+			du *= bounce;
 		}
 		if (u > 1)
 		{
 			u = 1;
-			du *= -0.5f;
+			du *= bounce;
 		}
 		if (v < 0)
 		{
 			v = 0;
-			dv *= -0.5f;
+			dv *= bounce;
 		}
 		if (v > 1)
 		{
 			v = 1;
-			dv *= -0.5f;
+			dv *= bounce;
 		}
 
 		trail.emplace_back(u, v);

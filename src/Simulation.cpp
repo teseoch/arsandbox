@@ -191,31 +191,44 @@ void Simulation::clear()
 
 void Simulation::step(const Depth &depth, float dt)
 {
+	const float gravity1 = 0.20f;
+	const float damping1 = 0.992f;
+	const float speed_cap1 = 0.06f;
+	const float bounce1 = -0.5f;
+
+	const float gravity2 = 0.10f;
+	const float damping2 = 0.97f;
+	const float speed_cap2 = 0.025f;
+	const float bounce2 = -0.1f;
+
 	for (auto &c : creatures)
 		c.step(depth, flowMap1, dt);
 
 	creatures.erase(std::remove_if(creatures.begin(), creatures.end(), [](const Creature &c) { return !c.alive(); }), creatures.end());
 
 	for (auto &d : rain_)
-		d.step(depth, dt);
+		d.step(depth, dt, gravity1, damping1, speed_cap1, bounce1);
 	for (auto &d : drops1)
-		d.step(depth, dt);
+		d.step(depth, dt, gravity1, damping1, speed_cap1, bounce1);
 	for (auto &d : drops2)
-		d.step(depth, dt);
+		d.step(depth, dt, gravity2, damping2, speed_cap2, bounce2);
 
 	rain_.erase(std::remove_if(rain_.begin(), rain_.end(), [](const Drop &d) { return !d.isAlive(); }), rain_.end());
 	drops1.erase(std::remove_if(drops1.begin(), drops1.end(), [](const Drop &d) { return !d.isAlive(); }), drops1.end());
 	drops2.erase(std::remove_if(drops2.begin(), drops2.end(), [](const Drop &d) { return !d.isAlive(); }), drops2.end());
 
-	flowMap1.decay(0.98f);
-	flowMap2.decay(0.98f);
+	// Water: lighter, faster-moving, spreads more and fades a bit faster.
+	flowMap1.decay(0.975f);
+	flowMap1.flowDrops(rain_, 4.5f, 0.0005f);
+	flowMap1.flowDrops(drops1, 5.5f, 0.0005f);
+	flowMap1.diffuse_once(0.78f, 0.055f);
+	flowMap1.diffuse_once(0.78f, 0.055f);
 
-	flowMap1.flowDrops(rain_);
-	flowMap1.flowDrops(drops1);
-	flowMap2.flowDrops(drops2);
-
-	flowMap1.diffuse_once();
-	flowMap2.diffuse_once();
+	// Lava: thicker and more honey-like: slower spreading, stronger deposit,
+	// and much more persistent.
+	flowMap2.decay(0.996f);
+	flowMap2.flowDrops(drops2, 10.0f, 0.0002f);
+	flowMap2.diffuse_once(0.96f, 0.01f);
 }
 
 void Simulation::init(const int w, const int h)

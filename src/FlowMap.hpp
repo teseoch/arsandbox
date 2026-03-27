@@ -51,7 +51,7 @@ public:
 		}
 	}
 
-	void diffuse_once()
+	void diffuse_once(float center_weight = 0.86f, float neighbor_weight = 0.035f)
 	{
 		if (w <= 2 || h <= 2)
 			return;
@@ -65,12 +65,12 @@ public:
 				float s = tmp[(y + 1) * w + x];
 				float e = tmp[y * w + (x + 1)];
 				float wv = tmp[y * w + (x - 1)];
-				flow[y * w + x] = 0.86f * c + 0.035f * (n + s + e + wv);
+				flow[y * w + x] = center_weight * c + neighbor_weight * (n + s + e + wv);
 			}
 		}
 	}
 
-	void flowDrops(const std::vector<Drop> &drops)
+	void flowDrops(const std::vector<Drop> &drops, float amount = 5.0f, float min_speed = 0.0005f)
 	{
 		for (const auto &d : drops)
 		{
@@ -84,10 +84,10 @@ public:
 				sp = std::sqrt(du * du + dv * dv);
 			}
 
-			if (sp > 0.0005f)
+			if (sp > min_speed)
 			{
 				const auto &[u, v] = d.trail.empty() ? Vec2{d.u, d.v} : d.trail.back();
-				splat(u, v, 5.0f);
+				splat(u, v, amount);
 			}
 		}
 	}
