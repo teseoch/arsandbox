@@ -37,6 +37,7 @@ include(apriltag)
 add_executable(arsandbox
           src/stb_impl.cpp
           src/app.cpp
+          src/pig.cpp
           src/goat.cpp
           src/Drop.cpp
           src/Simulation.cpp

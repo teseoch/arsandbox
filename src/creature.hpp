@@ -24,8 +24,15 @@ public:
 
 	CreatureState state = CreatureState::NORMAL;
 
+	Creature(int texture_index_) : texture_index(texture_index_) {}
+
 public:
 	bool alive() const { return life > -50; }
 
+	float textureIndex() const { return texture_index; }
+
 	virtual void step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float dt) = 0;
+
+private:
+	const int texture_index;
 };

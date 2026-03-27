@@ -160,16 +160,32 @@ int main()
 
 	int creatureSheetW = 0, creatureSheetH = 0;
 	{
-		std::vector<uint8_t> creatureRGBA =
-			load_png_rgba(folder + "/creatures/goat-sheet.png", creatureSheetW, creatureSheetH);
-		if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
 		{
-			overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH);
+			std::vector<uint8_t> creatureRGBA =
+				load_png_rgba(folder + "/creatures/goat-sheet.png", creatureSheetW, creatureSheetH);
+			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
+			{
+				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 0);
+			}
+			else
+			{
+				std::cerr << "Failed to load creature sprite texture: "
+						  << (folder + "/creatures/goat-sheet.png") << std::endl;
+			}
 		}
-		else
+
 		{
-			std::cerr << "Failed to load creature sprite texture: "
-					  << (folder + "/creatures/goat-sheet.png") << std::endl;
+			std::vector<uint8_t> creatureRGBA =
+				load_png_rgba(folder + "/creatures/pig-sheet.png", creatureSheetW, creatureSheetH);
+			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
+			{
+				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 1);
+			}
+			else
+			{
+				std::cerr << "Failed to load creature sprite texture: "
+						  << (folder + "/creatures/pig-sheet.png") << std::endl;
+			}
 		}
 	}
 
@@ -465,6 +481,11 @@ int main()
 				const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
 				sim.spawnGoat(gCtl.depth, tNow, u, v, dir.x, dir.y);
 			}
+			else if (t.id == 4 && t.decision_margin > 30.0f)
+			{
+				const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
+				sim.spawnPig(gCtl.depth, tNow, u, v, dir.x, dir.y);
+			}
 
 			std::cout << "id=" << t.id
 					  << " margin=" << t.decision_margin
@@ -490,7 +511,8 @@ int main()
 				{c->u, c->v, 30.0f, c->angle, c->flip_x,
 				 1.0f, 1.0f, 1.0f, 0.95f,
 				 1.0f,
-				 u0, v0, u1, v1});
+				 u0, v0, u1, v1,
+				 c->textureIndex()});
 		}
 
 		overlay.draw(overlayProgram, winW, winH, P8, sprites);

@@ -11,6 +11,7 @@ layout(location=4) in float iFlipX;  // sprite flip in x direction
 layout(location=5) in vec4 iColor;
 layout(location=6) in float iKind;      // 0 = soft circle, 1 = textured sprite
 layout(location=7) in vec4 iUVRect;     // uv0.xy, uv1.xy in [0,1]
+layout(location=8) in float iTexIndex;    // texture index
 
 uniform vec2 u_screenSize;    // pixels
 uniform vec2 u_projQuad[4];   // pixels: 0 TL, 1 TR, 2 BR, 3 BL
@@ -19,6 +20,7 @@ out vec2 vLocal;
 out vec2 vUV;
 out vec4 vColor;
 out float vKind;
+out float vTexIndex;
 
 vec2 warpScreenPx(vec2 st){
     vec2 top = mix(u_projQuad[0], u_projQuad[1], st.x);
@@ -50,6 +52,7 @@ void main(){
     vUV = mix(iUVRect.xy, iUVRect.zw, unitUV);
     vColor = iColor;
     vKind = iKind;
+    vTexIndex = iTexIndex;
 }
 )GLSL";
 
@@ -60,8 +63,10 @@ in vec2 vLocal;
 in vec2 vUV;
 in vec4 vColor;
 in float vKind;
+in float vTexIndex;
 
-uniform sampler2D u_spriteTex;
+uniform sampler2D u_spriteTex0;
+uniform sampler2D u_spriteTex1;
 
 out vec4 FragColor;
 
@@ -73,7 +78,9 @@ void main(){
         return;
     }
 
-    vec4 texel = texture(u_spriteTex, vUV);
+    vec4 texel = (vTexIndex > 0.5f)
+    ? texture(u_spriteTex1, vUV)
+    : texture(u_spriteTex0, vUV);
     FragColor = vec4(vColor.rgb * texel.rgb, vColor.a * texel.a);
 }
 )GLSL";
@@ -104,8 +111,8 @@ OverlayRenderer::OverlayRenderer()
 
 	// Each instance:
 	// st_x, st_y, radius_px, angle_rad, r, g, b, a, kind, flip_x,
-	// uv0_x, uv0_y, uv1_x, uv1_y  (14 floats)
-	const GLsizei stride = 14 * sizeof(float);
+	// uv0_x, uv0_y, uv1_x, uv1_y, texIndex  (15 floats)
+	const GLsizei stride = 15 * sizeof(float);
 
 	// location 1: iST (vec2)
 	glEnableVertexAttribArray_(1);
@@ -148,14 +155,21 @@ OverlayRenderer::OverlayRenderer()
 						   (void *)(10 * sizeof(float)));
 	glVertexAttribDivisor_(7, 1);
 
+	// location 7: iTexIndex (float)
+	glEnableVertexAttribArray_(8);
+	glVertexAttribPointer_(8, 1, GL_FLOAT, GL_FALSE, stride,
+						   (void *)(14 * sizeof(float)));
+	glVertexAttribDivisor_(8, 1);
+
 	glBindVertexArray_(0);
 	glBindBuffer_(GL_ARRAY_BUFFER, 0);
 
 	const uint8_t white[4] = {255, 255, 255, 255};
-	createRGBA8Texture(white, 1, 1);
+	createRGBA8Texture(white, 1, 1, 0);
+	createRGBA8Texture(white, 1, 1, 1);
 }
 
-void OverlayRenderer::createRGBA8Texture(const uint8_t *rgba, int w, int h)
+void OverlayRenderer::createRGBA8Texture(const uint8_t *rgba, int w, int h, int index)
 {
 	GLuint tex = 0;
 	glGenTextures_(1, &tex);
@@ -168,7 +182,7 @@ void OverlayRenderer::createRGBA8Texture(const uint8_t *rgba, int w, int h)
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glBindTexture_(GL_TEXTURE_2D, 0);
 
-	spriteTex = tex;
+	spriteTex[index] = tex;
 }
 
 void OverlayRenderer::draw(
@@ -189,10 +203,14 @@ void OverlayRenderer::draw(
 	GLint locQuad = glGetUniformLocation_(overlayProgram, "u_projQuad");
 	glUniform2fv_(locQuad, 4, projQuadPx);
 
-	GLint locSpriteTex = glGetUniformLocation_(overlayProgram, "u_spriteTex");
-	glUniform1i_(locSpriteTex, 3);
+	GLint locSpriteTex0 = glGetUniformLocation_(overlayProgram, "u_spriteTex0");
+	glUniform1i_(locSpriteTex0, 3);
 	glActiveTexture_(GL_TEXTURE3);
-	glBindTexture_(GL_TEXTURE_2D, spriteTex);
+	glBindTexture_(GL_TEXTURE_2D, spriteTex[0]);
+	GLint locSpriteTex1 = glGetUniformLocation_(overlayProgram, "u_spriteTex1");
+	glUniform1i_(locSpriteTex1, 4);
+	glActiveTexture_(GL_TEXTURE4);
+	glBindTexture_(GL_TEXTURE_2D, spriteTex[1]);
 
 	// Enable alpha blending
 	glEnable(GL_BLEND);

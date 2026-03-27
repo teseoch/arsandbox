@@ -5,7 +5,7 @@
 #include <cmath>
 #include <iostream>
 
-class Goat : public Creature
+class Pig : public Creature
 {
 public:
 	float h0;
@@ -14,7 +14,7 @@ public:
 	float init_dx = 0.0f;
 	float init_dy = 0.0f;
 
-	Goat() : Creature(0) {}
+	Pig() : Creature(1) {}
 
 private:
 	float init_timer = 5.0f; // seconds of initial directed motion

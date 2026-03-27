@@ -21,6 +21,7 @@ struct OverlaySprite
 	float uv0_y = 0.0f;
 	float uv1_x = 1.0f;
 	float uv1_y = 1.0f;
+	float texIndex = 0;
 };
 
 class OverlayRenderer
@@ -29,11 +30,11 @@ public:
 	GLuint vao = 0;
 	GLuint quadVBO = 0;
 	GLuint instVBO = 0;
-	GLuint spriteTex = 0;
+	GLuint spriteTex[2] = {0, 0};
 
 	OverlayRenderer();
 
-	void createRGBA8Texture(const uint8_t *rgba, int w, int h);
+	void createRGBA8Texture(const uint8_t *rgba, int w, int h, int index);
 
 	void draw(
 		GLuint overlayProgram, int screenW, int screenH,
