@@ -6,6 +6,13 @@
 #include <cmath>
 #include <iostream>
 
+enum class CreatureState
+{
+	NORMAL = 0,
+	PANIC = 1,
+	DEAD = 2
+};
+
 class Creature
 {
 public:
@@ -27,6 +34,8 @@ public:
 
 	// float panic_cooldown = 0.0f;
 
+	CreatureState state = CreatureState::NORMAL;
+
 	bool alive() const { return life > 0; }
 
 	void step(const Depth &hf, const FlowMap &water, float dt)
@@ -36,6 +45,8 @@ public:
 
 		if (gnorm < 1e-4f)
 			return;
+
+		state = CreatureState::NORMAL;
 
 		// tangent = rotate(grad) by 90 deg
 		float tx = dir * (-gy / gnorm);
@@ -110,7 +121,7 @@ public:
 		wet = std::clamp((wet - 0.08f) / 0.30f, 0.0f, 1.0f);
 		if (wet > 0.0f)
 		{
-
+			state = CreatureState::PANIC;
 			// Add a little random-ish panic by biasing direction away from the current
 			// contour motion and drift slightly downhill.
 			float downhill_x = -gx / gnorm;

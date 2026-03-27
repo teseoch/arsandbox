@@ -55,6 +55,10 @@ const static int VARIANTS = 3;
 const static int FRAMES = 2;
 const static int MAT_COUNT = 3;
 
+const static int CREATURE_SHEET_COLS = 4;
+const static int CREATURE_SHEET_ROWS = 3; // row 0 = walk, row 1 = panic, row 2 = dead
+const static float CREATURE_ANIM_FPS = 8.0f;
+
 const static int tileW = 64;
 const static int tileH = 64;
 
@@ -154,19 +158,18 @@ int main()
 	// once
 	OverlayRenderer overlay;
 
+	int creatureSheetW = 0, creatureSheetH = 0;
 	{
-		int cW = 0, cH = 0;
-		// TODO
 		std::vector<uint8_t> creatureRGBA =
-			load_png_rgba(folder + "/creatures/creature.png", cW, cH);
-		if (!creatureRGBA.empty() && cW > 0 && cH > 0)
+			load_png_rgba(folder + "/creatures/goat-sheet.png", creatureSheetW, creatureSheetH);
+		if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
 		{
-			overlay.createRGBA8Texture(creatureRGBA.data(), cW, cH);
+			overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH);
 		}
 		else
 		{
 			std::cerr << "Failed to load creature sprite texture: "
-					  << (folder + "/creatures/creature.png") << std::endl;
+					  << (folder + "/creatures/goat-sheet.png") << std::endl;
 		}
 	}
 
@@ -454,8 +457,19 @@ int main()
 
 		for (const auto &c : sim.getCreatures())
 		{
+			const int frame = int(std::floor(tNow * CREATURE_ANIM_FPS)) % CREATURE_SHEET_COLS;
+			const int row = static_cast<int>(c.state); // for now always use walk row; panic/dead rows can be added later
+
+			const float u0 = float(frame) / float(CREATURE_SHEET_COLS);
+			const float v0 = float(row) / float(CREATURE_SHEET_ROWS);
+			const float u1 = float(frame + 1) / float(CREATURE_SHEET_COLS);
+			const float v1 = float(row + 1) / float(CREATURE_SHEET_ROWS);
+
 			sprites.push_back(
-				{c.u, c.v, 30.0f, c.angle, c.flip_x, 1.0f, 1.0f, 1.0f, 0.9f, 1});
+				{c.u, c.v, 30.0f, c.angle, c.flip_x,
+				 1.0f, 1.0f, 1.0f, 0.95f,
+				 1.0f,
+				 u0, v0, u1, v1});
 		}
 
 		render_particles(sim.getRain(), sim.rainColor(), sim.rainSize(), sprites);
