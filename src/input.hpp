@@ -31,18 +31,24 @@ struct Controls
 	float gamma = 1.0f;
 
 	int nextBiome = 0;
+
 	bool useCMap = false;
 	int colormapIndex = 0;
 	int colormapCount = 0;
 
 	bool freezeDepth = false;
+
 	bool makeItRain = false;
-	bool megaRain = false;
+	bool megaRain1 = false;
+	bool megaRain2 = false;
+
 	bool clearMess = false;
-	bool spawnCreature = false;
+
+	bool spawnCreature1 = false;
+	bool spawnCreature2 = false;
 
 	// Gamepad edges
-	ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge;
+	ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge, dpadUpEdge, dpadLeftEdge, dpadRightEdge;
 	bool gamepadPresent = false;
 
 	void reset()
@@ -104,32 +110,35 @@ static void updateGamepad(Controls &c, float dt)
 	float RT = std::clamp((rt + 1.0f) * 0.5f, 0.0f, 1.0f);
 	float LT = std::clamp((lt + 1.0f) * 0.5f, 0.0f, 1.0f);
 
-	// // gamma with left Y
-	// c.gamma += (-ly) * (0.8f * dt);
-	// c.gamma = std::clamp(c.gamma, 0.2f, 3.0f);
-
 	// buttons
 	bool A = (s.buttons[GLFW_GAMEPAD_BUTTON_A] == GLFW_PRESS || s.buttons[GLFW_GAMEPAD_BUTTON_A] == GLFW_REPEAT);
 	bool B = (s.buttons[GLFW_GAMEPAD_BUTTON_B] == GLFW_PRESS || s.buttons[GLFW_GAMEPAD_BUTTON_B] == GLFW_REPEAT);
 	bool X = (s.buttons[GLFW_GAMEPAD_BUTTON_X] == GLFW_PRESS);
 	bool Y = (s.buttons[GLFW_GAMEPAD_BUTTON_Y] == GLFW_PRESS);
+
 	bool LB = (s.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] == GLFW_PRESS);
 	bool RB = (s.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] == GLFW_PRESS);
 
+	bool DUp = (s.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP] == GLFW_PRESS);
+	bool DLeft = (s.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT] == GLFW_PRESS);
+	bool DRight = (s.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT] == GLFW_PRESS);
+
 	if (c.bEdge.pressed(B))
 		c.makeItRain = true;
-	if (c.aEdge.pressed(X))
-		c.megaRain = true;
+	if (c.xEdge.pressed(X))
+		c.megaRain1 = true;
+	if (c.aEdge.pressed(A))
+		c.megaRain2 = true;
 
 	if (c.yEdge.pressed(Y))
 		c.clearMess = true;
 
-	if (c.aEdge.pressed(A))
-		c.spawnCreature = true;
-	// spawn creature
-	// if (c.yEdge.pressed(Y))
-	//   clear rain and creatures
-	// 	X = mega rain burst
+	if (c.dpadUpEdge.pressed(DUp))
+		c.spawnCreature1 = true; // goat
+	if (c.dpadLeftEdge.pressed(DLeft))
+		c.spawnCreature2 = true; // pig
+	// if (c.dpadRightEdge.pressed(DRight))
+	// 	c.spawnCreature3 = true; // fish
 
 	if (c.lbEdge.pressed(LT))
 	{
@@ -189,22 +198,34 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 		return;
 	}
 
+	if (key == GLFW_KEY_6)
+	{
+		gCtl.spawnCreature1 = true;
+		return;
+	}
+	if (key == GLFW_KEY_7)
+	{
+		gCtl.spawnCreature2 = true;
+		return;
+	}
+
 	// mode toggles (press only)
 	if (action == GLFW_PRESS)
 	{
 		if (key == GLFW_KEY_K)
 		{
-			gCtl.megaRain = true;
-			return;
-		}
-		if (key == GLFW_KEY_Y)
-		{
-			gCtl.clearMess = true;
+			gCtl.megaRain1 = true;
 			return;
 		}
 		if (key == GLFW_KEY_L)
 		{
-			gCtl.spawnCreature = true;
+			gCtl.megaRain2 = true;
+			return;
+		}
+
+		if (key == GLFW_KEY_Y)
+		{
+			gCtl.clearMess = true;
 			return;
 		}
 
@@ -225,7 +246,7 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 			return;
 		}
 
-		// colormap cycle
+		// biome cycle
 		if (key == GLFW_KEY_N)
 		{
 			gCtl.nextBiome = -1;

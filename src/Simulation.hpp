@@ -34,27 +34,31 @@ public:
 	void nextBiome();
 	void prevBiome();
 
+	void goToBiome(int index);
+
 	inline const std::vector<std::shared_ptr<Creature>> &getCreatures() const { return creatures; }
 
 	inline const std::vector<Drop> &getRain() const { return rain_; }
 	inline const std::vector<Drop> &getMega1() const { return drops1; }
 	inline const std::vector<Drop> &getMega2() const { return drops2; }
 
-	inline const std::array<float, 2> &rainSize() const { return currentBiome->rainSize(); }
-	inline const std::array<float, 3> &rainColor() const { return currentBiome->rainColor(); }
+	inline const std::array<float, 2> &rainSize() const { return currentBiome()->rainSize(); }
+	inline const std::array<float, 3> &rainColor() const { return currentBiome()->rainColor(); }
 
-	inline const std::array<float, 2> &mega1Size() const { return currentBiome->mega1Size(); }
-	inline const std::array<float, 3> &mega1Color() const { return currentBiome->mega1Color(); }
+	inline const std::array<float, 2> &mega1Size() const { return currentBiome()->mega1Size(); }
+	inline const std::array<float, 3> &mega1Color() const { return currentBiome()->mega1Color(); }
 
-	inline const std::array<float, 2> &mega2Size() const { return currentBiome->mega2Size(); }
-	inline const std::array<float, 3> &mega2Color() const { return currentBiome->mega2Color(); }
+	inline const std::array<float, 2> &mega2Size() const { return currentBiome()->mega2Size(); }
+	inline const std::array<float, 3> &mega2Color() const { return currentBiome()->mega2Color(); }
 
 	inline const FlowMap &getFlowMap1() const { return flowMap1; }
 	inline const FlowMap &getFlowMap2() const { return flowMap2; }
 
-	inline const GLuint &texture() const { return currentBiome->texture(); }
+	inline const GLuint &texture() const { return currentBiome()->texture(); }
 
 private:
+	std::shared_ptr<Biome> currentBiome() const { return biomes[biomeIndex]; }
+
 	FlowMap flowMap1;
 	FlowMap flowMap2;
 
@@ -63,7 +67,8 @@ private:
 	std::vector<Drop> drops2;
 
 	std::vector<std::shared_ptr<Creature>> creatures;
-	std::shared_ptr<Biome> currentBiome;
+
+	std::vector<std::shared_ptr<Biome>> biomes;
 
 	float lastMega1Time = 0.0f;
 	float lastMega2Time = 0.0f;
@@ -74,4 +79,6 @@ private:
 
 	constexpr static const float ru = 0.5f;
 	constexpr static const float rv = 1.0f;
+
+	int biomeIndex = 0;
 };

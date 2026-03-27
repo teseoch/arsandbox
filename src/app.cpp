@@ -338,16 +338,26 @@ int main()
 		}
 
 		// todo
-		if (gCtl.megaRain)
+		if (gCtl.megaRain1)
 		{
 			sim.mega1(); // random center
-			gCtl.megaRain = false;
+			gCtl.megaRain1 = false;
+		}
+		if (gCtl.megaRain2)
+		{
+			sim.mega2(); // random center
+			gCtl.megaRain2 = false;
 		}
 
-		if (gCtl.spawnCreature)
+		if (gCtl.spawnCreature1)
 		{
 			sim.spawnGoat(gCtl.depth); // random pos and params
-			gCtl.spawnCreature = false;
+			gCtl.spawnCreature1 = false;
+		}
+		if (gCtl.spawnCreature2)
+		{
+			sim.spawnPig(gCtl.depth); // random pos and params
+			gCtl.spawnCreature2 = false;
 		}
 
 		if (gCtl.clearMess)
@@ -485,12 +495,19 @@ int main()
 				const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
 				sim.spawnPig(gCtl.depth, tNow, u, v, dir.x, dir.y);
 			}
+			else if (t.id <= 2 && t.decision_margin > 30.0f)
+			{
+#ifdef SANDBOX_WITH_REALSENSE
+				sim.goToBiome(t.id - 1);
+				gCtl.useCMap = false;
+#endif
+			}
 
-			std::cout << "id=" << t.id
-					  << " margin=" << t.decision_margin
-					  << " uv=(" << t.uv.x << "," << t.uv.y << ")\n";
+			// std::cout << "id=" << t.id
+			// 		  << " margin=" << t.decision_margin
+			// 		  << " uv=(" << t.uv.x << "," << t.uv.y << ")\n";
 		}
-		std::cout << std::endl;
+		// std::cout << std::endl;
 
 		render_particles(sim.getRain(), sim.rainColor(), sim.rainSize(), sprites);
 		render_particles(sim.getMega1(), sim.mega1Color(), sim.mega1Size(), sprites);

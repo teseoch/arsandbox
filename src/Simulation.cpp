@@ -1,6 +1,7 @@
 #include "Simulation.hpp"
 
 #include "PlainBiome.hpp"
+#include "LavaBiome.hpp"
 #include "goat.hpp"
 #include "pig.hpp"
 
@@ -11,7 +12,9 @@ float random_float(float a, float b)
 
 Simulation::Simulation()
 {
-	currentBiome = std::make_shared<PlainBiome>();
+	biomes.push_back(std::make_shared<PlainBiome>());
+	biomes.push_back(std::make_shared<LavaBiome>());
+	biomeIndex = 0;
 }
 
 void Simulation::rain(const float t, const float u, const float v)
@@ -41,7 +44,7 @@ void Simulation::randomRain()
 		d.reset(
 			random_float(0.0f, 1.0f),
 			random_float(0.0f, 1.0f),
-			random_float(25.0f, 30.0f));
+			random_float(0.3f, 2.0f));
 		rain_.push_back(d);
 	}
 }
@@ -86,7 +89,7 @@ void Simulation::mega1(float t, float u, float v)
 		d.reset(
 			std::clamp(u + du, 0.0f, 1.0f),
 			std::clamp(v + dv, 0.0f, 1.0f),
-			random_float(25, 5));
+			random_float(25.0f, 30.0f));
 
 		drops1.push_back(d);
 	}
@@ -109,7 +112,7 @@ void Simulation::mega2(float t, float u, float v)
 			d.reset(
 				centerX + r * std::cos(angle),
 				centerY + r * std::sin(angle),
-				random_float(25, 5));
+				random_float(25.0f, 30.0f));
 			drops2.push_back(d);
 		}
 
@@ -134,7 +137,7 @@ void Simulation::mega2(float t, float u, float v)
 		d.reset(
 			std::clamp(u + du, 0.0f, 1.0f),
 			std::clamp(v + dv, 0.0f, 1.0f),
-			25.0f + 5.0f * (((float)std::rand()) / RAND_MAX));
+			random_float(0.3f, 2.0f));
 
 		drops2.push_back(d);
 	}
@@ -144,6 +147,24 @@ void Simulation::mega2(float t, float u, float v)
 
 void Simulation::spawnGoat(const Depth &depth, float t, float x, float y, float dirx, float diry)
 {
+	if (t < 0)
+	{
+		x = random_float(0.0f, 1.0f);
+		y = random_float(0.0f, 1.0f);
+
+		std::shared_ptr<Goat> c = std::make_shared<Goat>();
+		c->u = x;
+		c->v = y;
+		c->h0 = depth.sample_bilinear(c->u, c->v);
+		c->dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+
+		c->init_dx = random_float(-1.0f, 1.0f);
+		c->init_dy = random_float(-1.0f, 1.0f);
+
+		creatures.push_back(c);
+
+		return;
+	}
 
 	if (t - lastGoatTime < 2.0f)
 		return;
@@ -174,6 +195,24 @@ void Simulation::spawnGoat(const Depth &depth, float t, float x, float y, float 
 
 void Simulation::spawnPig(const Depth &depth, float t, float x, float y, float dirx, float diry)
 {
+	if (t < 0)
+	{
+		x = random_float(0.0f, 1.0f);
+		y = random_float(0.0f, 1.0f);
+
+		std::shared_ptr<Pig> c = std::make_shared<Pig>();
+		c->u = x;
+		c->v = y;
+		c->dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+
+		c->init_dx = random_float(-1.0f, 1.0f);
+		c->init_dy = random_float(-1.0f, 1.0f);
+
+		creatures.push_back(c);
+
+		return;
+	}
+
 	if (t - lastPigTime < 2.0f)
 		return;
 
@@ -265,10 +304,16 @@ void Simulation::init(const int w, const int h)
 
 void Simulation::nextBiome()
 {
-	// TODO
+	biomeIndex = (biomeIndex + 1) % biomes.size();
 }
 
 void Simulation::prevBiome()
 {
-	// TODO
+	biomeIndex = (biomeIndex - 1 + biomes.size()) % biomes.size();
+}
+
+void Simulation::goToBiome(int index)
+{
+	if (index >= 0 && index < biomes.size())
+		biomeIndex = index;
 }
