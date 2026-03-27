@@ -68,6 +68,7 @@ public:
 			}
 			return;
 		}
+		stuck_timer = 0.0f;
 
 		state = CreatureState::NORMAL;
 		low_altitude_cooldown = low_altitude_cooldown - dt;
@@ -119,17 +120,17 @@ public:
 		float hot = lava.sample_bilinear(u, v);
 		hot = std::clamp((hot - 0.04f) / 0.18f, 0.0f, 1.0f);
 
-		if (wet <= 0.0f && hot <= 0.0f && low_altitude_cooldown <= 0.0f)
-		{
-			// Goats dislike low altitude and try to climb uphill out of valleys/basins.
-			float low_altitude = std::clamp((low_altitude_threshold - z) / 0.18f, 0.0f, 1.0f);
-			if (low_altitude > 0.0f)
-			{
-				state = CreatureState::PANIC;
-				cx += low_altitude_gain * low_altitude * (gx / gnorm);
-				cy += low_altitude_gain * low_altitude * (gy / gnorm);
-			}
-		}
+		// if (wet <= 0.0f && hot <= 0.0f && low_altitude_cooldown <= 0.0f)
+		// {
+		// 	// Goats dislike low altitude and try to climb uphill out of valleys/basins.
+		// 	float low_altitude = std::clamp((low_altitude_threshold - z) / 0.18f, 0.0f, 1.0f);
+		// 	if (low_altitude > 0.0f)
+		// 	{
+		// 		state = CreatureState::PANIC;
+		// 		cx += low_altitude_gain * low_altitude * (gx / gnorm);
+		// 		cy += low_altitude_gain * low_altitude * (gy / gnorm);
+		// 	}
+		// }
 
 		u += (tangential_speed * tx + contour_gain * cx) * dt;
 		v += (tangential_speed * ty + contour_gain * cy) * dt;
