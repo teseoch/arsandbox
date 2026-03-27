@@ -472,6 +472,10 @@ int main()
 		}
 		std::cout << std::endl;
 
+		render_particles(sim.getRain(), sim.rainColor(), sim.rainSize(), sprites);
+		render_particles(sim.getMega1(), sim.mega1Color(), sim.mega1Size(), sprites);
+		render_particles(sim.getMega2(), sim.mega2Color(), sim.mega2Size(), sprites);
+
 		for (const auto &c : sim.getCreatures())
 		{
 			const int frame = int(std::floor(tNow * CREATURE_ANIM_FPS)) % CREATURE_SHEET_COLS;
@@ -488,10 +492,6 @@ int main()
 				 1.0f,
 				 u0, v0, u1, v1});
 		}
-
-		render_particles(sim.getRain(), sim.rainColor(), sim.rainSize(), sprites);
-		render_particles(sim.getMega1(), sim.mega1Color(), sim.mega1Size(), sprites);
-		render_particles(sim.getMega2(), sim.mega2Color(), sim.mega2Size(), sprites);
 
 		overlay.draw(overlayProgram, winW, winH, P8, sprites);
 

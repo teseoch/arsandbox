@@ -25,6 +25,8 @@ public:
 	float init_dy = 0.0f;
 	float init_timer = 5.0f; // seconds of initial directed motion
 
+	float stuck_timer = 0.0f;
+
 	int life = 10; // frames
 
 	float tangential_speed = 0.035f;
@@ -33,13 +35,20 @@ public:
 	float water_panic_gain = 0.12f;
 
 	// float panic_cooldown = 0.0f;
+	float lava_cooldown = 0.0f;
 
 	CreatureState state = CreatureState::NORMAL;
 
-	bool alive() const { return life > 0; }
+	bool alive() const { return life > -50; }
 
-	void step(const Depth &hf, const FlowMap &water, float dt)
+	void step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float dt)
 	{
+		if (life <= 0)
+		{
+			life--;
+			state = CreatureState::DEAD;
+			return;
+		}
 		auto [gx, gy] = hf.gradient_uv(u, v);
 		float gnorm = std::sqrt(gx * gx + gy * gy) + 1e-6f;
 
@@ -47,6 +56,9 @@ public:
 			return;
 
 		state = CreatureState::NORMAL;
+
+		const float old_u = u;
+		const float old_v = v;
 
 		// tangent = rotate(grad) by 90 deg
 		float tx = dir * (-gy / gnorm);
@@ -139,6 +151,48 @@ public:
 			// 	dir = -dir;
 			// 	panic_cooldown = 0.5f; // half a second
 			// }
+		}
+
+		// Lava is a much stronger hazard than water, but keep the response smooth:
+		// modify the motion instead of applying a second strong movement step.
+		float hot = lava.sample_bilinear(u, v);
+		hot = std::clamp((hot - 0.04f) / 0.18f, 0.0f, 1.0f);
+		if (hot > 0.0f)
+		{
+			state = CreatureState::PANIC;
+
+			float downhill_x = -gx / gnorm;
+			float downhill_y = -gy / gnorm;
+			float speed_scale = 1.0f + 0.35f * hot;
+			float contour_scale = 1.0f - 0.45f * hot;
+
+			u += (speed_scale * tangential_speed * tx + contour_scale * contour_gain * cx) * dt;
+			v += (speed_scale * tangential_speed * ty + contour_scale * contour_gain * cy) * dt;
+			u += (0.02f * hot) * downhill_x * dt;
+			v += (0.02f * hot) * downhill_y * dt;
+
+			lava_cooldown -= dt;
+			if (hot > 0.75f && lava_cooldown <= 0.0f)
+			{
+				life--;
+				lava_cooldown = 0.15f;
+			}
+		}
+
+		float du = u - old_u;
+		float dv = v - old_v;
+		float moved2 = du * du + dv * dv;
+
+		if (moved2 < 1e-8f)
+			stuck_timer += dt;
+		else
+			stuck_timer = 0.0f;
+
+		if (stuck_timer > 1.5f)
+		{
+			life = 0;
+			state = CreatureState::DEAD;
+			return;
 		}
 	}
 };
