@@ -447,9 +447,9 @@ int main()
 			{
 				sim.mega1(tNow, u, v);
 			}
-			else if (t.id == 8 && t.decision_margin > 30.0f)
+			else if (t.id == 9 && t.decision_margin > 30.0f)
 			{
-				// sim.rain(tNow, u, v);
+				sim.rain(tNow, u, v);
 
 				// sprites.push_back({
 				// 	u, v,
