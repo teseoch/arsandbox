@@ -27,6 +27,6 @@ public:
 		mega1Size_ = {8.0f, 10.0f};
 		mega1Color_ = {0.0f, 0.314118f, 0.643529f};
 		mega2Size_ = {8.0f, 10.0f};
-		mega2Color_ = {0.0f, 0.314118f, 0.643529f};
+		mega2Color_ = {1.0f, 0.35f, 0.05f};
 	}
 };

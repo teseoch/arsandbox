@@ -251,6 +251,15 @@ int main()
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
+	GLuint flowTex2 = 0;
+	glGenTextures_(1, &flowTex2);
+	glBindTexture_(GL_TEXTURE_2D, flowTex2);
+	glTexImage2D_(GL_TEXTURE_2D, 0, GL_R32F, sim.getFlowMap2().w, sim.getFlowMap2().h, 0, GL_RED, GL_FLOAT, sim.getFlowMap2().flow.data());
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
 	// TODO floawmap2
 
 	std::vector<CMap> colormaps;
@@ -279,6 +288,7 @@ int main()
 	const GLint loc_gamma = glGetUniformLocation_(prog, "u_gamma");
 	const GLint loc_depthSampler = glGetUniformLocation_(prog, "u_depthTex");
 	const GLint loc_flowSampler = glGetUniformLocation_(prog, "u_flowTex");
+	const GLint loc_flowSampler2 = glGetUniformLocation_(prog, "u_flowTex2");
 	GLint loc_lutSampler;
 	GLint u_time = -1;
 	GLint u_tileScale = -1;
@@ -289,6 +299,7 @@ int main()
 	glUniform1i_(loc_depthSampler, 0);
 	glUniform1i_(loc_lutSampler, 1);
 	glUniform1i_(loc_flowSampler, 2);
+	glUniform1i_(loc_flowSampler2, 3);
 
 	double tPrev = glfwGetTime();
 
@@ -376,6 +387,10 @@ int main()
 		glBindTexture_(GL_TEXTURE_2D, flowTex);
 		glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, sim.getFlowMap1().w, sim.getFlowMap1().h, GL_RED, GL_FLOAT, sim.getFlowMap1().flow.data());
 
+		glActiveTexture_(GL_TEXTURE3);
+		glBindTexture_(GL_TEXTURE_2D, flowTex2);
+		glTexSubImage2D_(GL_TEXTURE_2D, 0, 0, 0, sim.getFlowMap2().w, sim.getFlowMap2().h, GL_RED, GL_FLOAT, sim.getFlowMap2().flow.data());
+
 		// todo update flowmap2
 
 		// Clear to black
@@ -404,6 +419,8 @@ int main()
 		glBindTexture_(GL_TEXTURE_2D, depthTex);
 		glActiveTexture_(GL_TEXTURE2);
 		glBindTexture_(GL_TEXTURE_2D, flowTex);
+		glActiveTexture_(GL_TEXTURE3);
+		glBindTexture_(GL_TEXTURE_2D, flowTex2);
 
 		glActiveTexture_(GL_TEXTURE1);
 		if (gCtl.useCMap)
@@ -424,11 +441,11 @@ int main()
 
 			if (t.id == 10 && t.decision_margin > 30.0f)
 			{
-				// sim.mega2(tNow, u, v);
+				sim.mega2(tNow, u, v);
 			}
 			else if (t.id == 8 && t.decision_margin > 30.0f)
 			{
-				sim.mega1(tNow, u, v);
+				// sim.mega1(tNow, u, v);
 			}
 			else if (t.id == 8 && t.decision_margin > 30.0f)
 			{
