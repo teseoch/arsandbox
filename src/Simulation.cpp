@@ -1,6 +1,7 @@
 #include "Simulation.hpp"
 
 #include "PlainBiome.hpp"
+#include "goat.hpp"
 
 float random_float(float a, float b)
 {
@@ -148,23 +149,23 @@ void Simulation::spawnGoat(const Depth &depth, float t, float x, float y, float 
 
 	lastGoatTime = t;
 
-	Creature c;
-	c.u = x;
-	c.v = y;
-	c.h0 = depth.sample_bilinear(c.u, c.v);
-	c.dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+	std::shared_ptr<Goat> c = std::make_shared<Goat>();
+	c->u = x;
+	c->v = y;
+	c->h0 = depth.sample_bilinear(c->u, c->v);
+	c->dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
 
 	// store initial direction (normalized)
 	float n = std::sqrt(dirx * dirx + diry * diry);
 	if (n > 1e-6f)
 	{
-		c.init_dx = dirx / n;
-		c.init_dy = diry / n;
+		c->init_dx = dirx / n;
+		c->init_dy = diry / n;
 	}
 	else
 	{
-		c.init_dx = 0.0f;
-		c.init_dy = 0.0f;
+		c->init_dx = 0.0f;
+		c->init_dy = 0.0f;
 	}
 
 	creatures.push_back(c);
@@ -202,9 +203,9 @@ void Simulation::step(const Depth &depth, float dt)
 	const float bounce2 = -0.1f;
 
 	for (auto &c : creatures)
-		c.step(depth, flowMap1, flowMap2, dt);
+		c->step(depth, flowMap1, flowMap2, dt);
 
-	creatures.erase(std::remove_if(creatures.begin(), creatures.end(), [](const Creature &c) { return !c.alive(); }), creatures.end());
+	creatures.erase(std::remove_if(creatures.begin(), creatures.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), creatures.end());
 
 	for (auto &d : rain_)
 		d.step(depth, dt, gravity1, damping1, speed_cap1, bounce1, flowMap2, 0.15f);

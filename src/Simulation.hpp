@@ -34,7 +34,7 @@ public:
 	void nextBiome();
 	void prevBiome();
 
-	inline const std::vector<Creature> &getCreatures() const { return creatures; }
+	inline const std::vector<std::shared_ptr<Creature>> &getCreatures() const { return creatures; }
 
 	inline const std::vector<Drop> &getRain() const { return rain_; }
 	inline const std::vector<Drop> &getMega1() const { return drops1; }
@@ -62,7 +62,7 @@ private:
 	std::vector<Drop> drops1;
 	std::vector<Drop> drops2;
 
-	std::vector<Creature> creatures;
+	std::vector<std::shared_ptr<Creature>> creatures;
 	std::shared_ptr<Biome> currentBiome;
 
 	float lastMega1Time = 0.0f;

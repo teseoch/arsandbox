@@ -479,7 +479,7 @@ int main()
 		for (const auto &c : sim.getCreatures())
 		{
 			const int frame = int(std::floor(tNow * CREATURE_ANIM_FPS)) % CREATURE_SHEET_COLS;
-			const int row = static_cast<int>(c.state); // for now always use walk row; panic/dead rows can be added later
+			const int row = static_cast<int>(c->state); // for now always use walk row; panic/dead rows can be added later
 
 			const float u0 = float(frame) / float(CREATURE_SHEET_COLS);
 			const float v0 = float(row) / float(CREATURE_SHEET_ROWS);
@@ -487,7 +487,7 @@ int main()
 			const float v1 = float(row + 1) / float(CREATURE_SHEET_ROWS);
 
 			sprites.push_back(
-				{c.u, c.v, 30.0f, c.angle, c.flip_x,
+				{c->u, c->v, 30.0f, c->angle, c->flip_x,
 				 1.0f, 1.0f, 1.0f, 0.95f,
 				 1.0f,
 				 u0, v0, u1, v1});
