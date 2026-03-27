@@ -55,7 +55,7 @@ const static int VARIANTS = 3;
 const static int FRAMES = 2;
 const static int MAT_COUNT = 3;
 
-const static int CREATURE_SHEET_COLS = 4;
+const static int CREATURE_SHEET_COLS = 8;
 const static int CREATURE_SHEET_ROWS = 3; // row 0 = walk, row 1 = panic, row 2 = dead
 const static float CREATURE_ANIM_FPS = 8.0f;
 
