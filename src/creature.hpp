@@ -175,7 +175,7 @@ public:
 			if (hot > 0.75f && lava_cooldown <= 0.0f)
 			{
 				life--;
-				lava_cooldown = 0.15f;
+				lava_cooldown = 0.2f;
 			}
 		}
 
@@ -183,7 +183,7 @@ public:
 		float dv = v - old_v;
 		float moved2 = du * du + dv * dv;
 
-		if (moved2 < 1e-8f)
+		if (moved2 < 1e-7f)
 			stuck_timer += dt;
 		else
 			stuck_timer = 0.0f;
@@ -194,5 +194,8 @@ public:
 			state = CreatureState::DEAD;
 			return;
 		}
+
+		if (std::rand() / float(RAND_MAX) < 0.000001f)
+			life--;
 	}
 };
