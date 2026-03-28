@@ -31,15 +31,15 @@ void Pig::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float
 	float hot = lava.sample_bilinear(u, v);
 	hot = std::clamp((hot - 0.04f) / 0.18f, 0.0f, 1.0f);
 
-	// Update cruising heading from time to time. On plains, pigs mostly follow this
-	// heading rather than terrain contours.
+	// Update cruising heading from time to time, but only on relatively flat ground.
+	// This avoids jittery random reorientation while the pig is already fighting a slope.
 	heading_timer -= dt;
-	if (heading_timer <= 0.0f)
+	if (heading_timer <= 0.0f && gnorm < slope_slow_threshold)
 	{
 		float a = ((float)std::rand() / float(RAND_MAX)) * 6.2831853f;
 		heading_x = std::cos(a);
 		heading_y = std::sin(a);
-		heading_timer = heading_interval + 0.6f * ((float)std::rand() / float(RAND_MAX));
+		heading_timer = heading_interval + 1.0f * ((float)std::rand() / float(RAND_MAX));
 	}
 
 	// Initial push out of the house/spawner.
@@ -65,10 +65,10 @@ void Pig::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float
 		float downhill_x = -gx / gnorm;
 		float downhill_y = -gy / gnorm;
 		float slope = std::clamp((gnorm - slope_slow_threshold) / std::max(1e-4f, roll_threshold - slope_slow_threshold), 0.0f, 1.0f);
-		move_x *= (1.0f - 0.65f * slope);
-		move_y *= (1.0f - 0.65f * slope);
-		move_x += drift_gain * slope * downhill_x;
-		move_y += drift_gain * slope * downhill_y;
+		move_x *= (1.0f - 0.45f * slope);
+		move_y *= (1.0f - 0.45f * slope);
+		move_x += 0.6f * drift_gain * slope * downhill_x;
+		move_y += 0.6f * drift_gain * slope * downhill_y;
 	}
 
 	// Strong slope: roll downhill. This is the main pig-specific behavior.
@@ -78,9 +78,9 @@ void Pig::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float
 		float downhill_x = -gx / gnorm;
 		float downhill_y = -gy / gnorm;
 		float roll = std::clamp((gnorm - roll_threshold) / 0.20f, 0.0f, 1.0f);
-		move_x = (0.35f * cruise_speed) * heading_x + (roll_speed * (0.35f + 0.65f * roll)) * downhill_x;
-		move_y = (0.35f * cruise_speed) * heading_y + (roll_speed * (0.35f + 0.65f * roll)) * downhill_y;
-		angle += 10.0f * roll * dt; // rolling visual cue
+		move_x = (0.55f * cruise_speed) * heading_x + (0.65f * roll_speed * (0.25f + 0.75f * roll)) * downhill_x;
+		move_y = (0.55f * cruise_speed) * heading_y + (0.65f * roll_speed * (0.25f + 0.75f * roll)) * downhill_y;
+		angle += 4.0f * roll * dt; // gentler rolling visual cue
 	}
 	else
 	{
@@ -94,8 +94,8 @@ void Pig::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float
 		low_altitude_cooldown = low_altitude_cooldown_time;
 		float downhill_x = -gx / gnorm;
 		float downhill_y = -gy / gnorm;
-		move_x += 0.04f * wet * downhill_x;
-		move_y += 0.04f * wet * downhill_y;
+		move_x += 0.02f * wet * downhill_x;
+		move_y += 0.02f * wet * downhill_y;
 	}
 
 	// Lava: strong panic and damage over time.
@@ -105,8 +105,8 @@ void Pig::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float
 		low_altitude_cooldown = low_altitude_cooldown_time;
 		float downhill_x = -gx / gnorm;
 		float downhill_y = -gy / gnorm;
-		move_x += 0.12f * hot * downhill_x;
-		move_y += 0.12f * hot * downhill_y;
+		move_x += 0.06f * hot * downhill_x;
+		move_y += 0.06f * hot * downhill_y;
 
 		lava_cooldown -= dt;
 		if (hot > 0.75f && lava_cooldown <= 0.0f)
@@ -170,6 +170,6 @@ void Pig::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float
 		return;
 	}
 
-	if (std::rand() / float(RAND_MAX) < 0.000001f)
+	if (std::rand() / float(RAND_MAX) < 0.00001f)
 		life--;
 }
