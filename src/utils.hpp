@@ -125,6 +125,7 @@ using PFNGLUNIFORM1IPROC = void(APIENTRY *)(GLint, GLint);
 using PFNGLUNIFORM1FPROC = void(APIENTRY *)(GLint, GLfloat);
 using PFNGLUNIFORM2FPROC = void(APIENTRY *)(GLint, GLfloat, GLfloat);
 using PFNGLUNIFORM2FVPROC = void(APIENTRY *)(GLint, GLsizei, const GLfloat *);
+using PFNGLUNIFORM3FPROC = void(APIENTRY *)(GLint, GLfloat, GLfloat, GLfloat);
 using PFNGLGENVERTEXARRAYSPROC = void(APIENTRY *)(GLsizei, GLuint *);
 using PFNGLBINDVERTEXARRAYPROC = void(APIENTRY *)(GLuint);
 using PFNGLGENTEXTURESPROC = void(APIENTRY *)(GLsizei, GLuint *);
@@ -188,6 +189,7 @@ inline PFNGLUNIFORM1IPROC glUniform1i_ = nullptr;
 inline PFNGLUNIFORM1FPROC glUniform1f_ = nullptr;
 inline PFNGLUNIFORM2FPROC glUniform2f_ = nullptr;
 inline PFNGLUNIFORM2FVPROC glUniform2fv_ = nullptr;
+inline PFNGLUNIFORM3FPROC glUniform3f_ = nullptr;
 inline PFNGLGENVERTEXARRAYSPROC glGenVertexArrays_ = nullptr;
 inline PFNGLBINDVERTEXARRAYPROC glBindVertexArray_ = nullptr;
 inline PFNGLGENTEXTURESPROC glGenTextures_ = nullptr;
@@ -260,6 +262,7 @@ static bool loadGL()
 	glUniform1f_ = (PFNGLUNIFORM1FPROC)getGLProc("glUniform1f");
 	glUniform2f_ = (PFNGLUNIFORM2FPROC)getGLProc("glUniform2f");
 	glUniform2fv_ = (PFNGLUNIFORM2FVPROC)getGLProc("glUniform2fv");
+	glUniform3f_ = (PFNGLUNIFORM3FPROC)getGLProc("glUniform3f");
 	glGenVertexArrays_ = (PFNGLGENVERTEXARRAYSPROC)getGLProc("glGenVertexArrays");
 	glBindVertexArray_ = (PFNGLBINDVERTEXARRAYPROC)getGLProc("glBindVertexArray");
 	glGenTextures_ = (PFNGLGENTEXTURESPROC)getGLProc("glGenTextures");
@@ -272,7 +275,7 @@ static bool loadGL()
 	glActiveTexture_ = (PFNGLACTIVETEXTUREPROC)getGLProc("glActiveTexture");
 	glDrawArrays_ = (PFNGLDRAWARRAYSPROC)getGLProc("glDrawArrays");
 
-	return glCreateShader_ && glShaderSource_ && glCompileShader_ && glGetShaderiv_ && glGetShaderInfoLog_ && glCreateProgram_ && glAttachShader_ && glLinkProgram_ && glGetProgramiv_ && glGetProgramInfoLog_ && glUseProgram_ && glDeleteShader_ && glDeleteProgram_ && glGetUniformLocation_ && glUniform1i_ && glUniform1f_ && glUniform2f_ && glUniform2fv_ && glGenVertexArrays_ && glBindVertexArray_ && glGenTextures_ && glBindTexture_ && glTexImage2D_ && glTexSubImage2D_ && glTexImage1D_ && glTexSubImage1D_ && glTexParameteri_ && glActiveTexture_ && glDrawArrays_ && glGenBuffers_ && glBindBuffer_ && glBufferData_ && glDrawArraysInstanced_;
+	return glCreateShader_ && glShaderSource_ && glCompileShader_ && glGetShaderiv_ && glGetShaderInfoLog_ && glCreateProgram_ && glAttachShader_ && glLinkProgram_ && glGetProgramiv_ && glGetProgramInfoLog_ && glUseProgram_ && glDeleteShader_ && glDeleteProgram_ && glGetUniformLocation_ && glUniform1i_ && glUniform1f_ && glUniform2f_ && glUniform2fv_ && glUniform3f_ && glGenVertexArrays_ && glBindVertexArray_ && glGenTextures_ && glBindTexture_ && glTexImage2D_ && glTexSubImage2D_ && glTexImage1D_ && glTexSubImage1D_ && glTexParameteri_ && glActiveTexture_ && glDrawArrays_ && glGenBuffers_ && glBindBuffer_ && glBufferData_ && glDrawArraysInstanced_;
 }
 
 // ----------------------------- GL Utils ------------------------------------

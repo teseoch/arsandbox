@@ -34,6 +34,9 @@ uniform sampler1D  u_colormapTex;
 uniform sampler2D u_flowTex;
 uniform sampler2D u_flowTex2;
 
+uniform vec3 u_flowColor1;
+uniform vec3 u_flowColor2;
+
 uniform vec2  u_depthUVQuad[4];  // normalized [0,1]
 
 uniform float u_depthMinMm;
@@ -71,8 +74,8 @@ void main(){
   flow2 = clamp(flow2, 0.0, 1.0);
   flow2 = smoothstep(0.10, 0.45, flow2);
 
-  vec3 waterCol = texture(u_colormapTex, 0.08).rgb;
-  vec3 lavaCol = vec3(1.0, 0.35, 0.05);
+  vec3 waterCol = u_flowColor1;
+  vec3 lavaCol = u_flowColor2;
 
   col = mix(col, waterCol, 0.45 * flow1);
   col += 0.08 * flow1 * waterCol;

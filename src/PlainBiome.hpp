@@ -54,5 +54,26 @@ public:
 		flow2DropMinSpeed = 0.0002f;
 		flow2DiffuseCenterWeight = 0.96f;
 		flow2DiffuseNeighWeight = 0.01f;
+
+		mega1FlowColor = {0.0f, 0.314118f, 0.643529f};
+		mega2FlowColor = {1.0f, 0.35f, 0.05f};
+	}
+
+	std::tuple<float, float, float> trail_color(const std::array<float, 3> &col) const override
+	{
+		float rr = 0.65f * col[0] + 0.35f * 0.75f;
+		float rg = 0.65f * col[1] + 0.35f * 0.95f;
+		float rb = 0.65f * col[2] + 0.35f * 1.00f;
+
+		return {rr, rg, rb};
+	}
+
+	std::tuple<float, float, float> head_color(const std::array<float, 3> &col) const override
+	{
+		float rr = 0.50f * col[0] + 0.50f * 0.75f;
+		float rg = 0.50f * col[1] + 0.50f * 0.95f;
+		float rb = 0.50f * col[2] + 0.50f * 1.00f;
+
+		return {rr, rg, rb};
 	}
 };

@@ -62,6 +62,7 @@ const static int tileW = 64;
 const static int tileH = 64;
 
 void render_particles(
+	const Biome &biome,
 	const std::vector<Drop> &parts,
 	const std::array<float, 3> &col,
 	const std::array<float, 2> &sizes,
@@ -76,16 +77,12 @@ void render_particles(
 
 			// Push trail color slightly toward cyan/white so it still reads as
 			// water.
-			float rr = 0.65f * col[0] + 0.35f * 0.75f;
-			float rg = 0.65f * col[1] + 0.35f * 0.95f;
-			float rb = 0.65f * col[2] + 0.35f * 1.00f;
+			auto [rr, rg, rb] = biome.trail_color(col);
 
 			sprites.push_back(
 				{u, v, sizes[0] * t, 0.0f, 0.0f, rr, rg, rb, 0.02f + 0.18f * t});
 		}
-		float rr = 0.50f * col[0] + 0.50f * 0.75f;
-		float rg = 0.50f * col[1] + 0.50f * 0.95f;
-		float rb = 0.50f * col[2] + 0.50f * 1.00f;
+		auto [rr, rg, rb] = biome.head_color(col);
 
 		sprites.push_back({d.u, d.v, sizes[1], 0.0f, 0.0f, rr, rg, rb, 0.9f});
 	}
@@ -304,6 +301,8 @@ int main()
 	const GLint loc_depthSampler = glGetUniformLocation_(prog, "u_depthTex");
 	const GLint loc_flowSampler = glGetUniformLocation_(prog, "u_flowTex");
 	const GLint loc_flowSampler2 = glGetUniformLocation_(prog, "u_flowTex2");
+	const GLint loc_flowColor1 = glGetUniformLocation_(prog, "u_flowColor1");
+	const GLint loc_flowColor2 = glGetUniformLocation_(prog, "u_flowColor2");
 	GLint loc_lutSampler;
 	GLint u_time = -1;
 	GLint u_tileScale = -1;
@@ -440,6 +439,16 @@ int main()
 		glUniform1f_(loc_depthMaxMm, gCtl.depth.depthMaxMm);
 		glUniform1f_(loc_gamma, gCtl.gamma);
 
+		// Set flow colors
+		glUniform3f_(loc_flowColor1,
+					 sim.currentBiome()->mega1FlowColor[0],
+					 sim.currentBiome()->mega1FlowColor[1],
+					 sim.currentBiome()->mega1FlowColor[2]);
+		glUniform3f_(loc_flowColor2,
+					 sim.currentBiome()->mega2FlowColor[0],
+					 sim.currentBiome()->mega2FlowColor[1],
+					 sim.currentBiome()->mega2FlowColor[2]);
+
 		// bind textures
 		glActiveTexture_(GL_TEXTURE0);
 		glBindTexture_(GL_TEXTURE_2D, depthTex);
@@ -510,9 +519,9 @@ int main()
 		}
 		// std::cout << std::endl;
 
-		render_particles(sim.getRain(), sim.rainColor(), sim.rainSize(), sprites);
-		render_particles(sim.getMega1(), sim.mega1Color(), sim.mega1Size(), sprites);
-		render_particles(sim.getMega2(), sim.mega2Color(), sim.mega2Size(), sprites);
+		render_particles(*sim.currentBiome(), sim.getRain(), sim.rainColor(), sim.rainSize(), sprites);
+		render_particles(*sim.currentBiome(), sim.getMega1(), sim.mega1Color(), sim.mega1Size(), sprites);
+		render_particles(*sim.currentBiome(), sim.getMega2(), sim.mega2Color(), sim.mega2Size(), sprites);
 
 		for (const auto &c : sim.getCreatures())
 		{

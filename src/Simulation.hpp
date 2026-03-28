@@ -56,9 +56,9 @@ public:
 
 	inline const GLuint &texture() const { return currentBiome()->texture(); }
 
-private:
 	std::shared_ptr<Biome> currentBiome() const { return biomes[biomeIndex]; }
 
+private:
 	FlowMap flowMap1;
 	FlowMap flowMap2;
 

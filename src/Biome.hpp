@@ -47,6 +47,12 @@ public:
 	float flow2DiffuseCenterWeight = -1;
 	float flow2DiffuseNeighWeight = -1;
 
+	std::array<float, 3> mega1FlowColor;
+	std::array<float, 3> mega2FlowColor;
+
+	virtual std::tuple<float, float, float> trail_color(const std::array<float, 3> &col) const = 0;
+	virtual std::tuple<float, float, float> head_color(const std::array<float, 3> &col) const = 0;
+
 protected:
 	CMap cmap;
 
