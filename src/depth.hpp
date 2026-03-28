@@ -7,17 +7,24 @@
 #include <utility>
 #include <vector>
 #include <array>
-
+#include <deque>
 #include <iostream>
 
 #include "types.hpp"
 
 class Depth
 {
+private:
+	static const int MAX_HISTORY = 5;
+	std::deque<std::vector<float>> depth_history;
+	std::vector<float> depth_smooth; // millimeters, size w*h
+
 public:
 	int w, h;
 	std::vector<float> depth; // millimeters, size w*h
 	float depthMinMm, depthMaxMm;
+
+	void newDepth();
 
 	std::vector<uint8_t> rgb; // rgb
 	Quad uv_quad;
@@ -108,7 +115,7 @@ public:
 
 	inline float height(int xi, int yi) const
 	{
-		const float d = depth[yi * w + xi];
+		const float d = depth_smooth[yi * w + xi];
 		const float t =
 			std::clamp((d - depthMinMm) / (depthMaxMm - depthMinMm), 0.0f, 1.0f);
 		return 1.0f - t;

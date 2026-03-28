@@ -390,6 +390,7 @@ int main()
 			// readDepthFrame(gCtl.depth, "depth_debug.txt");
 #endif
 			gCtl.depth.uv_quad = gU;
+			gCtl.depth.newDepth();
 
 			// uint16_t min = 10000;
 			// uint16_t max = 0;

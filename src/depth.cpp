@@ -20,6 +20,30 @@ static std::string to_txt_path(const std::string &filename)
 	return filename + ".txt";
 }
 
+void Depth::newDepth()
+{
+	depth_history.push_back(depth);
+
+	if (depth_history.size() == 1)
+	{
+		depth_smooth = depth;
+		return;
+	}
+
+	if (depth_history.size() > MAX_HISTORY)
+	{
+		for (size_t i = 0; i < depth.size(); i++)
+			depth_smooth[i] += (depth_history.back()[i] - depth_history.front()[i]) / MAX_HISTORY;
+
+		depth_history.pop_front();
+	}
+	else
+	{
+		for (size_t i = 0; i < depth.size(); i++)
+			depth_smooth[i] = (depth_smooth[i] * (depth_history.size() - 1) + depth[i]) / depth_history.size();
+	}
+}
+
 void Depth::save_png(const std::string &filename) const
 {
 	if (depth.empty())
