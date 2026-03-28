@@ -256,15 +256,6 @@ void Simulation::clear()
 
 void Simulation::step(const Depth &depth, float dt)
 {
-	const float gravity1 = 0.20f;
-	const float damping1 = 0.992f;
-	const float speed_cap1 = 0.06f;
-	const float bounce1 = -0.5f;
-
-	const float gravity2 = 0.10f;
-	const float damping2 = 0.97f;
-	const float speed_cap2 = 0.025f;
-	const float bounce2 = -0.1f;
 
 	for (auto &c : creatures)
 		c->step(depth, flowMap1, flowMap2, dt);
@@ -272,28 +263,28 @@ void Simulation::step(const Depth &depth, float dt)
 	creatures.erase(std::remove_if(creatures.begin(), creatures.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), creatures.end());
 
 	for (auto &d : rain_)
-		d.step(depth, dt, gravity1, damping1, speed_cap1, bounce1, flowMap2, 0.15f);
+		d.step(depth, dt, currentBiome()->gravity1, currentBiome()->damping1, currentBiome()->speed_cap1, currentBiome()->bounce1, flowMap2, 0.15f);
 	for (auto &d : drops1)
-		d.step(depth, dt, gravity1, damping1, speed_cap1, bounce1, flowMap2, 0.15f);
+		d.step(depth, dt, currentBiome()->gravity1, currentBiome()->damping1, currentBiome()->speed_cap1, currentBiome()->bounce1, flowMap2, 0.15f);
 	for (auto &d : drops2)
-		d.step(depth, dt, gravity2, damping2, speed_cap2, bounce2, flowMap1, 0.15f);
+		d.step(depth, dt, currentBiome()->gravity2, currentBiome()->damping2, currentBiome()->speed_cap2, currentBiome()->bounce2, flowMap1, 0.15f);
 
 	rain_.erase(std::remove_if(rain_.begin(), rain_.end(), [](const Drop &d) { return !d.isAlive(); }), rain_.end());
 	drops1.erase(std::remove_if(drops1.begin(), drops1.end(), [](const Drop &d) { return !d.isAlive(); }), drops1.end());
 	drops2.erase(std::remove_if(drops2.begin(), drops2.end(), [](const Drop &d) { return !d.isAlive(); }), drops2.end());
 
-	// Water: lighter, faster-moving, spreads more and fades a bit faster.
-	flowMap1.decay(0.975f);
-	flowMap1.flowDrops(rain_, 4.5f, 0.0005f);
-	flowMap1.flowDrops(drops1, 5.5f, 0.0005f);
-	flowMap1.diffuse_once(0.78f, 0.055f);
-	flowMap1.diffuse_once(0.78f, 0.055f);
+	// // Water: lighter, faster-moving, spreads more and fades a bit faster.
+	flowMap1.decay(currentBiome()->flow1Decay);
+	flowMap1.flowDrops(rain_, currentBiome()->flow1RainAmount, currentBiome()->flow1RainMinSpeed);
+	flowMap1.flowDrops(drops1, currentBiome()->flow1DropAmount, currentBiome()->flow1DropMinSpeed);
+	flowMap1.diffuse_once(currentBiome()->flow1DiffuseCenterWeight, currentBiome()->flow1DiffuseNeighWeight);
+	flowMap1.diffuse_once(currentBiome()->flow1DiffuseCenterWeight, currentBiome()->flow1DiffuseNeighWeight);
 
 	// Lava: thicker and more honey-like: slower spreading, stronger deposit,
 	// and much more persistent.
-	flowMap2.decay(0.975f);
-	flowMap2.flowDrops(drops2, 10.0f, 0.0002f);
-	flowMap2.diffuse_once(0.96f, 0.01f);
+	flowMap2.decay(currentBiome()->flow2Decay);
+	flowMap2.flowDrops(drops2, currentBiome()->flow2DropAmount, currentBiome()->flow2DropMinSpeed);
+	flowMap2.diffuse_once(currentBiome()->flow2DiffuseCenterWeight, currentBiome()->flow2DiffuseNeighWeight);
 }
 
 void Simulation::init(const int w, const int h)

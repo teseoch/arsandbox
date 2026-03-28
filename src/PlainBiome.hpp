@@ -28,5 +28,31 @@ public:
 		mega1Color_ = {0.0f, 0.314118f, 0.643529f};
 		mega2Size_ = {8.0f, 10.0f};
 		mega2Color_ = {1.0f, 0.35f, 0.05f};
+
+		gravity1 = 0.20f;
+		damping1 = 0.992f;
+		speed_cap1 = 0.06f;
+		bounce1 = -0.5f;
+
+		gravity2 = 0.10f;
+		damping2 = 0.97f;
+		speed_cap2 = 0.025f;
+		bounce2 = -0.1f;
+
+		flow1Decay = 0.975f;
+
+		flow1RainAmount = 4.5f;
+		flow1RainMinSpeed = 0.0005f;
+		flow1DropAmount = 5.5f;
+		flow1DropMinSpeed = 0.0005f;
+		flow1DiffuseCenterWeight = 0.78f;
+		flow1DiffuseNeighWeight = 0.055f;
+
+		flow2Decay = 0.975f;
+
+		flow2DropAmount = 10.0f;
+		flow2DropMinSpeed = 0.0002f;
+		flow2DiffuseCenterWeight = 0.96f;
+		flow2DiffuseNeighWeight = 0.01f;
 	}
 };

@@ -21,6 +21,32 @@ public:
 	inline const std::array<float, 2> &mega2Size() const { return mega2Size_; }
 	inline const std::array<float, 3> &mega2Color() const { return mega2Color_; }
 
+	float gravity1 = -1;
+	float damping1 = -1;
+	float speed_cap1 = -1;
+	float bounce1 = -1;
+
+	float gravity2 = -1;
+	float damping2 = -1;
+	float speed_cap2 = -1;
+	float bounce2 = -1;
+
+	float flow1Decay = -1;
+
+	float flow1RainAmount = -1;
+	float flow1RainMinSpeed = -1;
+	float flow1DropAmount = -1;
+	float flow1DropMinSpeed = -1;
+	float flow1DiffuseCenterWeight = -1;
+	float flow1DiffuseNeighWeight = -1;
+
+	float flow2Decay = -1;
+
+	float flow2DropAmount = -1;
+	float flow2DropMinSpeed = -1;
+	float flow2DiffuseCenterWeight = -1;
+	float flow2DiffuseNeighWeight = -1;
+
 protected:
 	CMap cmap;
 
