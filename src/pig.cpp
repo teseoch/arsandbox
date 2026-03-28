@@ -172,4 +172,19 @@ void Pig::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float
 
 	if (std::rand() / float(RAND_MAX) < 0.00001f)
 		life--;
+
+	if (wet > 0.6f)
+	{
+		drown_timer += dt;
+
+		if (drown_timer > 2.0f) // ~2 seconds underwater
+		{
+			life--;
+			drown_timer = 0.5f; // slow ticking damage
+		}
+	}
+	else
+	{
+		drown_timer = std::max(0.0f, drown_timer - 2.0f * dt); // recover quickly
+	}
 }

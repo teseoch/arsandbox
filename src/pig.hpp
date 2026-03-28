@@ -19,6 +19,8 @@ private:
 	float init_timer = 0.8f; // initial push out of the house
 	float stuck_timer = 0.0f;
 
+	float drown_timer = 0.0f;
+
 	// Pig-specific movement: likes plains, dislikes slopes.
 	float cruise_speed = 0.018f;
 	float drift_gain = 0.020f;
