@@ -589,3 +589,15 @@ Gamepad (if present, GLFW mapping):
   Left stick Y: gamma
   LB/RB: cycle colormap backward/forward
 */
+
+/*still hardcoded
+	•	30.0f creature sprite size
+	•	30.0 panic flicker frequency
+	•	30.0f tag decision margin
+	•	shader flow blend strengths:
+	•	0.45, 0.08, 0.55, 0.12
+	•	shader smoothstep thresholds:
+	•	0.10, 0.45
+	render_particles(): 0.02f + 0.18f * t
+
+*/
