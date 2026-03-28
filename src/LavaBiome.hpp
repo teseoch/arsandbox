@@ -29,7 +29,7 @@ public:
 		mega1Color_ = {0.45f, 0.32f, 0.22f};
 
 		mega2Size_ = {9.0f, 12.0f};
-		mega2Color_ = {0.95f, 0.25f, 0.05f};
+		mega2Color_ = {1.0f, 0.30f, 0.08f};
 
 		gravity1 = 0.12f;
 		damping1 = 0.990f;
@@ -59,7 +59,7 @@ public:
 
 		// Flow colors (used in shader)
 		mega1FlowColor = {0.45f, 0.22f, 0.10f};
-		mega2FlowColor = {1.0f, 0.35f, 0.08f};
+		mega2FlowColor = {1.0f, 0.40f, 0.10f};
 	}
 
 	std::tuple<float, float, float> trail_color(const std::array<float, 3> &col) const override
