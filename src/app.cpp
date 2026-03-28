@@ -527,7 +527,7 @@ int main()
 			float flipx = c->flip_x;
 			if (c->state == CreatureState::PANIC)
 			{
-				int panic_tick = int(std::floor(tNow * 12.0));
+				int panic_tick = int(std::floor(tNow * 30.0));
 				if (((panic_tick + int(c->u * 1000.0f) + int(c->v * 1000.0f)) & 1) != 0)
 					flipx = 1.0f - flipx;
 			}
