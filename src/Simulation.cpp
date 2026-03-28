@@ -291,9 +291,9 @@ void Simulation::step(const Depth &depth, float dt)
 
 	// Lava: thicker and more honey-like: slower spreading, stronger deposit,
 	// and much more persistent.
-	flowMap2.decay(0.992f);
-	flowMap2.flowDrops(drops2, 7.0f, 0.0002f);
-	flowMap2.diffuse_once(0.94f, 0.015f);
+	flowMap2.decay(0.975f);
+	flowMap2.flowDrops(drops2, 10.0f, 0.0002f);
+	flowMap2.diffuse_once(0.96f, 0.01f);
 }
 
 void Simulation::init(const int w, const int h)
