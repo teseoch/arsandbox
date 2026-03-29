@@ -1,6 +1,7 @@
 #pragma once
 
 #include "utils.hpp"
+#include "audio.hpp"
 
 #include <fstream>
 #include <iostream>

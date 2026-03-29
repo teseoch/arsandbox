@@ -26,10 +26,14 @@
 // - If you later swap synthetic depth for Kinect/RealSense, keep the depthTex
 // upload path identical.
 
+#define MINIAUDIO_IMPLEMENTATION
+#include "miniaudio.h"
+
 #include "creature.hpp"
 #include "depth.hpp"
 #include "drop.hpp"
 #include "image.hpp"
+#include "audio.hpp"
 #include "overlay.hpp"
 #include "utils.hpp"
 #include "types.hpp"
@@ -190,6 +194,7 @@ int main()
 	}
 
 	TagDetector tagDetector;
+	Audio::instance().init();
 
 	// Initial projector quad covers whole windows
 	if (std::filesystem::exists("calib.txt"))
@@ -326,6 +331,8 @@ int main()
 		double tNow = glfwGetTime();
 		float dt = (float)(tNow - tPrev);
 		tPrev = tNow;
+
+		Audio::instance().update();
 
 		// update window size (in case of resize)
 		glfwGetFramebufferSize(win, &winW, &winH);
@@ -565,6 +572,7 @@ int main()
 
 	glDeleteProgram_(prog);
 	glfwTerminate();
+	Audio::instance().shutdown();
 	return 0;
 }
 

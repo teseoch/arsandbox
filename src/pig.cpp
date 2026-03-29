@@ -1,9 +1,17 @@
 #include "pig.hpp"
 
+#include "audio.hpp"
+
 void Pig::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float dt)
 {
 	if (life <= 0)
 	{
+		if (!deadSoundPlayed)
+		{
+			Audio::instance().play(Sound::Burn, 0.5f);
+			deadSoundPlayed = true;
+		}
+
 		life--;
 		state = CreatureState::DEAD;
 		return;

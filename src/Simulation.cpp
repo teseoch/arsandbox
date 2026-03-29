@@ -4,6 +4,7 @@
 #include "LavaBiome.hpp"
 #include "goat.hpp"
 #include "pig.hpp"
+#include "audio.hpp"
 
 float random_float(float a, float b)
 {
@@ -76,6 +77,8 @@ void Simulation::mega1(float t, float u, float v)
 
 	lastMega1Time = t;
 
+	// Audio::instance().play(Sound::Splash, 0.5f);
+
 	for (int i = 0; i < 100; i++)
 	{
 		Drop d;
@@ -124,6 +127,8 @@ void Simulation::mega2(float t, float u, float v)
 
 	lastMega2Time = t;
 
+	Audio::instance().play(Sound::Lava, 0.2f);
+
 	for (int i = 0; i < 100; i++)
 	{
 		Drop d;
@@ -168,6 +173,8 @@ void Simulation::spawnGoat(const Depth &depth, float t, float x, float y, float 
 
 	if (t - lastGoatTime < 2.0f)
 		return;
+
+	Audio::instance().play(Sound::Goat, 0.2f);
 
 	lastGoatTime = t;
 
@@ -215,6 +222,8 @@ void Simulation::spawnPig(const Depth &depth, float t, float x, float y, float d
 
 	if (t - lastPigTime < 2.0f)
 		return;
+
+	Audio::instance().play(Sound::Pig, 0.7f);
 
 	lastPigTime = t;
 

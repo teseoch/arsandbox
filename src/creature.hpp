@@ -35,4 +35,7 @@ public:
 
 private:
 	const int texture_index;
+
+protected:
+	bool deadSoundPlayed = false;
 };
