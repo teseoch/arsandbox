@@ -30,15 +30,16 @@ public:
 	GLuint vao = 0;
 	GLuint quadVBO = 0;
 	GLuint instVBO = 0;
-	GLuint spriteTex[2] = {0, 0};
+	GLuint spriteTex[2][2] = {{0, 0}, {0, 0}}; // [biome][animal]
 
 	OverlayRenderer();
 
-	void createRGBA8Texture(const uint8_t *rgba, int w, int h, int index);
+	void createRGBA8Texture(const uint8_t *rgba, int w, int h, int biome, int animal);
 
 	void draw(
 		GLuint overlayProgram, int screenW, int screenH,
 		const float projQuadPx[8], // [x0,y0, x1,y1, x2,y2, x3,y3] TL,TR,BR,BL
+		const int biome,
 		const std::vector<OverlaySprite> &sprites);
 
 	GLuint createProgram();

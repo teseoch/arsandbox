@@ -157,31 +157,35 @@ int main()
 	int creatureSheetW = 0, creatureSheetH = 0;
 	{
 		{
-			std::vector<uint8_t> creatureRGBA =
-				load_png_rgba(folder + "/creatures/goat-sheet.png", creatureSheetW, creatureSheetH);
+			std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/goat-sheet.png", creatureSheetW, creatureSheetH);
 			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
-			{
-				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 0);
-			}
+				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 0, 0);
 			else
-			{
-				std::cerr << "Failed to load creature sprite texture: "
-						  << (folder + "/creatures/goat-sheet.png") << std::endl;
-			}
+				std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/goat-sheet.png") << std::endl;
 		}
 
 		{
-			std::vector<uint8_t> creatureRGBA =
-				load_png_rgba(folder + "/creatures/pig-sheet.png", creatureSheetW, creatureSheetH);
+			std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/pig-sheet.png", creatureSheetW, creatureSheetH);
 			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
-			{
-				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 1);
-			}
+				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 0, 1);
 			else
-			{
-				std::cerr << "Failed to load creature sprite texture: "
-						  << (folder + "/creatures/pig-sheet.png") << std::endl;
-			}
+				std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/pig-sheet.png") << std::endl;
+		}
+
+		{
+			std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/goat-lava-sheet.png", creatureSheetW, creatureSheetH);
+			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
+				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 1, 0);
+			else
+				std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/goat-lava-sheet.png") << std::endl;
+		}
+
+		{
+			std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/pig-lava-sheet.png", creatureSheetW, creatureSheetH);
+			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
+				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 1, 1);
+			else
+				std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/pig-lava-sheet.png") << std::endl;
 		}
 	}
 
@@ -549,7 +553,7 @@ int main()
 				 c->textureIndex()});
 		}
 
-		overlay.draw(overlayProgram, winW, winH, P8, sprites);
+		overlay.draw(overlayProgram, winW, winH, P8, sim.biomeIndex, sprites);
 
 		glfwSwapBuffers(win);
 		glfwPollEvents();

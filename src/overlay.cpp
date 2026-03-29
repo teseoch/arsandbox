@@ -165,11 +165,13 @@ OverlayRenderer::OverlayRenderer()
 	glBindBuffer_(GL_ARRAY_BUFFER, 0);
 
 	const uint8_t white[4] = {255, 255, 255, 255};
-	createRGBA8Texture(white, 1, 1, 0);
-	createRGBA8Texture(white, 1, 1, 1);
+	createRGBA8Texture(white, 1, 1, 0, 0);
+	createRGBA8Texture(white, 1, 1, 0, 1);
+	createRGBA8Texture(white, 1, 1, 1, 0);
+	createRGBA8Texture(white, 1, 1, 1, 1);
 }
 
-void OverlayRenderer::createRGBA8Texture(const uint8_t *rgba, int w, int h, int index)
+void OverlayRenderer::createRGBA8Texture(const uint8_t *rgba, int w, int h, int biome, int animal)
 {
 	GLuint tex = 0;
 	glGenTextures_(1, &tex);
@@ -182,12 +184,13 @@ void OverlayRenderer::createRGBA8Texture(const uint8_t *rgba, int w, int h, int 
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glBindTexture_(GL_TEXTURE_2D, 0);
 
-	spriteTex[index] = tex;
+	spriteTex[biome][animal] = tex;
 }
 
 void OverlayRenderer::draw(
 	GLuint overlayProgram, int screenW, int screenH,
 	const float projQuadPx[8], // [x0,y0, x1,y1, x2,y2, x3,y3] TL,TR,BR,BL
+	const int biome,
 	const std::vector<OverlaySprite> &sprites)
 {
 	if (sprites.empty())
@@ -206,11 +209,11 @@ void OverlayRenderer::draw(
 	GLint locSpriteTex0 = glGetUniformLocation_(overlayProgram, "u_spriteTex0");
 	glUniform1i_(locSpriteTex0, 3);
 	glActiveTexture_(GL_TEXTURE3);
-	glBindTexture_(GL_TEXTURE_2D, spriteTex[0]);
+	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][0]);
 	GLint locSpriteTex1 = glGetUniformLocation_(overlayProgram, "u_spriteTex1");
 	glUniform1i_(locSpriteTex1, 4);
 	glActiveTexture_(GL_TEXTURE4);
-	glBindTexture_(GL_TEXTURE_2D, spriteTex[1]);
+	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][1]);
 
 	// Enable alpha blending
 	glEnable(GL_BLEND);

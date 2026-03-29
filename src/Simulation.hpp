@@ -58,6 +58,8 @@ public:
 
 	std::shared_ptr<Biome> currentBiome() const { return biomes[biomeIndex]; }
 
+	int biomeIndex = 0;
+
 private:
 	FlowMap flowMap1;
 	FlowMap flowMap2;
@@ -79,6 +81,4 @@ private:
 
 	constexpr static const float ru = 0.5f;
 	constexpr static const float rv = 1.0f;
-
-	int biomeIndex = 0;
 };
