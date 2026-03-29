@@ -168,7 +168,7 @@ void Goat::step(const Depth &hf,
 		if (wet > 0.55f && wet_cooldown <= 0.0f)
 		{
 			life--;
-			wet_cooldown = 0.2f;
+			wet_cooldown = 0.8f;
 		}
 	}
 
