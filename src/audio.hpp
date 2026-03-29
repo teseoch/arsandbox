@@ -31,6 +31,8 @@ public:
 
 	void play(Sound s, float volume = 1.0f);
 
+	bool muted = false;
+
 private:
 	Audio() = default;
 

@@ -37,5 +37,8 @@ private:
 	float lava_cooldown = 0.0f;
 
 public:
-	void step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float dt) override;
+	void step(const Depth &hf,
+			  const Biome &biome,
+			  const FlowMap &water, const FlowMap &lava,
+			  float dt) override;
 };

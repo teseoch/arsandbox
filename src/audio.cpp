@@ -21,6 +21,9 @@ void Audio::init()
 
 void Audio::play(Sound s, float volume)
 {
+	if (muted)
+		return;
+
 	auto instance = std::make_unique<ma_sound>();
 
 	if (ma_sound_init_copy(&engine, &baseSounds[(int)s], 0, nullptr, instance.get()) != MA_SUCCESS)

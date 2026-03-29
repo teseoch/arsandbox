@@ -267,7 +267,7 @@ void Simulation::step(const Depth &depth, float dt)
 {
 
 	for (auto &c : creatures)
-		c->step(depth, flowMap1, flowMap2, dt);
+		c->step(depth, *currentBiome(), flowMap1, flowMap2, dt);
 
 	creatures.erase(std::remove_if(creatures.begin(), creatures.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), creatures.end());
 

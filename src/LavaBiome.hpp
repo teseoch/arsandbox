@@ -60,6 +60,8 @@ public:
 		// Flow colors (used in shader)
 		mega1FlowColor = {0.45f, 0.22f, 0.10f};
 		mega2FlowColor = {1.0f, 0.40f, 0.10f};
+
+		lava_threshold = 0.6;
 	}
 
 	std::tuple<float, float, float> trail_color(const std::array<float, 3> &col) const override
