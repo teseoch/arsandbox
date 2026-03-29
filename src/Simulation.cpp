@@ -77,7 +77,7 @@ void Simulation::mega1(float t, float u, float v)
 
 	lastMega1Time = t;
 
-	// Audio::instance().play(Sound::Splash, 0.5f);
+	Audio::instance().play(Sound::Splash, 0.2f);
 
 	for (int i = 0; i < 100; i++)
 	{
@@ -127,7 +127,7 @@ void Simulation::mega2(float t, float u, float v)
 
 	lastMega2Time = t;
 
-	Audio::instance().play(Sound::Lava, 0.2f);
+	Audio::instance().play(Sound::Lava, 0.6f);
 
 	for (int i = 0; i < 100; i++)
 	{
