@@ -24,6 +24,7 @@ private:
 	float shore_avoid_gain = 0.040f;
 	float heading_x = 1.0f;
 	float heading_y = 0.0f;
+	float previous_angle = 0.0f;
 	float heading_timer = 0.0f;
 	float heading_interval = 1.2f;
 	float wet_cooldown = 0.0f;

@@ -40,12 +40,6 @@ void Fish::step(const Depth &hf,
 	float hot = lava.sample_bilinear(u, v);
 	hot = std::clamp((hot - 0.04f) / 0.18f, 0.0f, 1.0f);
 
-	// Terrain-defined biome hazards.
-	if (biome.water_threshold >= 0.0f)
-	{
-		float terrain_wet = std::clamp((biome.water_threshold - z) / 0.10f, 0.0f, 1.0f);
-		wet = std::max(wet, terrain_wet);
-	}
 	if (biome.lava_threshold >= 0.0f)
 	{
 		float terrain_hot = std::clamp((biome.lava_threshold - z) / 0.08f, 0.0f, 1.0f);
@@ -56,10 +50,11 @@ void Fish::step(const Depth &hf,
 	heading_timer -= dt;
 	if (heading_timer <= 0.0f)
 	{
-		float a = ((float)std::rand() / float(RAND_MAX)) * 6.2831853f;
+		float a = previous_angle + (((float)std::rand() / float(RAND_MAX)) * 20.0f - 10.0f) / 6.2831853f;
 		heading_x = std::cos(a);
 		heading_y = std::sin(a);
 		heading_timer = heading_interval + 0.8f * ((float)std::rand() / float(RAND_MAX));
+		previous_angle = a;
 	}
 
 	// Initial push away from the spawner.
@@ -86,6 +81,13 @@ void Fish::step(const Depth &hf,
 	{
 		move_x += flow_follow_gain * wet * downhill_x;
 		move_y += flow_follow_gain * wet * downhill_y;
+	}
+
+	// Terrain-defined biome hazards.
+	if (biome.water_threshold >= 0.0f)
+	{
+		float terrain_wet = std::clamp((biome.water_threshold - z) / 0.10f, 0.0f, 1.0f);
+		wet = std::max(wet, terrain_wet);
 	}
 
 	// Out of water, fish panic and try to get back to lower/wetter regions.
