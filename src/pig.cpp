@@ -120,13 +120,6 @@ void Pig::step(const Depth &hf,
 		float downhill_y = -gy / gnorm;
 		move_x += 0.02f * wet * downhill_x;
 		move_y += 0.02f * wet * downhill_y;
-
-		wet_cooldown -= dt;
-		if (wet > 0.65f && wet_cooldown <= 0.0f)
-		{
-			life--;
-			wet_cooldown = 0.8f;
-		}
 	}
 
 	// Lava: strong panic and damage over time.

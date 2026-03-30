@@ -35,7 +35,6 @@ private:
 	float low_altitude_cooldown = 0.0f;
 	float low_altitude_cooldown_time = 1.0f;
 	float lava_cooldown = 0.0f;
-	float wet_cooldown = 0.0f;
 
 public:
 	void step(const Depth &hf,

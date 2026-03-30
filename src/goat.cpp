@@ -37,7 +37,6 @@ void Goat::step(const Depth &hf,
 	stuck_timer = 0.0f;
 
 	state = CreatureState::NORMAL;
-	low_altitude_cooldown = low_altitude_cooldown - dt;
 
 	const float old_u = u;
 	const float old_v = v;
