@@ -4,6 +4,7 @@
 #include "LavaBiome.hpp"
 #include "goat.hpp"
 #include "pig.hpp"
+#include "fish.hpp"
 #include "audio.hpp"
 
 float random_float(float a, float b)
@@ -250,6 +251,50 @@ void Simulation::spawnPig(const Depth &depth, float t, float x, float y, float d
 
 void Simulation::spawnFish(const Depth &depth, float t, float x, float y, float dirx, float diry)
 {
+	if (t < 0)
+	{
+		x = random_float(0.0f, 1.0f);
+		y = random_float(0.0f, 1.0f);
+
+		std::shared_ptr<Fish> c = std::make_shared<Fish>();
+		c->u = x;
+		c->v = y;
+		c->dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+
+		c->init_dx = random_float(-1.0f, 1.0f);
+		c->init_dy = random_float(-1.0f, 1.0f);
+
+		creatures.push_back(c);
+
+		return;
+	}
+
+	if (t - lastFishTime < 2.0f)
+		return;
+
+	// Audio::instance().play(Sound::Fish, 0.7f);
+
+	lastFishTime = t;
+
+	std::shared_ptr<Fish> c = std::make_shared<Fish>();
+	c->u = x;
+	c->v = y;
+	c->dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+
+	// store initial direction (normalized)
+	float n = std::sqrt(dirx * dirx + diry * diry);
+	if (n > 1e-6f)
+	{
+		c->init_dx = dirx / n;
+		c->init_dy = diry / n;
+	}
+	else
+	{
+		c->init_dx = 0.0f;
+		c->init_dy = 0.0f;
+	}
+
+	creatures.push_back(c);
 }
 
 void Simulation::clear()

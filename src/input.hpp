@@ -47,6 +47,7 @@ struct Controls
 
 	bool spawnCreature1 = false;
 	bool spawnCreature2 = false;
+	bool spawnCreature3 = false;
 
 	// Gamepad edges
 	ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge, dpadUpEdge, dpadLeftEdge, dpadRightEdge;
@@ -138,8 +139,8 @@ static void updateGamepad(Controls &c, float dt)
 		c.spawnCreature1 = true; // goat
 	if (c.dpadLeftEdge.pressed(DLeft))
 		c.spawnCreature2 = true; // pig
-	// if (c.dpadRightEdge.pressed(DRight))
-	// 	c.spawnCreature3 = true; // fish
+	if (c.dpadRightEdge.pressed(DRight))
+		c.spawnCreature3 = true; // fish
 
 	if (c.lbEdge.pressed(LT))
 	{
@@ -207,6 +208,11 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 	if (key == GLFW_KEY_7)
 	{
 		gCtl.spawnCreature2 = true;
+		return;
+	}
+	if (key == GLFW_KEY_8)
+	{
+		gCtl.spawnCreature3 = true;
 		return;
 	}
 
