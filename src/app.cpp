@@ -538,7 +538,7 @@ int main()
 				const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
 				sim.spawnPig(gCtl.depth, tNow, u, v, dir.x, dir.y);
 			}
-			else if (t.id == 3 && t.decision_margin > 30.0f) // fixme
+			else if (t.id == 5 && t.decision_margin > 30.0f)
 			{
 				const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
 				sim.spawnFish(gCtl.depth, tNow, u, v, dir.x, dir.y);
