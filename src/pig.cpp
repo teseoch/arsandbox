@@ -1,8 +1,12 @@
 #include "pig.hpp"
 
 #include "audio.hpp"
+#include "Biome.hpp"
 
-void Pig::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float dt)
+void Pig::step(const Depth &hf,
+			   const Biome &biome,
+			   const FlowMap &water, const FlowMap &lava,
+			   float dt)
 {
 	if (life <= 0)
 	{
@@ -38,6 +42,18 @@ void Pig::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float
 
 	float hot = lava.sample_bilinear(u, v);
 	hot = std::clamp((hot - 0.04f) / 0.18f, 0.0f, 1.0f);
+
+	// Biome-dependent terrain hazards based on the current terrain height.
+	if (biome.water_threshold >= 0.0f)
+	{
+		float terrain_wet = std::clamp((biome.water_threshold - z) / 0.08f, 0.0f, 1.0f);
+		wet = std::max(wet, terrain_wet);
+	}
+	if (biome.lava_threshold >= 0.0f)
+	{
+		float terrain_hot = std::clamp((biome.lava_threshold - z) / 0.08f, 0.0f, 1.0f);
+		hot = std::max(hot, terrain_hot);
+	}
 
 	// Update cruising heading from time to time, but only on relatively flat ground.
 	// This avoids jittery random reorientation while the pig is already fighting a slope.
@@ -117,7 +133,7 @@ void Pig::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float
 		move_y += 0.06f * hot * downhill_y;
 
 		lava_cooldown -= dt;
-		if (hot > 0.75f && lava_cooldown <= 0.0f)
+		if (hot > 0.55f && lava_cooldown <= 0.0f)
 		{
 			life--;
 			lava_cooldown = 0.2f;
@@ -181,7 +197,7 @@ void Pig::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float
 	if (std::rand() / float(RAND_MAX) < 0.00001f)
 		life--;
 
-	if (wet > 0.6f)
+	if (wet > 0.45f)
 	{
 		drown_timer += dt;
 

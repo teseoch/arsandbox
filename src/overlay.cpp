@@ -67,6 +67,7 @@ in float vTexIndex;
 
 uniform sampler2D u_spriteTex0;
 uniform sampler2D u_spriteTex1;
+uniform sampler2D u_spriteTex2;
 
 out vec4 FragColor;
 
@@ -78,9 +79,11 @@ void main(){
         return;
     }
 
-    vec4 texel = (vTexIndex > 0.5f)
-    ? texture(u_spriteTex1, vUV)
-    : texture(u_spriteTex0, vUV);
+    vec4 texel = (vTexIndex > 1.5f)
+    ? texture(u_spriteTex2, vUV)
+    : (vTexIndex > 0.5f)
+        ? texture(u_spriteTex1, vUV)
+        : texture(u_spriteTex0, vUV);
     FragColor = vec4(vColor.rgb * texel.rgb, vColor.a * texel.a);
 }
 )GLSL";
@@ -165,10 +168,14 @@ OverlayRenderer::OverlayRenderer()
 	glBindBuffer_(GL_ARRAY_BUFFER, 0);
 
 	const uint8_t white[4] = {255, 255, 255, 255};
+
 	createRGBA8Texture(white, 1, 1, 0, 0);
 	createRGBA8Texture(white, 1, 1, 0, 1);
+	createRGBA8Texture(white, 1, 1, 0, 2);
+
 	createRGBA8Texture(white, 1, 1, 1, 0);
 	createRGBA8Texture(white, 1, 1, 1, 1);
+	createRGBA8Texture(white, 1, 1, 1, 2);
 }
 
 void OverlayRenderer::createRGBA8Texture(const uint8_t *rgba, int w, int h, int biome, int animal)
@@ -210,10 +217,16 @@ void OverlayRenderer::draw(
 	glUniform1i_(locSpriteTex0, 3);
 	glActiveTexture_(GL_TEXTURE3);
 	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][0]);
+
 	GLint locSpriteTex1 = glGetUniformLocation_(overlayProgram, "u_spriteTex1");
 	glUniform1i_(locSpriteTex1, 4);
 	glActiveTexture_(GL_TEXTURE4);
 	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][1]);
+
+	GLint locSpriteTex2 = glGetUniformLocation_(overlayProgram, "u_spriteTex2");
+	glUniform1i_(locSpriteTex2, 5);
+	glActiveTexture_(GL_TEXTURE5);
+	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][2]);
 
 	// Enable alpha blending
 	glEnable(GL_BLEND);

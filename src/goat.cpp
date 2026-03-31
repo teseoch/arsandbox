@@ -1,8 +1,12 @@
 #include "goat.hpp"
 
 #include "audio.hpp"
+#include "Biome.hpp"
 
-void Goat::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float dt)
+void Goat::step(const Depth &hf,
+				const Biome &biome,
+				const FlowMap &water, const FlowMap &lava,
+				float dt)
 {
 	if (life <= 0)
 	{
@@ -33,7 +37,6 @@ void Goat::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, floa
 	stuck_timer = 0.0f;
 
 	state = CreatureState::NORMAL;
-	low_altitude_cooldown = low_altitude_cooldown - dt;
 
 	const float old_u = u;
 	const float old_v = v;
@@ -82,7 +85,21 @@ void Goat::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, floa
 	float hot = lava.sample_bilinear(u, v);
 	hot = std::clamp((hot - 0.04f) / 0.18f, 0.0f, 1.0f);
 
-	float low_altitude = std::clamp((0.35f - z) / 0.15f, 0.0f, 1.0f);
+	// Biome-dependent terrain hazards based on the current terrain height.
+	if (biome.water_threshold >= 0.0f)
+	{
+		float terrain_wet = std::clamp((biome.water_threshold - z) / 0.08f, 0.0f, 1.0f);
+		wet = std::max(wet, terrain_wet);
+	}
+	if (biome.lava_threshold >= 0.0f)
+	{
+		float terrain_hot = std::clamp((biome.lava_threshold - z) / 0.08f, 0.0f, 1.0f);
+		hot = std::max(hot, terrain_hot);
+	}
+
+	float low_altitude = 0.0f;
+	if (biome.water_threshold >= 0.0f)
+		low_altitude = std::clamp((biome.water_threshold - z) / 0.15f, 0.0f, 1.0f);
 	if (low_altitude > 0.0f)
 	{
 		state = CreatureState::PANIC;
@@ -93,18 +110,6 @@ void Goat::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, floa
 			low_altitude_cooldown = 0.5f;
 		}
 	}
-
-	// if (wet <= 0.0f && hot <= 0.0f && low_altitude_cooldown <= 0.0f)
-	// {
-	// 	// Goats dislike low altitude and try to climb uphill out of valleys/basins.
-	// 	float low_altitude = std::clamp((low_altitude_threshold - z) / 0.18f, 0.0f, 1.0f);
-	// 	if (low_altitude > 0.0f)
-	// 	{
-	// 		state = CreatureState::PANIC;
-	// 		cx += low_altitude_gain * low_altitude * (gx / gnorm);
-	// 		cy += low_altitude_gain * low_altitude * (gy / gnorm);
-	// 	}
-	// }
 
 	u += (tangential_speed * tx + contour_gain * cx) * dt;
 	v += (tangential_speed * ty + contour_gain * cy) * dt;
@@ -158,6 +163,12 @@ void Goat::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, floa
 		// 	dir = -dir;
 		// 	panic_cooldown = 0.5f; // half a second
 		// }
+		wet_cooldown -= dt;
+		if (wet > 0.55f && wet_cooldown <= 0.0f)
+		{
+			life--;
+			wet_cooldown = 0.8f;
+		}
 	}
 
 	// Lava is a much stronger hazard than water, but keep the response smooth:
@@ -178,7 +189,7 @@ void Goat::step(const Depth &hf, const FlowMap &water, const FlowMap &lava, floa
 		v += (0.02f * hot) * downhill_y * dt;
 
 		lava_cooldown -= dt;
-		if (hot > 0.75f && lava_cooldown <= 0.0f)
+		if (hot > 0.55f && lava_cooldown <= 0.0f)
 		{
 			life--;
 			lava_cooldown = 0.2f;

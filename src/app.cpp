@@ -191,10 +191,27 @@ int main()
 			else
 				std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/pig-lava-sheet.png") << std::endl;
 		}
+
+		{
+			std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/fish-sheet.png", creatureSheetW, creatureSheetH);
+			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
+				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 0, 2);
+			else
+				std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/fish-sheet.png") << std::endl;
+		}
+
+		{
+			std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/fish-lava-sheet.png", creatureSheetW, creatureSheetH);
+			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
+				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 1, 2);
+			else
+				std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/fish-lava-sheet.png") << std::endl;
+		}
 	}
 
 	TagDetector tagDetector;
 	Audio::instance().init();
+	Audio::instance().muted = true;
 
 	// Initial projector quad covers whole windows
 	if (std::filesystem::exists("calib.txt"))
@@ -369,6 +386,11 @@ int main()
 			sim.spawnPig(gCtl.depth); // random pos and params
 			gCtl.spawnCreature2 = false;
 		}
+		if (gCtl.spawnCreature3)
+		{
+			sim.spawnFish(gCtl.depth); // random pos and params
+			gCtl.spawnCreature3 = false;
+		}
 
 		if (gCtl.clearMess)
 		{
@@ -515,6 +537,11 @@ int main()
 			{
 				const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
 				sim.spawnPig(gCtl.depth, tNow, u, v, dir.x, dir.y);
+			}
+			else if (t.id == 5 && t.decision_margin > 30.0f)
+			{
+				const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
+				sim.spawnFish(gCtl.depth, tNow, u, v, dir.x, dir.y);
 			}
 			else if (t.id <= 2 && t.decision_margin > 30.0f)
 			{

@@ -13,6 +13,8 @@ enum class CreatureState
 	DEAD = 2
 };
 
+class Biome;
+
 class Creature
 {
 public:
@@ -31,7 +33,11 @@ public:
 
 	float textureIndex() const { return texture_index; }
 
-	virtual void step(const Depth &hf, const FlowMap &water, const FlowMap &lava, float dt) = 0;
+	virtual void step(
+		const Depth &hf,
+		const Biome &biome,
+		const FlowMap &water, const FlowMap &lava,
+		float dt) = 0;
 
 private:
 	const int texture_index;

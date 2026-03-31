@@ -57,6 +57,8 @@ public:
 
 		mega1FlowColor = {0.0f, 0.314118f, 0.643529f};
 		mega2FlowColor = {1.0f, 0.35f, 0.05f};
+
+		water_threshold = 0.2f;
 	}
 
 	std::tuple<float, float, float> trail_color(const std::array<float, 3> &col) const override

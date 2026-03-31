@@ -29,7 +29,7 @@ public:
 		td_ = apriltag_detector_create();
 		apriltag_detector_add_family(td_, tf_);
 		td_->quad_decimate = 1.0f;
-		td_->quad_sigma = 0.8f;
+		td_->quad_sigma = 0.0f;
 		td_->refine_edges = 1;
 		td_->nthreads = 2;
 		td_->debug = 0;

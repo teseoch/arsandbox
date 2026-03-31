@@ -47,6 +47,9 @@ public:
 	float flow2DiffuseCenterWeight = -1;
 	float flow2DiffuseNeighWeight = -1;
 
+	float water_threshold = -1;
+	float lava_threshold = -1;
+
 	std::array<float, 3> mega1FlowColor;
 	std::array<float, 3> mega2FlowColor;
 
