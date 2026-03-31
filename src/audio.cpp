@@ -1,5 +1,7 @@
 #include "audio.hpp"
 
+#include <string>
+
 void Audio::init()
 {
 	ma_engine_init(nullptr, &engine);
