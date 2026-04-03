@@ -39,6 +39,7 @@ add_executable(arsandbox
           src/stb_impl.cpp
           src/app.cpp
           src/pig.cpp
+          src/frog.cpp
           src/goat.cpp
           src/eagle.cpp
           src/fish.cpp

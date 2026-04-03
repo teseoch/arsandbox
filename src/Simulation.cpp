@@ -6,6 +6,7 @@
 #include "pig.hpp"
 #include "fish.hpp"
 #include "volture.hpp"
+#include "frog.hpp"
 #include "eagle.hpp"
 #include "audio.hpp"
 
@@ -385,7 +386,31 @@ void Simulation::spawnVolture(const Depth &depth, float t, float x, float y, flo
 
 void Simulation::spawnFrog(const Depth &depth, float t, float x, float y, float dirx, float diry)
 {
-	// Similar implementation to spawnGoat and spawnPig, but for Frog creature.
+	if (t < 0)
+	{
+		x = random_float(0.0f, 1.0f);
+		y = random_float(0.0f, 1.0f);
+		auto frog = std::make_shared<Frog>();
+		frog->u = x;
+		frog->v = y;
+
+		creatures.push_back(frog);
+		preys.push_back(frog);
+		return;
+	}
+
+	if (t - lastFrogTime < 2.0f)
+		return;
+
+	lastFrogTime = t;
+
+	std::shared_ptr<Frog> frog = std::make_shared<Frog>();
+	frog->u = x;
+	frog->v = y;
+	float n = std::sqrt(dirx * dirx + diry * diry);
+
+	creatures.push_back(frog);
+	preys.push_back(frog);
 }
 
 void Simulation::clear()
