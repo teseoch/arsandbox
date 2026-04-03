@@ -20,6 +20,52 @@ void Goat::step(const Depth &hf,
 		state = CreatureState::DEAD;
 		return;
 	}
+	if (target && (!target->alive() || target->decaying()))
+	{
+		target = nullptr;
+	}
+	if (target)
+	{
+		state = CreatureState::PANIC;
+		panic_flicks = false;
+
+		float du = target->u - u;
+		float dv = target->v - v;
+		float dist2 = du * du + dv * dv;
+		float dist = std::sqrt(dist2);
+
+		if (dist > 1e-6f)
+		{
+			float vx = ram_speed * du / dist;
+			float vy = ram_speed * dv / dist;
+			u += vx * dt;
+			v += vy * dt;
+			angle = std::atan2(vy, vx);
+			flip_x = (vx < 0.0f) ? 1.0f : 0.0f;
+		}
+
+		u = std::clamp(u, 0.0f, 1.0f);
+		v = std::clamp(v, 0.0f, 1.0f);
+
+		ram_cooldown -= dt;
+		if (dist2 < ram_hit_radius * ram_hit_radius && ram_cooldown <= 0.0f)
+		{
+			// Hurt and shove the target a little so the ram is visible.
+			target->life -= 3;
+			if (dist > 1e-6f)
+			{
+				target->u = std::clamp(target->u + 0.05f * du / dist, 0.0f, 1.0f);
+				target->v = std::clamp(target->v + 0.05f * dv / dist, 0.0f, 1.0f);
+			}
+			dir = -dir;
+			target = nullptr;
+			ram_cooldown = 0.8f;
+		}
+
+		return;
+	}
+	panic_flicks = true;
+
 	auto [gx, gy] = hf.gradient_uv(u, v);
 	float gnorm = std::sqrt(gx * gx + gy * gy) + 1e-6f;
 
@@ -212,6 +258,13 @@ void Goat::step(const Depth &hf,
 		return;
 	}
 
+	ram_cooldown -= dt;
+
 	if (std::rand() / float(RAND_MAX) < 0.000001f)
 		life--;
+}
+
+bool Goat::find_ram() const
+{
+	return target == nullptr && rand() % 1000 < 5; // 5% chance each frame to look for a ram target
 }

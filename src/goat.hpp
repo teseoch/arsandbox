@@ -34,9 +34,15 @@ private:
 	float lava_cooldown = 0.0f;
 	float wet_cooldown = 0.0f;
 
+	float ram_speed = 0.11f;
+	float ram_hit_radius = 0.045f;
+	float ram_cooldown = 0.0f;
+
 public:
 	void step(const Depth &hf,
 			  const Biome &biome,
 			  const FlowMap &water, const FlowMap &lava,
 			  float dt) override;
+
+	bool find_ram() const override;
 };
