@@ -61,6 +61,8 @@ public:
 	int biomeIndex = 0;
 
 private:
+	std::shared_ptr<Creature> findNearestCreature(float u, float v, float radius, const std::vector<std::shared_ptr<Creature>> &candidates) const;
+
 	FlowMap flowMap1;
 	FlowMap flowMap2;
 
@@ -69,6 +71,9 @@ private:
 	std::vector<Drop> drops2;
 
 	std::vector<std::shared_ptr<Creature>> creatures;
+	std::vector<std::shared_ptr<Creature>> rammables;
+	std::vector<std::shared_ptr<Creature>> preys;
+	std::vector<std::shared_ptr<Creature>> corpses;
 
 	std::vector<std::shared_ptr<Biome>> biomes;
 

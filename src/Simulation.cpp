@@ -12,6 +12,26 @@ float random_float(float a, float b)
 	return a + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (b - a)));
 }
 
+std::shared_ptr<Creature> Simulation::findNearestCreature(float u, float v, float radius, const std::vector<std::shared_ptr<Creature>> &candidates) const
+{
+	std::shared_ptr<Creature> nearest = nullptr;
+	float nearest_dist2 = radius * radius;
+
+	for (const auto &c : candidates)
+	{
+		float du = c->u - u;
+		float dv = c->v - v;
+		float dist2 = du * du + dv * dv;
+		if (dist2 < nearest_dist2)
+		{
+			nearest = c;
+			nearest_dist2 = dist2;
+		}
+	}
+
+	return nearest;
+}
+
 Simulation::Simulation()
 {
 	biomes.push_back(std::make_shared<PlainBiome>());
@@ -168,6 +188,7 @@ void Simulation::spawnGoat(const Depth &depth, float t, float x, float y, float 
 		c->init_dy = random_float(-1.0f, 1.0f);
 
 		creatures.push_back(c);
+		rammables.push_back(c);
 
 		return;
 	}
@@ -199,6 +220,7 @@ void Simulation::spawnGoat(const Depth &depth, float t, float x, float y, float 
 	}
 
 	creatures.push_back(c);
+	rammables.push_back(c);
 }
 
 void Simulation::spawnPig(const Depth &depth, float t, float x, float y, float dirx, float diry)
@@ -247,6 +269,7 @@ void Simulation::spawnPig(const Depth &depth, float t, float x, float y, float d
 	}
 
 	creatures.push_back(c);
+	rammables.push_back(c);
 }
 
 void Simulation::spawnFish(const Depth &depth, float t, float x, float y, float dirx, float diry)
@@ -265,6 +288,7 @@ void Simulation::spawnFish(const Depth &depth, float t, float x, float y, float 
 		c->init_dy = random_float(-1.0f, 1.0f);
 
 		creatures.push_back(c);
+		preys.push_back(c);
 
 		return;
 	}
@@ -295,6 +319,7 @@ void Simulation::spawnFish(const Depth &depth, float t, float x, float y, float 
 	}
 
 	creatures.push_back(c);
+	preys.push_back(c);
 }
 
 void Simulation::clear()
@@ -303,6 +328,9 @@ void Simulation::clear()
 	drops1.clear();
 	drops2.clear();
 	creatures.clear();
+	rammables.clear();
+	preys.clear();
+	corpses.clear();
 
 	flowMap1.clear();
 	flowMap2.clear();
@@ -314,7 +342,26 @@ void Simulation::step(const Depth &depth, float dt)
 	for (auto &c : creatures)
 		c->step(depth, *currentBiome(), flowMap1, flowMap2, dt);
 
+	for (const auto &c : creatures)
+	{
+		if (c->decaying() && std::find(corpses.begin(), corpses.end(), c) == corpses.end())
+			corpses.push_back(c);
+	}
+
+	for (const auto &c : creatures)
+	{
+		if (c->find_ram())
+			c->target = findNearestCreature(c->u, c->v, c->search_radius, rammables);
+		else if (c->find_prey())
+			c->target = findNearestCreature(c->u, c->v, c->search_radius, preys);
+		else if (c->find_corpse())
+			c->target = findNearestCreature(c->u, c->v, c->search_radius, corpses);
+	}
+
 	creatures.erase(std::remove_if(creatures.begin(), creatures.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), creatures.end());
+	rammables.erase(std::remove_if(rammables.begin(), rammables.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), rammables.end());
+	preys.erase(std::remove_if(preys.begin(), preys.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), preys.end());
+	corpses.erase(std::remove_if(corpses.begin(), corpses.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), corpses.end());
 
 	for (auto &d : rain_)
 		d.step(depth, dt, currentBiome()->gravity1, currentBiome()->damping1, currentBiome()->speed_cap1, currentBiome()->bounce1, flowMap2, 0.15f);
