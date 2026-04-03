@@ -325,6 +325,21 @@ void Simulation::spawnFish(const Depth &depth, float t, float x, float y, float 
 	preys.push_back(c);
 }
 
+void Simulation::spawnEagle(const Depth &depth, float t, float x, float y, float dirx, float diry)
+{
+	// Similar implementation to spawnGoat and spawnPig, but for Eagle creature.
+}
+
+void Simulation::spawnVolure(const Depth &depth, float t, float x, float y, float dirx, float diry)
+{
+	// Similar implementation to spawnGoat and spawnPig, but for Volure creature.
+}
+
+void Simulation::spawnFrog(const Depth &depth, float t, float x, float y, float dirx, float diry)
+{
+	// Similar implementation to spawnGoat and spawnPig, but for Frog creature.
+}
+
 void Simulation::clear()
 {
 	rain_.clear();

@@ -25,6 +25,10 @@ public:
 	void spawnPig(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
 	void spawnFish(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
 
+	void spawnEagle(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
+	void spawnVolure(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
+	void spawnFrog(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
+
 	void step(const Depth &depth, float dt);
 
 	void init(const int w, const int h);
@@ -61,7 +65,9 @@ public:
 	int biomeIndex = 0;
 
 private:
-	std::shared_ptr<Creature> findNearestCreature(const std::shared_ptr<Creature> &self, const std::vector<std::shared_ptr<Creature>> &candidates) const;
+	std::shared_ptr<Creature> findNearestCreature(
+		const std::shared_ptr<Creature> &self,
+		const std::vector<std::shared_ptr<Creature>> &candidates) const;
 
 	FlowMap flowMap1;
 	FlowMap flowMap2;

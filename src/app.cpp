@@ -525,6 +525,14 @@ int main()
 				const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
 				sim.spawnFish(gCtl.depth, tNow, u, v, dir.x, dir.y);
 			}
+			else if (t.id == 6 && t.decision_margin > 30.0f)
+			{
+				sim.spawnEagle(gCtl.depth, tNow, u, v);
+			}
+			else if (t.id == 3 && t.decision_margin > 30.0f)
+			{
+				sim.spawnVolure(gCtl.depth, tNow, u, v);
+			}
 			else if (t.id <= 2 && t.decision_margin > 30.0f)
 			{
 #ifdef SANDBOX_WITH_REALSENSE
