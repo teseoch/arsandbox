@@ -13,7 +13,7 @@ Volture::Volture() : Creature(4)
 	u = 0.5f;
 	v = 0.5f;
 	panic_flicks = false;
-	size = 40.0f;
+	size = 50.0f;
 	reset_orbit_center();
 }
 

@@ -12,6 +12,7 @@ Eagle::Eagle() : Creature(3)
 	life = 500;
 	u = 0.5f;
 	v = 0.5f;
+	size = 50;
 	panic_flicks = false;
 	reset_orbit_center();
 }
