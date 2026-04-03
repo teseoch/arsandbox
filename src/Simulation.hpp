@@ -26,7 +26,7 @@ public:
 	void spawnFish(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
 
 	void spawnEagle(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
-	void spawnVolure(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
+	void spawnVolture(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
 	void spawnFrog(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
 
 	void step(const Depth &depth, float dt);
@@ -90,7 +90,7 @@ private:
 	float lastPigTime = 0.0f;
 	float lastFishTime = 0.0f;
 	float lastEagleTime = 0.0f;
-	float lastVolureTime = 0.0f;
+	float lastVoltureTime = 0.0f;
 	float lastFrogTime = 0.0f;
 
 	constexpr static const float ru = 0.5f;

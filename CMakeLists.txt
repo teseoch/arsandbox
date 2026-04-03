@@ -42,6 +42,7 @@ add_executable(arsandbox
           src/goat.cpp
           src/eagle.cpp
           src/fish.cpp
+          src/volture.cpp
           src/Drop.cpp
           src/Simulation.cpp
           src/image.cpp

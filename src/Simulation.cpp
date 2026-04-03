@@ -5,6 +5,7 @@
 #include "goat.hpp"
 #include "pig.hpp"
 #include "fish.hpp"
+#include "volture.hpp"
 #include "eagle.hpp"
 #include "audio.hpp"
 
@@ -354,9 +355,32 @@ void Simulation::spawnEagle(const Depth &depth, float t, float x, float y, float
 	creatures.push_back(eagle);
 }
 
-void Simulation::spawnVolure(const Depth &depth, float t, float x, float y, float dirx, float diry)
+void Simulation::spawnVolture(const Depth &depth, float t, float x, float y, float dirx, float diry)
 {
-	// Similar implementation to spawnGoat and spawnPig, but for Volure creature.
+	if (t < 0)
+	{
+		x = random_float(0.0f, 1.0f);
+		y = random_float(0.0f, 1.0f);
+		auto volture = std::make_shared<Volture>();
+		volture->cx = x;
+		volture->cy = y;
+		volture->orbit_angle = random_float(0.0f, 2 * 3.14159f);
+		volture->circle_radius += random_float(-0.01f, 0.01f);
+		creatures.push_back(volture);
+		return;
+	}
+
+	if (t - lastVoltureTime < 10.0f)
+		return;
+
+	lastVoltureTime = t;
+
+	std::shared_ptr<Volture> volture = std::make_shared<Volture>();
+	volture->cx = x + random_float(-0.05f, 0.05f);
+	volture->cy = y + random_float(-0.05f, 0.05f);
+	volture->orbit_angle = random_float(0.0f, 2 * 3.14159f);
+	volture->circle_radius += random_float(-0.01f, 0.01f);
+	creatures.push_back(volture);
 }
 
 void Simulation::spawnFrog(const Depth &depth, float t, float x, float y, float dirx, float diry)

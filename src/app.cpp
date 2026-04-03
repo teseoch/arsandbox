@@ -531,7 +531,7 @@ int main()
 			}
 			else if (t.id == 3 && t.decision_margin > 30.0f)
 			{
-				sim.spawnVolure(gCtl.depth, tNow, u, v);
+				sim.spawnVolture(gCtl.depth, tNow, u, v);
 			}
 			else if (t.id <= 2 && t.decision_margin > 30.0f)
 			{
