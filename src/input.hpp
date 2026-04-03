@@ -25,13 +25,29 @@ struct ButtonEdge
 	}
 };
 
+enum class InputActionType
+{
+	Rain,
+	Mega1,
+	Mega2,
+	Clear,
+	NextBiome,
+	PrevBiome,
+	SpawnGoat,
+	SpawnPig,
+	SpawnFish,
+	SpawnEagle,
+	SpawnVulture,
+	SpawnFrog
+};
+
 struct Controls
 {
 	Depth depth;
 
 	float gamma = 1.0f;
 
-	int nextBiome = 0;
+	std::vector<InputActionType> actions;
 
 	bool useCMap = false;
 	int colormapIndex = 0;
@@ -39,18 +55,8 @@ struct Controls
 
 	bool freezeDepth = false;
 
-	bool makeItRain = false;
-	bool megaRain1 = false;
-	bool megaRain2 = false;
-
-	bool clearMess = false;
-
-	bool spawnCreature1 = false;
-	bool spawnCreature2 = false;
-	bool spawnCreature3 = false;
-
 	// Gamepad edges
-	ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge, dpadUpEdge, dpadLeftEdge, dpadRightEdge;
+	ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge, dpadUpEdge, dpadLeftEdge, dpadRightEdge, dpadDownEdge;
 	bool gamepadPresent = false;
 
 	void reset()
@@ -124,43 +130,46 @@ static void updateGamepad(Controls &c, float dt)
 	bool DUp = (s.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP] == GLFW_PRESS);
 	bool DLeft = (s.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT] == GLFW_PRESS);
 	bool DRight = (s.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT] == GLFW_PRESS);
+	bool DDown = (s.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN] == GLFW_PRESS);
 
 	if (c.bEdge.pressed(B))
-		c.makeItRain = true;
+		c.actions.push_back(InputActionType::Rain);
 	if (c.xEdge.pressed(X))
-		c.megaRain1 = true;
+		c.actions.push_back(InputActionType::Mega1);
 	if (c.aEdge.pressed(A))
-		c.megaRain2 = true;
+		c.actions.push_back(InputActionType::Mega2);
 
 	if (c.yEdge.pressed(Y))
-		c.clearMess = true;
+		c.actions.push_back(InputActionType::Clear);
 
 	if (c.dpadUpEdge.pressed(DUp))
-		c.spawnCreature1 = true; // goat
+		c.actions.push_back(InputActionType::SpawnGoat);
 	if (c.dpadLeftEdge.pressed(DLeft))
-		c.spawnCreature2 = true; // pig
+		c.actions.push_back(InputActionType::SpawnPig);
 	if (c.dpadRightEdge.pressed(DRight))
-		c.spawnCreature3 = true; // fish
+		c.actions.push_back(InputActionType::SpawnFish);
+	if (c.dpadDownEdge.pressed(DDown))
+		c.actions.push_back(InputActionType::SpawnEagle);
 
 	if (c.lbEdge.pressed(LT))
 	{
-		c.colormapIndex = (c.colormapIndex - 1 + c.colormapCount) % std::max(1, c.colormapCount);
+		c.actions.push_back(InputActionType::SpawnVulture);
 		c.useCMap = true;
 	}
 	if (c.rbEdge.pressed(RT))
 	{
-		c.colormapIndex = (c.colormapIndex + 1) % std::max(1, c.colormapCount);
+		c.actions.push_back(InputActionType::SpawnFrog);
 		c.useCMap = true;
 	}
 
 	if (c.rbEdge.pressed(LB))
 	{
-		c.nextBiome = -1;
+		c.actions.push_back(InputActionType::PrevBiome);
 		c.useCMap = false;
 	}
 	if (c.lbEdge.pressed(RB))
 	{
-		c.nextBiome = 1;
+		c.actions.push_back(InputActionType::NextBiome);
 		c.useCMap = false;
 	}
 }
@@ -196,23 +205,38 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 
 	if (key == GLFW_KEY_T)
 	{
-		gCtl.makeItRain = true;
+		gCtl.actions.push_back(InputActionType::Rain);
 		return;
 	}
 
+	if (key == GLFW_KEY_5)
+	{
+		gCtl.actions.push_back(InputActionType::SpawnGoat);
+		return;
+	}
 	if (key == GLFW_KEY_6)
 	{
-		gCtl.spawnCreature1 = true;
+		gCtl.actions.push_back(InputActionType::SpawnPig);
 		return;
 	}
 	if (key == GLFW_KEY_7)
 	{
-		gCtl.spawnCreature2 = true;
+		gCtl.actions.push_back(InputActionType::SpawnFish);
 		return;
 	}
 	if (key == GLFW_KEY_8)
 	{
-		gCtl.spawnCreature3 = true;
+		gCtl.actions.push_back(InputActionType::SpawnEagle);
+		return;
+	}
+	if (key == GLFW_KEY_9)
+	{
+		gCtl.actions.push_back(InputActionType::SpawnVulture);
+		return;
+	}
+	if (key == GLFW_KEY_0)
+	{
+		gCtl.actions.push_back(InputActionType::SpawnFrog);
 		return;
 	}
 
@@ -221,18 +245,18 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 	{
 		if (key == GLFW_KEY_K)
 		{
-			gCtl.megaRain1 = true;
+			gCtl.actions.push_back(InputActionType::Mega1);
 			return;
 		}
 		if (key == GLFW_KEY_L)
 		{
-			gCtl.megaRain2 = true;
+			gCtl.actions.push_back(InputActionType::Mega2);
 			return;
 		}
 
 		if (key == GLFW_KEY_Y)
 		{
-			gCtl.clearMess = true;
+			gCtl.actions.push_back(InputActionType::Clear);
 			return;
 		}
 
@@ -256,13 +280,13 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 		// biome cycle
 		if (key == GLFW_KEY_N)
 		{
-			gCtl.nextBiome = -1;
+			gCtl.actions.push_back(InputActionType::PrevBiome);
 			gCtl.useCMap = false;
 			return;
 		}
 		if (key == GLFW_KEY_M)
 		{
-			gCtl.nextBiome = -1;
+			gCtl.actions.push_back(InputActionType::NextBiome);
 			gCtl.useCMap = false;
 			return;
 		}

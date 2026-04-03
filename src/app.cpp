@@ -343,55 +343,49 @@ int main()
 		// Optional gamepad controls (always safe; if no pad, no effect)
 		updateGamepad(gCtl, dt);
 
-		if (gCtl.makeItRain)
+		for (const auto &action : gCtl.actions)
 		{
-			sim.randomRain();
-			gCtl.makeItRain = false;
-		}
-
-		// todo
-		if (gCtl.megaRain1)
-		{
-			sim.mega1(); // random center
-			gCtl.megaRain1 = false;
-		}
-		if (gCtl.megaRain2)
-		{
-			sim.mega2(); // random center
-			gCtl.megaRain2 = false;
-		}
-
-		if (gCtl.spawnCreature1)
-		{
-			sim.spawnGoat(gCtl.depth); // random pos and params
-			gCtl.spawnCreature1 = false;
-		}
-		if (gCtl.spawnCreature2)
-		{
-			sim.spawnPig(gCtl.depth); // random pos and params
-			gCtl.spawnCreature2 = false;
-		}
-		if (gCtl.spawnCreature3)
-		{
-			sim.spawnFish(gCtl.depth); // random pos and params
-			gCtl.spawnCreature3 = false;
-		}
-
-		if (gCtl.clearMess)
-		{
-			sim.clear();
-			gCtl.clearMess = false;
-		}
-
-		if (gCtl.nextBiome != 0)
-		{
-			if (gCtl.nextBiome > 0)
+			switch (action)
+			{
+			case InputActionType::Rain:
+				sim.randomRain();
+				break;
+			case InputActionType::Mega1:
+				sim.mega1(); // random center
+				break;
+			case InputActionType::Mega2:
+				sim.mega2(); // random center
+				break;
+			case InputActionType::Clear:
+				sim.clear();
+				break;
+			case InputActionType::NextBiome:
 				sim.nextBiome();
-			else
+				break;
+			case InputActionType::PrevBiome:
 				sim.prevBiome();
-
-			gCtl.nextBiome = 0;
+				break;
+			case InputActionType::SpawnGoat:
+				sim.spawnGoat(gCtl.depth); // random pos and params
+				break;
+			case InputActionType::SpawnPig:
+				sim.spawnPig(gCtl.depth); // random pos and params
+				break;
+			case InputActionType::SpawnFish:
+				sim.spawnFish(gCtl.depth); // random pos and params
+				break;
+			case InputActionType::SpawnEagle:
+				sim.spawnEagle(gCtl.depth); // random pos and params
+				break;
+			case InputActionType::SpawnVulture:
+				sim.spawnVolture(gCtl.depth); // random pos and params
+				break;
+			case InputActionType::SpawnFrog:
+				sim.spawnFrog(gCtl.depth); // random pos and params
+				break;
+			}
 		}
+		gCtl.actions.clear();
 
 		// Update synthetic depth
 		if (!gCtl.freezeDepth)
