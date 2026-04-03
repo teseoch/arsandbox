@@ -325,6 +325,9 @@ int main()
 
 	double tPrev = glfwGetTime();
 
+	bool saw_change_biome = true;
+	float lastBiomeSwitch = 0;
+
 	while (!glfwWindowShouldClose(win))
 	{
 		double tNow = glfwGetTime();
@@ -485,6 +488,8 @@ int main()
 		std::vector<OverlaySprite> sprites;
 
 		auto detectedTags = tagDetector.detect(gCtl.depth);
+
+		bool isBiomeChange = false;
 		for (const auto &t : detectedTags)
 		{
 			auto [u, v] = gCtl.depth.inverse_warp_uv(t.uv.x, t.uv.y);
@@ -533,17 +538,30 @@ int main()
 			{
 				sim.spawnVolture(gCtl.depth, tNow, u, v);
 			}
-			else if (t.id <= 2 && t.decision_margin > 30.0f)
+			else if (t.id == 2 && t.decision_margin > 30.0f)
 			{
-#ifdef SANDBOX_WITH_REALSENSE
-				sim.goToBiome(t.id - 1);
-				gCtl.useCMap = false;
-#endif
+				sim.spawnFrog(gCtl.depth, tNow, u, v);
+			}
+			else if (t.id == 1 && t.decision_margin > 30.0f)
+			{
+				if (!saw_change_biome && (tNow - lastBiomeSwitch > 1.0f))
+				{
+					sim.nextBiome();
+
+					saw_change_biome = true;
+					lastBiomeSwitch = tNow;
+				}
+				isBiomeChange = true;
 			}
 
 			// std::cout << "id=" << t.id
 			// 		  << " margin=" << t.decision_margin
 			// 		  << " uv=(" << t.uv.x << "," << t.uv.y << ")\n";
+		}
+		if (!isBiomeChange)
+		{
+			if (tNow - lastBiomeSwitch > 1.0f)
+				saw_change_biome = false;
 		}
 		// std::cout << std::endl;
 
