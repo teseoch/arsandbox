@@ -65,6 +65,21 @@ const static float CREATURE_ANIM_FPS = 8.0f;
 const static int tileW = 64;
 const static int tileH = 64;
 
+void load_creature_sprite(
+	const std::string &folder,
+	const std::string &sprite,
+	OverlayRenderer &overlay,
+	int biome, int animal)
+{
+	int creatureSheetW = 0, creatureSheetH = 0;
+
+	std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/" + sprite, creatureSheetW, creatureSheetH);
+	if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
+		overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, biome, animal);
+	else
+		std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/" + sprite) << std::endl;
+}
+
 void render_particles(
 	const Biome &biome,
 	const std::vector<Drop> &parts,
@@ -158,56 +173,14 @@ int main()
 	// once
 	OverlayRenderer overlay;
 
-	int creatureSheetW = 0, creatureSheetH = 0;
-	{
-		{
-			std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/goat-sheet.png", creatureSheetW, creatureSheetH);
-			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
-				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 0, 0);
-			else
-				std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/goat-sheet.png") << std::endl;
-		}
+	load_creature_sprite(folder, "goat-sheet.png", overlay, 0, 0);
+	load_creature_sprite(folder, "goat-lava-sheet.png", overlay, 1, 0);
 
-		{
-			std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/pig-sheet.png", creatureSheetW, creatureSheetH);
-			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
-				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 0, 1);
-			else
-				std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/pig-sheet.png") << std::endl;
-		}
+	load_creature_sprite(folder, "pig-sheet.png", overlay, 0, 1);
+	load_creature_sprite(folder, "pig-lava-sheet.png", overlay, 1, 1);
 
-		{
-			std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/goat-lava-sheet.png", creatureSheetW, creatureSheetH);
-			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
-				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 1, 0);
-			else
-				std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/goat-lava-sheet.png") << std::endl;
-		}
-
-		{
-			std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/pig-lava-sheet.png", creatureSheetW, creatureSheetH);
-			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
-				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 1, 1);
-			else
-				std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/pig-lava-sheet.png") << std::endl;
-		}
-
-		{
-			std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/fish-sheet.png", creatureSheetW, creatureSheetH);
-			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
-				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 0, 2);
-			else
-				std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/fish-sheet.png") << std::endl;
-		}
-
-		{
-			std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/fish-lava-sheet.png", creatureSheetW, creatureSheetH);
-			if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
-				overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, 1, 2);
-			else
-				std::cerr << "Failed to load creature sprite texture: " << (folder + "/creatures/fish-lava-sheet.png") << std::endl;
-		}
-	}
+	load_creature_sprite(folder, "fish-sheet.png", overlay, 0, 2);
+	load_creature_sprite(folder, "fish-lava-sheet.png", overlay, 1, 2);
 
 	TagDetector tagDetector;
 	Audio::instance().init();
