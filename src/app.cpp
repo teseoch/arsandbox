@@ -562,7 +562,7 @@ int main()
 			const float v1 = float(row + 1) / float(CREATURE_SHEET_ROWS);
 
 			float flipx = c->flip_x;
-			if (c->state == CreatureState::PANIC)
+			if (c->state == CreatureState::PANIC && c->panic_flicks)
 			{
 				int panic_tick = int(std::floor(tNow * 30.0));
 				if (((panic_tick + int(c->u * 1000.0f) + int(c->v * 1000.0f)) & 1) != 0)
@@ -570,7 +570,7 @@ int main()
 			}
 
 			sprites.push_back(
-				{c->u, c->v, 30.0f, c->angle, flipx,
+				{c->u, c->v, c->size, c->angle, flipx,
 				 1.0f, 1.0f, 1.0f, 0.95f,
 				 1.0f,
 				 u0, v0, u1, v1,

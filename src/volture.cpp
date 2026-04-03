@@ -6,12 +6,14 @@
 #include <algorithm>
 #include <cstdlib>
 
-Volture::Volture() : Creature(3)
+Volture::Volture() : Creature(4)
 {
 	search_radius = 0.6f;
 	life = 600;
 	u = 0.5f;
 	v = 0.5f;
+	panic_flicks = false;
+	size = 40.0f;
 	reset_orbit_center();
 }
 
@@ -58,11 +60,15 @@ void Volture::step(const Depth &,
 	life--;
 	state = CreatureState::NORMAL;
 
-	if (target && (!target->alive()))
+	if (target && !target->alive())
+	{
 		target = nullptr;
+		reset_orbit_center();
+	}
 
 	if (target)
 	{
+		state = CreatureState::PANIC;
 		// Chase prey directly.
 		float du = target->u - u;
 		float dv = target->v - v;
@@ -88,6 +94,7 @@ void Volture::step(const Depth &,
 		if (dist2 < 0.0025f)
 		{
 			life += 300;
+			target->life = -1000; // mark as dead for corpse detection
 			target = nullptr;
 			flip_x = 0.0f;
 			reset_orbit_center();

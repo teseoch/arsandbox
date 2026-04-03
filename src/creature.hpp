@@ -26,6 +26,9 @@ public:
 
 	float search_radius = 0;
 
+	bool panic_flicks = true;
+	float size = 30;
+
 	std::shared_ptr<Creature> target;
 
 	CreatureState state = CreatureState::NORMAL;

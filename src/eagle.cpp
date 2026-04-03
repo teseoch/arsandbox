@@ -12,6 +12,7 @@ Eagle::Eagle() : Creature(3)
 	life = 500;
 	u = 0.5f;
 	v = 0.5f;
+	panic_flicks = false;
 	reset_orbit_center();
 }
 
@@ -59,10 +60,15 @@ void Eagle::step(const Depth &,
 	state = CreatureState::NORMAL;
 
 	if (target && (!target->alive() || target->decaying()))
+	{
 		target = nullptr;
+		reset_orbit_center();
+	}
 
 	if (target)
 	{
+		state = CreatureState::PANIC;
+
 		// Chase prey directly.
 		float du = target->u - u;
 		float dv = target->v - v;
