@@ -5,10 +5,17 @@
 
 #include "CMap.hpp"
 
+enum class BiomeType
+{
+	Plains,
+	Lava
+};
+
 class Biome
 {
 public:
 	virtual ~Biome() = default;
+	Biome(BiomeType type) : type_(type) {}
 
 	const GLuint &texture() const { return cmap.lutTex; }
 
@@ -56,6 +63,8 @@ public:
 	virtual std::tuple<float, float, float> trail_color(const std::array<float, 3> &col) const = 0;
 	virtual std::tuple<float, float, float> head_color(const std::array<float, 3> &col) const = 0;
 
+	inline BiomeType type() const { return type_; }
+
 protected:
 	CMap cmap;
 
@@ -65,6 +74,9 @@ protected:
 	std::array<float, 3> mega1Color_;
 	std::array<float, 2> mega2Size_;
 	std::array<float, 3> mega2Color_;
+
+private:
+	const BiomeType type_;
 };
 
 // auto base = sampleCurrentCmap(0.1);

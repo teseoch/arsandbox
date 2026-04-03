@@ -11,6 +11,7 @@ class LavaBiome : public Biome
 {
 public:
 	LavaBiome()
+		: Biome(BiomeType::Lava)
 	{
 		const std::string folder = AR_IMAGE_FOLDER;
 

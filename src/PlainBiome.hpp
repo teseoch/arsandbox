@@ -11,6 +11,7 @@ class PlainBiome : public Biome
 {
 public:
 	PlainBiome()
+		: Biome(BiomeType::Plains)
 	{
 		const std::string folder = AR_IMAGE_FOLDER;
 
