@@ -5,6 +5,7 @@
 #include "goat.hpp"
 #include "pig.hpp"
 #include "fish.hpp"
+#include "eagle.hpp"
 #include "audio.hpp"
 
 float random_float(float a, float b)
@@ -327,7 +328,30 @@ void Simulation::spawnFish(const Depth &depth, float t, float x, float y, float 
 
 void Simulation::spawnEagle(const Depth &depth, float t, float x, float y, float dirx, float diry)
 {
-	// Similar implementation to spawnGoat and spawnPig, but for Eagle creature.
+	if (t < 0)
+	{
+		x = random_float(0.0f, 1.0f);
+		y = random_float(0.0f, 1.0f);
+		auto eagle = std::make_shared<Eagle>();
+		eagle->cx = x;
+		eagle->cy = y;
+		eagle->orbit_angle = random_float(0.0f, 2 * 3.14159f);
+		eagle->circle_radius += random_float(-0.01f, 0.01f);
+		creatures.push_back(eagle);
+		return;
+	}
+
+	if (t - lastEagleTime < 10.0f)
+		return;
+
+	lastEagleTime = t;
+
+	std::shared_ptr<Eagle> eagle = std::make_shared<Eagle>();
+	eagle->cx = x + random_float(-0.05f, 0.05f);
+	eagle->cy = y + random_float(-0.05f, 0.05f);
+	eagle->orbit_angle = random_float(0.0f, 2 * 3.14159f);
+	eagle->circle_radius += random_float(-0.01f, 0.01f);
+	creatures.push_back(eagle);
 }
 
 void Simulation::spawnVolure(const Depth &depth, float t, float x, float y, float dirx, float diry)

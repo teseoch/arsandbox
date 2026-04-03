@@ -89,6 +89,9 @@ private:
 	float lastGoatTime = 0.0f;
 	float lastPigTime = 0.0f;
 	float lastFishTime = 0.0f;
+	float lastEagleTime = 0.0f;
+	float lastVolureTime = 0.0f;
+	float lastFrogTime = 0.0f;
 
 	constexpr static const float ru = 0.5f;
 	constexpr static const float rv = 1.0f;
