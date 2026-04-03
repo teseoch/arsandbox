@@ -30,7 +30,7 @@ public:
 	GLuint vao = 0;
 	GLuint quadVBO = 0;
 	GLuint instVBO = 0;
-	GLuint spriteTex[2][3] = {{0, 0, 0}, {0, 0, 0}}; // [biome][animal]
+	GLuint spriteTex[2][6] = {{0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}}; // [biome][animal]
 
 	OverlayRenderer();
 

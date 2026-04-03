@@ -1,5 +1,7 @@
 #include "overlay.hpp"
 
+#include <cassert>
+
 static const char *kOverlayVert = R"GLSL(
 #version 330 core
 
@@ -68,6 +70,9 @@ in float vTexIndex;
 uniform sampler2D u_spriteTex0;
 uniform sampler2D u_spriteTex1;
 uniform sampler2D u_spriteTex2;
+uniform sampler2D u_spriteTex3;
+uniform sampler2D u_spriteTex4;
+uniform sampler2D u_spriteTex5;
 
 out vec4 FragColor;
 
@@ -79,11 +84,21 @@ void main(){
         return;
     }
 
-    vec4 texel = (vTexIndex > 1.5f)
-    ? texture(u_spriteTex2, vUV)
-    : (vTexIndex > 0.5f)
-        ? texture(u_spriteTex1, vUV)
-        : texture(u_spriteTex0, vUV);
+    vec4 texel;
+
+	if (vTexIndex < 0.5f)
+		texel = texture(u_spriteTex0, vUV);
+	else if (vTexIndex < 1.5f)
+		texel = texture(u_spriteTex1, vUV);
+	else if (vTexIndex < 2.5f)
+		texel = texture(u_spriteTex2, vUV);
+	else if (vTexIndex < 3.5f)
+		texel = texture(u_spriteTex3, vUV);
+	else if (vTexIndex < 4.5f)
+		texel = texture(u_spriteTex4, vUV);
+	else
+		texel = texture(u_spriteTex5, vUV);
+
     FragColor = vec4(vColor.rgb * texel.rgb, vColor.a * texel.a);
 }
 )GLSL";
@@ -166,16 +181,6 @@ OverlayRenderer::OverlayRenderer()
 
 	glBindVertexArray_(0);
 	glBindBuffer_(GL_ARRAY_BUFFER, 0);
-
-	const uint8_t white[4] = {255, 255, 255, 255};
-
-	createRGBA8Texture(white, 1, 1, 0, 0);
-	createRGBA8Texture(white, 1, 1, 0, 1);
-	createRGBA8Texture(white, 1, 1, 0, 2);
-
-	createRGBA8Texture(white, 1, 1, 1, 0);
-	createRGBA8Texture(white, 1, 1, 1, 1);
-	createRGBA8Texture(white, 1, 1, 1, 2);
 }
 
 void OverlayRenderer::createRGBA8Texture(const uint8_t *rgba, int w, int h, int biome, int animal)
@@ -183,13 +188,15 @@ void OverlayRenderer::createRGBA8Texture(const uint8_t *rgba, int w, int h, int 
 	GLuint tex = 0;
 	glGenTextures_(1, &tex);
 	glBindTexture_(GL_TEXTURE_2D, tex);
-	glTexImage2D_(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-				  rgba);
+	glTexImage2D_(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glBindTexture_(GL_TEXTURE_2D, 0);
+
+	assert(biome >= 0 && biome < 2);
+	assert(animal >= 0 && animal < 6);
 
 	spriteTex[biome][animal] = tex;
 }
@@ -227,6 +234,21 @@ void OverlayRenderer::draw(
 	glUniform1i_(locSpriteTex2, 5);
 	glActiveTexture_(GL_TEXTURE5);
 	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][2]);
+
+	GLint locSpriteTex3 = glGetUniformLocation_(overlayProgram, "u_spriteTex3");
+	glUniform1i_(locSpriteTex3, 6);
+	glActiveTexture_(GL_TEXTURE6);
+	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][3]);
+
+	GLint locSpriteTex4 = glGetUniformLocation_(overlayProgram, "u_spriteTex4");
+	glUniform1i_(locSpriteTex4, 7);
+	glActiveTexture_(GL_TEXTURE7);
+	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][4]);
+
+	GLint locSpriteTex5 = glGetUniformLocation_(overlayProgram, "u_spriteTex5");
+	glUniform1i_(locSpriteTex5, 8);
+	glActiveTexture_(GL_TEXTURE8);
+	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][5]);
 
 	// Enable alpha blending
 	glEnable(GL_BLEND);

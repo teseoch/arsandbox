@@ -182,6 +182,15 @@ int main()
 	load_creature_sprite(folder, "fish-sheet.png", overlay, 0, 2);
 	load_creature_sprite(folder, "fish-lava-sheet.png", overlay, 1, 2);
 
+	load_creature_sprite(folder, "eagle-sheet.png", overlay, 0, 3);
+	load_creature_sprite(folder, "eagle-lava-sheet.png", overlay, 1, 3);
+
+	load_creature_sprite(folder, "volure-sheet.png", overlay, 0, 4);
+	load_creature_sprite(folder, "volure-lava-sheet.png", overlay, 1, 4);
+
+	load_creature_sprite(folder, "frog-sheet.png", overlay, 0, 5);
+	load_creature_sprite(folder, "frog-lava-sheet.png", overlay, 1, 5);
+
 	TagDetector tagDetector;
 	Audio::instance().init();
 	Audio::instance().muted = true;
