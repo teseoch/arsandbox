@@ -12,15 +12,18 @@ float random_float(float a, float b)
 	return a + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (b - a)));
 }
 
-std::shared_ptr<Creature> Simulation::findNearestCreature(float u, float v, float radius, const std::vector<std::shared_ptr<Creature>> &candidates) const
+std::shared_ptr<Creature> Simulation::findNearestCreature(const std::shared_ptr<Creature> &self, const std::vector<std::shared_ptr<Creature>> &candidates) const
 {
 	std::shared_ptr<Creature> nearest = nullptr;
-	float nearest_dist2 = radius * radius;
+	float nearest_dist2 = self->search_radius * self->search_radius;
 
 	for (const auto &c : candidates)
 	{
-		float du = c->u - u;
-		float dv = c->v - v;
+		if (c == self)
+			continue;
+
+		float du = c->u - self->u;
+		float dv = c->v - self->v;
 		float dist2 = du * du + dv * dv;
 		if (dist2 < nearest_dist2)
 		{
@@ -351,11 +354,11 @@ void Simulation::step(const Depth &depth, float dt)
 	for (const auto &c : creatures)
 	{
 		if (c->find_ram())
-			c->target = findNearestCreature(c->u, c->v, c->search_radius, rammables);
+			c->target = findNearestCreature(c, rammables);
 		else if (c->find_prey())
-			c->target = findNearestCreature(c->u, c->v, c->search_radius, preys);
+			c->target = findNearestCreature(c, preys);
 		else if (c->find_corpse())
-			c->target = findNearestCreature(c->u, c->v, c->search_radius, corpses);
+			c->target = findNearestCreature(c, corpses);
 	}
 
 	creatures.erase(std::remove_if(creatures.begin(), creatures.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), creatures.end());
