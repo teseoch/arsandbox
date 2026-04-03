@@ -6,6 +6,13 @@
 #include <algorithm>
 #include <cstdlib>
 
+Fish::Fish() : Creature(2)
+{
+	life = 5; // Fish live shorter than pigs and goats, as they can drown and are more fragile.
+
+	is_lava_fish = (std::rand() % 10) == 0; // 10% chance to be a lava fish, which can survive in lava a bit and has a different color.
+}
+
 void Fish::step(const Depth &hf,
 				const Biome &biome,
 				const FlowMap &water, const FlowMap &lava,
@@ -107,7 +114,7 @@ void Fish::step(const Depth &hf,
 
 	// Lava is very bad for fish.
 	lava_cooldown -= dt;
-	if (hot > 0.30f)
+	if (!is_lava_fish && hot > 0.30f)
 	{
 		state = CreatureState::PANIC;
 		move_x += 0.08f * hot * downhill_x;

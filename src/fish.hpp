@@ -13,10 +13,7 @@ public:
 	float init_dx = 0.0f;
 	float init_dy = 0.0f;
 
-	Fish() : Creature(2)
-	{
-		life = 5; // Fish live shorter than pigs and goats, as they can drown and are more fragile.
-	}
+	Fish();
 
 private:
 	float swim_speed = 0.020f;
@@ -32,6 +29,7 @@ private:
 	float init_timer = 0.8f;
 	float stuck_timer = 0.0f;
 	float display_angle = 0.0f;
+	bool is_lava_fish = false;
 
 public:
 	void step(const Depth &hf,

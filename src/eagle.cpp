@@ -29,7 +29,7 @@ void Eagle::reset_orbit_center()
 }
 
 void Eagle::step(const Depth &,
-				 const Biome &,
+				 const Biome &biome,
 				 const FlowMap &, const FlowMap &,
 				 float dt)
 {
@@ -44,6 +44,15 @@ void Eagle::step(const Depth &,
 		life--;
 		state = CreatureState::DEAD;
 		return;
+	}
+
+	float chase_speed_mod = chase_speed;
+	float orbit_speed_mod = orbit_speed;
+
+	if (biome.type() == BiomeType::Lava)
+	{
+		chase_speed_mod *= 1.25f;
+		orbit_speed_mod *= 1.25f;
 	}
 
 	life--;
@@ -62,8 +71,8 @@ void Eagle::step(const Depth &,
 
 		if (dist > 1e-6f)
 		{
-			float vx = chase_speed * du / dist;
-			float vy = chase_speed * dv / dist;
+			float vx = chase_speed_mod * du / dist;
+			float vy = chase_speed_mod * dv / dist;
 			u += vx * dt;
 			v += vy * dt;
 			angle = std::atan2(vy, vx);
@@ -88,7 +97,7 @@ void Eagle::step(const Depth &,
 	else
 	{
 		// Drift on a circular trajectory around the current center.
-		orbit_angle += orbit_speed * dt;
+		orbit_angle += orbit_speed_mod * dt;
 		u = cx + circle_radius * std::cos(orbit_angle);
 		v = cy + circle_radius * std::sin(orbit_angle);
 
