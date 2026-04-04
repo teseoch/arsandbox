@@ -2,6 +2,8 @@
 
 #include <string>
 
+static int MAX_SOUND_INSTANCES = 7; // max overlapping instances of the same sound
+
 void Audio::init()
 {
 	ma_engine_init(nullptr, &engine);
@@ -13,7 +15,10 @@ void Audio::init()
 		folder + "/lava.wav",
 		folder + "/goat.wav",
 		folder + "/burn.wav",
-		folder + "/pig.wav"};
+		folder + "/pig.wav",
+		folder + "/eagle.wav",
+		folder + "/fish-flop.wav",
+		folder + "/frog.wav"};
 
 	for (int i = 0; i < paths.size(); ++i)
 	{
@@ -24,6 +29,9 @@ void Audio::init()
 void Audio::play(Sound s, float volume)
 {
 	if (muted)
+		return;
+
+	if (sound_count[(int)s] >= MAX_SOUND_INSTANCES) // limit max overlapping instances of the same sound
 		return;
 
 	auto instance = std::make_unique<ma_sound>();
@@ -38,16 +46,18 @@ void Audio::play(Sound s, float volume)
 		return;
 	}
 
-	active.push_back(std::move(instance));
+	active.emplace_back(std::move(instance), (int)s);
+	sound_count[(int)s]++;
 }
 
 void Audio::update()
 {
 	for (size_t i = 0; i < active.size();)
 	{
-		if (!ma_sound_is_playing(active[i].get()))
+		if (!ma_sound_is_playing(active[i].first.get()))
 		{
-			ma_sound_uninit(active[i].get());
+			ma_sound_uninit(active[i].first.get());
+			sound_count[active[i].second]--;
 			active.erase(active.begin() + i);
 		}
 		else
@@ -63,7 +73,7 @@ void Audio::shutdown()
 		ma_sound_uninit(&s);
 
 	for (auto &s : active)
-		ma_sound_uninit(s.get());
+		ma_sound_uninit(s.first.get());
 	active.clear();
 
 	ma_engine_uninit(&engine);

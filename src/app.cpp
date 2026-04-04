@@ -193,7 +193,7 @@ int main()
 
 	TagDetector tagDetector;
 	Audio::instance().init();
-	Audio::instance().muted = true;
+	Audio::instance().muted = false;
 
 	// Initial projector quad covers whole windows
 	if (std::filesystem::exists("calib.txt"))

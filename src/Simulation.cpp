@@ -403,6 +403,7 @@ void Simulation::spawnFrog(const Depth &depth, float t, float x, float y, float 
 		return;
 
 	lastFrogTime = t;
+	Audio::instance().play(Sound::Frog, 0.7f);
 
 	std::shared_ptr<Frog> frog = std::make_shared<Frog>();
 	frog->u = x;
@@ -444,7 +445,11 @@ void Simulation::step(const Depth &depth, float dt)
 		if (c->find_ram())
 			c->target = findNearestCreature(c, rammables);
 		else if (c->find_prey())
+		{
 			c->target = findNearestCreature(c, preys);
+			if (c->target)
+				Audio::instance().play(Sound::Eagle, 0.8f);
+		}
 		else if (c->find_corpse())
 			c->target = findNearestCreature(c, corpses);
 	}
