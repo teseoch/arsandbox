@@ -9,7 +9,7 @@
 Eagle::Eagle() : Creature(3)
 {
 	search_radius = 0.3f;
-	life = 500;
+	life = 400;
 	u = 0.5f;
 	v = 0.5f;
 	size = 50;
@@ -95,7 +95,7 @@ void Eagle::step(const Depth &,
 		if (dist2 < 0.0025f)
 		{
 			target->life = 0;
-			life += 200;
+			life += 150;
 			target = nullptr;
 			flip_x = 0.0f;
 			reset_orbit_center();
