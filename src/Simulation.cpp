@@ -206,27 +206,32 @@ void Simulation::spawnGoat(const Depth &depth, float t, float x, float y, float 
 
 	lastGoatTime = t;
 
-	std::shared_ptr<Goat> c = std::make_shared<Goat>();
-	c->u = x;
-	c->v = y;
-	c->h0 = depth.sample_bilinear(c->u, c->v);
-	c->dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+	const int numGoats = random_float(0.0f, 1.0f) < 0.3f ? 2 : 1;
 
-	// store initial direction (normalized)
-	float n = std::sqrt(dirx * dirx + diry * diry);
-	if (n > 1e-6f)
+	for (int i = 0; i < numGoats; i++)
 	{
-		c->init_dx = dirx / n;
-		c->init_dy = diry / n;
-	}
-	else
-	{
-		c->init_dx = 0.0f;
-		c->init_dy = 0.0f;
-	}
+		std::shared_ptr<Goat> c = std::make_shared<Goat>();
+		c->u = std::clamp(x + random_float(-jitter, jitter), 0.0f, 1.0f);
+		c->v = std::clamp(y + random_float(-jitter, jitter), 0.0f, 1.0f);
+		c->h0 = depth.sample_bilinear(c->u, c->v);
+		c->dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
 
-	creatures.push_back(c);
-	rammables.push_back(c);
+		// store initial direction (normalized)
+		float n = std::sqrt(dirx * dirx + diry * diry);
+		if (n > 1e-6f)
+		{
+			c->init_dx = dirx / n;
+			c->init_dy = diry / n;
+		}
+		else
+		{
+			c->init_dx = 0.0f;
+			c->init_dy = 0.0f;
+		}
+
+		creatures.push_back(c);
+		rammables.push_back(c);
+	}
 }
 
 void Simulation::spawnPig(const Depth &depth, float t, float x, float y, float dirx, float diry)
@@ -256,26 +261,37 @@ void Simulation::spawnPig(const Depth &depth, float t, float x, float y, float d
 
 	lastPigTime = t;
 
-	std::shared_ptr<Pig> c = std::make_shared<Pig>();
-	c->u = x;
-	c->v = y;
-	c->dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+	int numPigs = 1;
+	const float r = random_float(0.0f, 1.0f);
 
-	// store initial direction (normalized)
-	float n = std::sqrt(dirx * dirx + diry * diry);
-	if (n > 1e-6f)
-	{
-		c->init_dx = dirx / n;
-		c->init_dy = diry / n;
-	}
-	else
-	{
-		c->init_dx = 0.0f;
-		c->init_dy = 0.0f;
-	}
+	if (r < 0.1f)
+		numPigs = 4;
+	else if (r < 0.3f)
+		numPigs = 2;
 
-	creatures.push_back(c);
-	rammables.push_back(c);
+	for (int i = 0; i < numPigs; i++)
+	{
+		std::shared_ptr<Pig> c = std::make_shared<Pig>();
+		c->u = std::clamp(x + random_float(-jitter, jitter), 0.0f, 1.0f);
+		c->v = std::clamp(y + random_float(-jitter, jitter), 0.0f, 1.0f);
+		c->dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+
+		// store initial direction (normalized)
+		float n = std::sqrt(dirx * dirx + diry * diry);
+		if (n > 1e-6f)
+		{
+			c->init_dx = dirx / n;
+			c->init_dy = diry / n;
+		}
+		else
+		{
+			c->init_dx = 0.0f;
+			c->init_dy = 0.0f;
+		}
+
+		creatures.push_back(c);
+		rammables.push_back(c);
+	}
 }
 
 void Simulation::spawnFish(const Depth &depth, float t, float x, float y, float dirx, float diry)
@@ -306,26 +322,39 @@ void Simulation::spawnFish(const Depth &depth, float t, float x, float y, float 
 
 	lastFishTime = t;
 
-	std::shared_ptr<Fish> c = std::make_shared<Fish>();
-	c->u = x;
-	c->v = y;
-	c->dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+	int numFish = 1;
+	const float r = random_float(0.0f, 1.0f);
 
-	// store initial direction (normalized)
-	float n = std::sqrt(dirx * dirx + diry * diry);
-	if (n > 1e-6f)
-	{
-		c->init_dx = dirx / n;
-		c->init_dy = diry / n;
-	}
-	else
-	{
-		c->init_dx = 0.0f;
-		c->init_dy = 0.0f;
-	}
+	if (r < 0.1f)
+		numFish = 5;
+	else if (r < 0.2f)
+		numFish = 3;
+	else if (r < 0.4f)
+		numFish = 2;
 
-	creatures.push_back(c);
-	preys.push_back(c);
+	for (int i = 0; i < numFish; i++)
+	{
+		std::shared_ptr<Fish> c = std::make_shared<Fish>();
+		c->u = std::clamp(x + random_float(-jitter, jitter), 0.0f, 1.0f);
+		c->v = std::clamp(y + random_float(-jitter, jitter), 0.0f, 1.0f);
+		c->dir = (std::rand() % 2 == 0) ? 1.0f : -1.0f;
+
+		// store initial direction (normalized)
+		float n = std::sqrt(dirx * dirx + diry * diry);
+		if (n > 1e-6f)
+		{
+			c->init_dx = dirx / n;
+			c->init_dy = diry / n;
+		}
+		else
+		{
+			c->init_dx = 0.0f;
+			c->init_dy = 0.0f;
+		}
+
+		creatures.push_back(c);
+		preys.push_back(c);
+	}
 }
 
 void Simulation::spawnEagle(const Depth &depth, float t, float x, float y, float dirx, float diry)
@@ -405,13 +434,20 @@ void Simulation::spawnFrog(const Depth &depth, float t, float x, float y, float 
 	lastFrogTime = t;
 	Audio::instance().play(Sound::Frog, 0.7f);
 
-	std::shared_ptr<Frog> frog = std::make_shared<Frog>();
-	frog->u = x;
-	frog->v = y;
-	float n = std::sqrt(dirx * dirx + diry * diry);
+	int numFrog = 1;
+	const float r = random_float(0.0f, 1.0f);
+	if (r < 0.1f)
+		numFrog = 5;
 
-	creatures.push_back(frog);
-	preys.push_back(frog);
+	for (int i = 0; i < numFrog; i++)
+	{
+		std::shared_ptr<Frog> frog = std::make_shared<Frog>();
+		frog->u = std::clamp(x + random_float(-jitter, jitter), 0.0f, 1.0f);
+		frog->v = std::clamp(y + random_float(-jitter, jitter), 0.0f, 1.0f);
+
+		creatures.push_back(frog);
+		preys.push_back(frog);
+	}
 }
 
 void Simulation::clear()

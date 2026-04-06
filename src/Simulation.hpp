@@ -93,6 +93,8 @@ private:
 	float lastVoltureTime = 0.0f;
 	float lastFrogTime = 0.0f;
 
+	float jitter = 0.01f;
+
 	constexpr static const float ru = 0.5f;
 	constexpr static const float rv = 1.0f;
 };
