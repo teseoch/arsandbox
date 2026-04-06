@@ -30,7 +30,9 @@ public:
 	GLuint vao = 0;
 	GLuint quadVBO = 0;
 	GLuint instVBO = 0;
-	GLuint spriteTex[2][6] = {{0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}}; // [biome][animal]
+	GLuint spriteTexArray[2] = {0, 0}; // one texture array per biome (6 layers each)
+	int spriteTexW = 0;
+	int spriteTexH = 0;
 
 	OverlayRenderer();
 

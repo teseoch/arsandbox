@@ -67,12 +67,7 @@ in vec4 vColor;
 in float vKind;
 in float vTexIndex;
 
-uniform sampler2D u_spriteTex0;
-uniform sampler2D u_spriteTex1;
-uniform sampler2D u_spriteTex2;
-uniform sampler2D u_spriteTex3;
-uniform sampler2D u_spriteTex4;
-uniform sampler2D u_spriteTex5;
+uniform sampler2DArray u_spriteTex;
 
 out vec4 FragColor;
 
@@ -84,20 +79,7 @@ void main(){
         return;
     }
 
-    vec4 texel;
-
-	if (vTexIndex < 0.5f)
-		texel = texture(u_spriteTex0, vUV);
-	else if (vTexIndex < 1.5f)
-		texel = texture(u_spriteTex1, vUV);
-	else if (vTexIndex < 2.5f)
-		texel = texture(u_spriteTex2, vUV);
-	else if (vTexIndex < 3.5f)
-		texel = texture(u_spriteTex3, vUV);
-	else if (vTexIndex < 4.5f)
-		texel = texture(u_spriteTex4, vUV);
-	else
-		texel = texture(u_spriteTex5, vUV);
+    vec4 texel = texture(u_spriteTex, vec3(vUV, vTexIndex));
 
     FragColor = vec4(vColor.rgb * texel.rgb, vColor.a * texel.a);
 }
@@ -185,20 +167,38 @@ OverlayRenderer::OverlayRenderer()
 
 void OverlayRenderer::createRGBA8Texture(const uint8_t *rgba, int w, int h, int biome, int animal)
 {
-	GLuint tex = 0;
-	glGenTextures_(1, &tex);
-	glBindTexture_(GL_TEXTURE_2D, tex);
-	glTexImage2D_(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
-	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri_(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBindTexture_(GL_TEXTURE_2D, 0);
-
 	assert(biome >= 0 && biome < 2);
 	assert(animal >= 0 && animal < 6);
 
-	spriteTex[biome][animal] = tex;
+	if (spriteTexArray[biome] == 0)
+	{
+		glGenTextures_(1, &spriteTexArray[biome]);
+		glBindTexture_(GL_TEXTURE_2D_ARRAY, spriteTexArray[biome]);
+
+		spriteTexW = w;
+		spriteTexH = h;
+
+		glTexImage3D_(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8,
+					  w, h, 6, 0,
+					  GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+		glTexParameteri_(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri_(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri_(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri_(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	}
+
+	glBindTexture_(GL_TEXTURE_2D_ARRAY, spriteTexArray[biome]);
+
+	glTexSubImage3D_(GL_TEXTURE_2D_ARRAY,
+					 0,
+					 0, 0, animal,
+					 w, h, 1,
+					 GL_RGBA,
+					 GL_UNSIGNED_BYTE,
+					 rgba);
+
+	glBindTexture_(GL_TEXTURE_2D_ARRAY, 0);
 }
 
 void OverlayRenderer::draw(
@@ -220,35 +220,10 @@ void OverlayRenderer::draw(
 	GLint locQuad = glGetUniformLocation_(overlayProgram, "u_projQuad");
 	glUniform2fv_(locQuad, 4, projQuadPx);
 
-	GLint locSpriteTex0 = glGetUniformLocation_(overlayProgram, "u_spriteTex0");
-	glUniform1i_(locSpriteTex0, 3);
+	GLint locSpriteTex = glGetUniformLocation_(overlayProgram, "u_spriteTex");
+	glUniform1i_(locSpriteTex, 3);
 	glActiveTexture_(GL_TEXTURE3);
-	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][0]);
-
-	GLint locSpriteTex1 = glGetUniformLocation_(overlayProgram, "u_spriteTex1");
-	glUniform1i_(locSpriteTex1, 4);
-	glActiveTexture_(GL_TEXTURE4);
-	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][1]);
-
-	GLint locSpriteTex2 = glGetUniformLocation_(overlayProgram, "u_spriteTex2");
-	glUniform1i_(locSpriteTex2, 5);
-	glActiveTexture_(GL_TEXTURE5);
-	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][2]);
-
-	GLint locSpriteTex3 = glGetUniformLocation_(overlayProgram, "u_spriteTex3");
-	glUniform1i_(locSpriteTex3, 6);
-	glActiveTexture_(GL_TEXTURE6);
-	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][3]);
-
-	GLint locSpriteTex4 = glGetUniformLocation_(overlayProgram, "u_spriteTex4");
-	glUniform1i_(locSpriteTex4, 7);
-	glActiveTexture_(GL_TEXTURE7);
-	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][4]);
-
-	GLint locSpriteTex5 = glGetUniformLocation_(overlayProgram, "u_spriteTex5");
-	glUniform1i_(locSpriteTex5, 8);
-	glActiveTexture_(GL_TEXTURE8);
-	glBindTexture_(GL_TEXTURE_2D, spriteTex[biome][5]);
+	glBindTexture_(GL_TEXTURE_2D_ARRAY, spriteTexArray[biome]);
 
 	// Enable alpha blending
 	glEnable(GL_BLEND);
