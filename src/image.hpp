@@ -8,3 +8,4 @@ std::vector<uint8_t> load_png_as_1d_texture(const std::string &filename, int &ou
 
 std::vector<uint8_t> load_png(const std::string &filename, int &outWidth, int &outHeight);
 std::vector<uint8_t> load_png_rgba(const std::string &filename, int &outWidth, int &outHeight);
+std::vector<uint8_t> load_png_rgba_with_size(const std::string &filename, int width, int height);

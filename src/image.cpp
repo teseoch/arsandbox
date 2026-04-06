@@ -8,6 +8,8 @@
 
 #include "utils.hpp"
 
+#include "stb_image_resize2.h"
+
 static void forceWrapEdgesRGB(std::vector<uint8_t> &data, int w, int h)
 {
 	auto px = [&](int x, int y) -> uint8_t * { return &data[3 * (y * w + x)]; };
@@ -30,8 +32,7 @@ static void forceWrapEdgesRGB(std::vector<uint8_t> &data, int w, int h)
 // texture. On success:  returns vector of size (width * 3) in RGB order. On
 // failure:  returns empty vector. Also returns the image width via outWidth.
 
-std::vector<uint8_t> load_png_as_1d_texture(const std::string &filename,
-											int &outWidth)
+std::vector<uint8_t> load_png_as_1d_texture(const std::string &filename, int &outWidth)
 {
 	int w = 0, h = 0, channels = 0;
 
@@ -73,8 +74,7 @@ std::vector<uint8_t> load_png_as_1d_texture(const std::string &filename,
 	return tex1d;
 }
 
-std::vector<uint8_t> load_png(const std::string &filename, int &outWidth,
-							  int &outHeight)
+std::vector<uint8_t> load_png(const std::string &filename, int &outWidth, int &outHeight)
 {
 	int w = 0, h = 0, channels = 0;
 
@@ -115,8 +115,7 @@ std::vector<uint8_t> load_png(const std::string &filename, int &outWidth,
 	return tex;
 }
 
-std::vector<uint8_t> load_png_rgba(const std::string &filename, int &outWidth,
-								   int &outHeight)
+std::vector<uint8_t> load_png_rgba(const std::string &filename, int &outWidth, int &outHeight)
 {
 	int w = 0, h = 0, channels = 0;
 
@@ -138,8 +137,6 @@ std::vector<uint8_t> load_png_rgba(const std::string &filename, int &outWidth,
 	// Allocate output: width * 4 bytes (RGBA)
 	std::vector<uint8_t> tex;
 	tex.resize(outWidth * outHeight * 4);
-	// Copy the first row into a 1D texture
-	// (you can change this later if you want to average rows)
 	for (int x = 0; x < outWidth; ++x)
 	{
 		for (int y = 0; y < outHeight; ++y)
@@ -151,6 +148,30 @@ std::vector<uint8_t> load_png_rgba(const std::string &filename, int &outWidth,
 			tex[idx + 3] = data[idx + 3]; // A
 		}
 	}
+
+	stbi_image_free(data);
+
+	return tex;
+}
+
+std::vector<uint8_t> load_png_rgba_with_size(const std::string &filename, int width, int height)
+{
+	int w = 0, h = 0, channels = 0;
+
+	stbi_uc *data = stbi_load(filename.c_str(), &w, &h, &channels, 4);
+
+	if (!data)
+	{
+		std::cerr << "stb_image failed to load: " << filename << "\n";
+		return {};
+	}
+
+	std::vector<uint8_t> tex(width * height * 4);
+
+	stbir_resize_uint8_linear(
+		data, w, h, 0,
+		tex.data(), width, height, 0,
+		STBIR_RGBA);
 
 	stbi_image_free(data);
 

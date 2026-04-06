@@ -71,9 +71,9 @@ void load_creature_sprite(
 	OverlayRenderer &overlay,
 	int biome, int animal)
 {
-	int creatureSheetW = 0, creatureSheetH = 0;
+	int creatureSheetW = 560, creatureSheetH = 270;
 
-	std::vector<uint8_t> creatureRGBA = load_png_rgba(folder + "/creatures/" + sprite, creatureSheetW, creatureSheetH);
+	std::vector<uint8_t> creatureRGBA = load_png_rgba_with_size(folder + "/creatures/" + sprite, creatureSheetW, creatureSheetH);
 	if (!creatureRGBA.empty() && creatureSheetW > 0 && creatureSheetH > 0)
 		overlay.createRGBA8Texture(creatureRGBA.data(), creatureSheetW, creatureSheetH, biome, animal);
 	else
@@ -193,7 +193,7 @@ int main()
 
 	TagDetector tagDetector;
 	Audio::instance().init();
-	Audio::instance().muted = false;
+	Audio::instance().muted = true;
 
 	// Initial projector quad covers whole windows
 	if (std::filesystem::exists("calib.txt"))
