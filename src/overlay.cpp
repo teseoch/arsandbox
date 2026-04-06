@@ -179,7 +179,7 @@ void OverlayRenderer::createRGBA8Texture(const uint8_t *rgba, int w, int h, int 
 		spriteTexH = h;
 
 		glTexImage3D_(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8,
-					  w, h, 6, 0,
+					  w, h, n_sprites, 0,
 					  GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
 		glTexParameteri_(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
