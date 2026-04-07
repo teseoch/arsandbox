@@ -56,7 +56,7 @@ struct Controls
 	bool freezeDepth = false;
 
 	// Gamepad edges
-	ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge, dpadUpEdge, dpadLeftEdge, dpadRightEdge, dpadDownEdge;
+	ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge, ltEdge, rtEdge, dpadUpEdge, dpadLeftEdge, dpadRightEdge, dpadDownEdge;
 	bool gamepadPresent = false;
 
 	void reset()
@@ -98,39 +98,69 @@ static Quad gP;
 // Depth UV quad in *normalized* [0,1] coords (you warp this to match depth ROI)
 static Quad gU;
 
-static void updateGamepad(Controls &c, float dt)
+static void updateGamepad(Controls &c, float)
 {
-	c.gamepadPresent = glfwJoystickPresent(GLFW_JOYSTICK_1) && glfwJoystickIsGamepad(GLFW_JOYSTICK_1);
+
+	c.gamepadPresent = glfwJoystickPresent(GLFW_JOYSTICK_1);
 	if (!c.gamepadPresent)
 		return;
 
-	GLFWgamepadstate s;
-	if (!glfwGetGamepadState(GLFW_JOYSTICK_1, &s))
-		return;
+	const int jid = GLFW_JOYSTICK_1;
 
+	int axisCount = 0;
+	const float *axes = glfwGetJoystickAxes(jid, &axisCount);
+
+	int buttonCount = 0;
+	const unsigned char *buttons = glfwGetJoystickButtons(jid, &buttonCount);
+
+	auto axis = [&](int i) -> float {
+		if (!axes || i < 0 || i >= axisCount)
+			return 0.0f;
+		return axes[i];
+	};
+	auto button = [&](int i) -> bool {
+		if (!buttons || i < 0 || i >= buttonCount)
+			return false;
+		return buttons[i] == GLFW_PRESS;
+	};
 	auto deadzone = [&](float x) { return (std::fabs(x) < 0.12f) ? 0.0f : x; };
 
-	float ly = deadzone(s.axes[GLFW_GAMEPAD_AXIS_LEFT_Y]); // -1 up, +1 down
-	float ry = deadzone(s.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y]);
-	float rt =
-		s.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER]; // -1 released -> +1 pressed
-	float lt = s.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
-	float RT = std::clamp((rt + 1.0f) * 0.5f, 0.0f, 1.0f);
-	float LT = std::clamp((lt + 1.0f) * 0.5f, 0.0f, 1.0f);
+	// Raw Xbox layout on Linux is not standardized by GLFW, so keep the mapping
+	// explicit and easy to tweak if needed.
+	// Common mapping used here:
+	// axes: 0=LX, 1=LY, 2=LT, 3=RX, 4=RY, 5=RT, 6=DPAD_X, 7=DPAD_Y
+	// buttons: 0=A, 1=B, 2=X, 3=Y, 4=LB, 5=RB
 
-	// buttons
-	bool A = (s.buttons[GLFW_GAMEPAD_BUTTON_A] == GLFW_PRESS || s.buttons[GLFW_GAMEPAD_BUTTON_A] == GLFW_REPEAT);
-	bool B = (s.buttons[GLFW_GAMEPAD_BUTTON_B] == GLFW_PRESS || s.buttons[GLFW_GAMEPAD_BUTTON_B] == GLFW_REPEAT);
-	bool X = (s.buttons[GLFW_GAMEPAD_BUTTON_X] == GLFW_PRESS);
-	bool Y = (s.buttons[GLFW_GAMEPAD_BUTTON_Y] == GLFW_PRESS);
+	float lx = deadzone(axis(0));
+	float ly = deadzone(axis(1));
+	float rx = deadzone(axis(3));
+	float ry = deadzone(axis(4));
+	(void)lx;
+	(void)ly;
+	(void)rx;
+	(void)ry;
 
-	bool LB = (s.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER] == GLFW_PRESS);
-	bool RB = (s.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER] == GLFW_PRESS);
+	float ltAxis = axis(2);
+	float rtAxis = axis(5);
 
-	bool DUp = (s.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP] == GLFW_PRESS);
-	bool DLeft = (s.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT] == GLFW_PRESS);
-	bool DRight = (s.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT] == GLFW_PRESS);
-	bool DDown = (s.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN] == GLFW_PRESS);
+	// Handle both [-1,1] and [0,1] trigger conventions.
+	float LT = (ltAxis < 0.0f) ? std::clamp((ltAxis + 1.0f) * 0.5f, 0.0f, 1.0f) : std::clamp(ltAxis, 0.0f, 1.0f);
+	float RT = (rtAxis < 0.0f) ? std::clamp((rtAxis + 1.0f) * 0.5f, 0.0f, 1.0f) : std::clamp(rtAxis, 0.0f, 1.0f);
+
+	bool A = button(0);
+	bool B = button(1);
+	bool X = button(2);
+	bool Y = button(3);
+	bool LB = button(4);
+	bool RB = button(5);
+
+	// D-pad often comes through as axes on Linux joydev. Fall back to buttons if present.
+	float dpadX = axis(6);
+	float dpadY = axis(7);
+	bool DLeft = (dpadX < -0.5f) || button(13);
+	bool DRight = (dpadX > 0.5f) || button(14);
+	bool DUp = (dpadY < -0.5f) || button(11);
+	bool DDown = (dpadY > 0.5f) || button(12);
 
 	if (c.bEdge.pressed(B))
 		c.actions.push_back(InputActionType::Rain);
@@ -138,7 +168,6 @@ static void updateGamepad(Controls &c, float dt)
 		c.actions.push_back(InputActionType::Mega1);
 	if (c.aEdge.pressed(A))
 		c.actions.push_back(InputActionType::Mega2);
-
 	if (c.yEdge.pressed(Y))
 		c.actions.push_back(InputActionType::Clear);
 
@@ -151,23 +180,25 @@ static void updateGamepad(Controls &c, float dt)
 	if (c.dpadDownEdge.pressed(DDown))
 		c.actions.push_back(InputActionType::SpawnEagle);
 
-	if (c.lbEdge.pressed(LT))
+	bool LTPressed = LT > 0.5f;
+	bool RTPressed = RT > 0.5f;
+	if (c.ltEdge.pressed(LTPressed))
 	{
 		c.actions.push_back(InputActionType::SpawnVulture);
 		c.useCMap = true;
 	}
-	if (c.rbEdge.pressed(RT))
+	if (c.rtEdge.pressed(RTPressed))
 	{
 		c.actions.push_back(InputActionType::SpawnFrog);
 		c.useCMap = true;
 	}
 
-	if (c.rbEdge.pressed(LB))
+	if (c.lbEdge.pressed(LB))
 	{
 		c.actions.push_back(InputActionType::PrevBiome);
 		c.useCMap = false;
 	}
-	if (c.lbEdge.pressed(RB))
+	if (c.rbEdge.pressed(RB))
 	{
 		c.actions.push_back(InputActionType::NextBiome);
 		c.useCMap = false;
