@@ -140,7 +140,7 @@ static void updateGamepad(Controls &c, float)
 	(void)rx;
 	(void)ry;
 
-	float ltAxis = axis(2);
+	float ltAxis = axis(4);
 	float rtAxis = axis(5);
 
 	// Handle both [-1,1] and [0,1] trigger conventions.
@@ -149,18 +149,25 @@ static void updateGamepad(Controls &c, float)
 
 	bool A = button(0);
 	bool B = button(1);
-	bool X = button(2);
-	bool Y = button(3);
-	bool LB = button(4);
-	bool RB = button(5);
+	bool X = button(3);
+	bool Y = button(4);
+	bool LB = button(6);
+	bool RB = button(7);
+
+	// for (int i = 0; i < axisCount; ++i)
+	// 	std::cout << i << ": " << axis(i) << " ";
+	// std::cout << std::endl;
+
+	// for (int i = 0; i < buttonCount; ++i)
+	// 	std::cout << i << ": " << button(i) << " ";
+	// std::cout << std::endl;
 
 	// D-pad often comes through as axes on Linux joydev. Fall back to buttons if present.
-	float dpadX = axis(6);
-	float dpadY = axis(7);
-	bool DLeft = (dpadX < -0.5f) || button(13);
-	bool DRight = (dpadX > 0.5f) || button(14);
-	bool DUp = (dpadY < -0.5f) || button(11);
-	bool DDown = (dpadY > 0.5f) || button(12);
+
+	bool DLeft = button(18);
+	bool DRight = button(16);
+	bool DUp = button(15);
+	bool DDown = button(17);
 
 	if (c.bEdge.pressed(B))
 		c.actions.push_back(InputActionType::Rain);
@@ -184,24 +191,20 @@ static void updateGamepad(Controls &c, float)
 	bool RTPressed = RT > 0.5f;
 	if (c.ltEdge.pressed(LTPressed))
 	{
-		c.actions.push_back(InputActionType::SpawnVulture);
-		c.useCMap = true;
+		c.actions.push_back(InputActionType::PrevBiome);
 	}
 	if (c.rtEdge.pressed(RTPressed))
 	{
-		c.actions.push_back(InputActionType::SpawnFrog);
-		c.useCMap = true;
+		c.actions.push_back(InputActionType::NextBiome);
 	}
 
 	if (c.lbEdge.pressed(LB))
 	{
-		c.actions.push_back(InputActionType::PrevBiome);
-		c.useCMap = false;
+		c.actions.push_back(InputActionType::SpawnVulture);
 	}
 	if (c.rbEdge.pressed(RB))
 	{
-		c.actions.push_back(InputActionType::NextBiome);
-		c.useCMap = false;
+		c.actions.push_back(InputActionType::SpawnFrog);
 	}
 }
 
