@@ -96,8 +96,8 @@ void Wolf::step(const Depth &hf,
 
 		if (dist > 1e-6f)
 		{
-			float vx = (speed * 1.5f) * du / dist;
-			float vy = (speed * 1.5f) * dv / dist;
+			float vx = (speed * 1.3f) * du / dist;
+			float vy = (speed * 1.3f) * dv / dist;
 			u += vx * dt;
 			v += vy * dt;
 			angle = std::atan2(vy, vx);
@@ -157,7 +157,6 @@ void Wolf::step(const Depth &hf,
 			vy += 0.005f * downhill_y;
 		}
 		angle = std::atan2(vy, vx);
-		flip_x = (vx < 0.0f) ? 1.0f : 0.0f;
 
 		u += vx * dt;
 		v += vy * dt;
