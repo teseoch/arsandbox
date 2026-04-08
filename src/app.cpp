@@ -581,7 +581,7 @@ int main()
 			const float u1 = float(frame + 1) / float(CREATURE_SHEET_COLS);
 			const float v1 = float(row + 1) / float(CREATURE_SHEET_ROWS);
 
-			float flipx = c->flip_x;
+			float flipx = 0; // c->flip_x;
 			if (c->state == CreatureState::PANIC && c->panic_flicks)
 			{
 				int panic_tick = int(std::floor(tNow * 30.0));

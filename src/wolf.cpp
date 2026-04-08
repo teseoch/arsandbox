@@ -12,7 +12,7 @@ Wolf::Wolf() : Creature(6)
 	life = 400;
 	u = 0.5f;
 	v = 0.5f;
-	size = 50;
+	size = 60;
 	panic_flicks = false;
 }
 
