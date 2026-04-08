@@ -134,6 +134,10 @@ void Wolf::step(const Depth &hf,
 		u += vx * dt;
 		v += vy * dt;
 
+		// stay in sandbox
+		u = std::clamp(u, 0.0f, 1.0f);
+		v = std::clamp(v, 0.0f, 1.0f);
+
 		angle = std::atan2(vy, vx);
 		flip_x = (vx < 0.0f) ? 1.0f : 0.0f;
 	}
