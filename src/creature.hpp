@@ -42,6 +42,7 @@ public:
 
 	virtual bool find_ram() const { return false; }
 	virtual bool find_prey() const { return false; }
+	virtual bool find_wolf_prey() const { return false; }
 	virtual bool find_corpse() const { return false; }
 
 	float textureIndex() const { return texture_index; }

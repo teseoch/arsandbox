@@ -8,6 +8,7 @@
 #include "volture.hpp"
 #include "frog.hpp"
 #include "eagle.hpp"
+#include "wolf.hpp"
 #include "audio.hpp"
 
 float random_float(float a, float b)
@@ -195,6 +196,7 @@ void Simulation::spawnGoat(const Depth &depth, float t, float x, float y, float 
 
 		creatures.push_back(c);
 		rammables.push_back(c);
+		wolf_preys.push_back(c);
 
 		return;
 	}
@@ -231,6 +233,7 @@ void Simulation::spawnGoat(const Depth &depth, float t, float x, float y, float 
 
 		creatures.push_back(c);
 		rammables.push_back(c);
+		wolf_preys.push_back(c);
 	}
 }
 
@@ -250,6 +253,8 @@ void Simulation::spawnPig(const Depth &depth, float t, float x, float y, float d
 		c->init_dy = random_float(-1.0f, 1.0f);
 
 		creatures.push_back(c);
+		rammables.push_back(c);
+		wolf_preys.push_back(c);
 
 		return;
 	}
@@ -291,6 +296,7 @@ void Simulation::spawnPig(const Depth &depth, float t, float x, float y, float d
 
 		creatures.push_back(c);
 		rammables.push_back(c);
+		wolf_preys.push_back(c);
 	}
 }
 
@@ -385,6 +391,30 @@ void Simulation::spawnEagle(const Depth &depth, float t, float x, float y, float
 	creatures.push_back(eagle);
 }
 
+void Simulation::spawnWolf(const Depth &depth, float t, float x, float y, float dirx, float diry)
+{
+	if (t < 0)
+	{
+		x = random_float(0.0f, 1.0f);
+		y = random_float(0.0f, 1.0f);
+		auto wolf = std::make_shared<Wolf>();
+		wolf->u = x;
+		wolf->v = y;
+		creatures.push_back(wolf);
+		return;
+	}
+
+	if (t - lastWolfTime < 10.0f)
+		return;
+
+	lastWolfTime = t;
+
+	std::shared_ptr<Wolf> wolf = std::make_shared<Wolf>();
+	wolf->u = x + random_float(-0.05f, 0.05f);
+	wolf->v = y + random_float(-0.05f, 0.05f);
+	creatures.push_back(wolf);
+}
+
 void Simulation::spawnVolture(const Depth &depth, float t, float x, float y, float dirx, float diry)
 {
 	if (t < 0)
@@ -458,6 +488,8 @@ void Simulation::clear()
 	creatures.clear();
 	rammables.clear();
 	preys.clear();
+	wolf_preys.clear();
+
 	corpses.clear();
 
 	flowMap1.clear();
@@ -488,11 +520,14 @@ void Simulation::step(const Depth &depth, float dt)
 		}
 		else if (c->find_corpse())
 			c->target = findNearestCreature(c, corpses);
+		else if (c->find_wolf_prey())
+			c->target = findNearestCreature(c, wolf_preys);
 	}
 
 	creatures.erase(std::remove_if(creatures.begin(), creatures.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), creatures.end());
 	rammables.erase(std::remove_if(rammables.begin(), rammables.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), rammables.end());
 	preys.erase(std::remove_if(preys.begin(), preys.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), preys.end());
+	wolf_preys.erase(std::remove_if(wolf_preys.begin(), wolf_preys.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), wolf_preys.end());
 	corpses.erase(std::remove_if(corpses.begin(), corpses.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), corpses.end());
 
 	for (auto &d : rain_)

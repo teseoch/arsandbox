@@ -38,7 +38,8 @@ enum class InputActionType
 	SpawnFish,
 	SpawnEagle,
 	SpawnVulture,
-	SpawnFrog
+	SpawnFrog,
+	SpawnWolf
 };
 
 struct Controls
@@ -191,7 +192,7 @@ static void updateGamepad(Controls &c, float)
 	bool RTPressed = RT > 0.5f;
 	if (c.ltEdge.pressed(LTPressed))
 	{
-		c.actions.push_back(InputActionType::PrevBiome);
+		c.actions.push_back(InputActionType::SpawnWolf);
 	}
 	if (c.rtEdge.pressed(RTPressed))
 	{
@@ -271,6 +272,11 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 	if (key == GLFW_KEY_0)
 	{
 		gCtl.actions.push_back(InputActionType::SpawnFrog);
+		return;
+	}
+	if (key == GLFW_KEY_MINUS)
+	{
+		gCtl.actions.push_back(InputActionType::SpawnWolf);
 		return;
 	}
 

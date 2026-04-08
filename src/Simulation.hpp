@@ -27,6 +27,7 @@ public:
 
 	void spawnEagle(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
 	void spawnVolture(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
+	void spawnWolf(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
 	void spawnFrog(const Depth &depth, float t = -1, float x = -1.0f, float y = -1.0f, float dirx = 0.0f, float diry = 0.0f);
 
 	void step(const Depth &depth, float dt);
@@ -79,6 +80,7 @@ private:
 	std::vector<std::shared_ptr<Creature>> creatures;
 	std::vector<std::shared_ptr<Creature>> rammables;
 	std::vector<std::shared_ptr<Creature>> preys;
+	std::vector<std::shared_ptr<Creature>> wolf_preys;
 	std::vector<std::shared_ptr<Creature>> corpses;
 
 	std::vector<std::shared_ptr<Biome>> biomes;
@@ -91,6 +93,7 @@ private:
 	float lastFishTime = 0.0f;
 	float lastEagleTime = 0.0f;
 	float lastVoltureTime = 0.0f;
+	float lastWolfTime = 0.0f;
 	float lastFrogTime = 0.0f;
 
 	float jitter = 0.01f;

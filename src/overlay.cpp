@@ -168,7 +168,7 @@ OverlayRenderer::OverlayRenderer()
 void OverlayRenderer::createRGBA8Texture(const uint8_t *rgba, int w, int h, int biome, int animal)
 {
 	assert(biome >= 0 && biome < 2);
-	assert(animal >= 0 && animal < 6);
+	assert(animal >= 0 && animal < n_sprites);
 
 	if (spriteTexArray[biome] == 0)
 	{

@@ -191,6 +191,9 @@ int main()
 	load_creature_sprite(folder, "frog-sheet.png", overlay, 0, 5);
 	load_creature_sprite(folder, "frog-lava-sheet.png", overlay, 1, 5);
 
+	load_creature_sprite(folder, "wolf-sheet.png", overlay, 0, 6);
+	load_creature_sprite(folder, "wolf-lava-sheet.png", overlay, 1, 6);
+
 	TagDetector tagDetector;
 	Audio::instance().init();
 	Audio::instance().muted = true;
@@ -383,6 +386,9 @@ int main()
 			case InputActionType::SpawnFrog:
 				sim.spawnFrog(gCtl.depth); // random pos and params
 				break;
+			case InputActionType::SpawnWolf:
+				sim.spawnWolf(gCtl.depth); // random pos and params
+				break;
 			}
 		}
 		gCtl.actions.clear();
@@ -487,6 +493,7 @@ int main()
 		for (const auto &t : detectedTags)
 		{
 			auto [u, v] = gCtl.depth.inverse_warp_uv(t.uv.x, t.uv.y);
+			const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
 
 			if (t.id == 10 && t.decision_margin > 30.0f)
 			{
@@ -511,17 +518,14 @@ int main()
 			}
 			else if (t.id == 7 && t.decision_margin > 30.0f)
 			{
-				const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
 				sim.spawnGoat(gCtl.depth, tNow, u, v, dir.x, dir.y);
 			}
 			else if (t.id == 4 && t.decision_margin > 30.0f)
 			{
-				const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
 				sim.spawnPig(gCtl.depth, tNow, u, v, dir.x, dir.y);
 			}
 			else if (t.id == 5 && t.decision_margin > 30.0f)
 			{
-				const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
 				sim.spawnFish(gCtl.depth, tNow, u, v, dir.x, dir.y);
 			}
 			else if (t.id == 6 && t.decision_margin > 30.0f)
@@ -546,6 +550,10 @@ int main()
 					lastBiomeSwitch = tNow;
 				}
 				isBiomeChange = true;
+			}
+			else if (t.id == 11 && t.decision_margin > 30.0f)
+			{
+				sim.spawnWolf(gCtl.depth, tNow, u, v);
 			}
 
 			// std::cout << "id=" << t.id
