@@ -31,7 +31,7 @@ public:
 	GLuint quadVBO = 0;
 	GLuint instVBO = 0;
 	GLuint spriteTexArray[2] = {0, 0}; // one texture array per biome
-	static const int n_sprites = 7;
+	static const int n_sprites = 8;
 	int spriteTexW = 0;
 	int spriteTexH = 0;
 

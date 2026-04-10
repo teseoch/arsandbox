@@ -194,6 +194,9 @@ int main()
 	load_creature_sprite(folder, "wolf-sheet.png", overlay, 0, 6);
 	load_creature_sprite(folder, "wolf-lava-sheet.png", overlay, 1, 6);
 
+	load_creature_sprite(folder, "fish-rare-sheet.png", overlay, 0, 7);
+	load_creature_sprite(folder, "fish-rare-lava-sheet.png", overlay, 1, 7);
+
 	TagDetector tagDetector;
 	Audio::instance().init();
 	Audio::instance().muted = true;

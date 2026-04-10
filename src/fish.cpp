@@ -6,11 +6,11 @@
 #include <algorithm>
 #include <cstdlib>
 
-Fish::Fish() : Creature(2)
+Fish::Fish() : Creature((std::rand() % 10) == 0 ? 7 : 2) // 10% chance to be a rare lava fish, which has a different sprite.
 {
 	life = 5; // Fish live shorter than pigs and goats, as they can drown and are more fragile.
 
-	is_lava_fish = (std::rand() % 10) == 0; // 10% chance to be a lava fish, which can survive in lava a bit and has a different color.
+	is_lava_fish = textureIndex() == 7;
 }
 
 void Fish::step(const Depth &hf,
