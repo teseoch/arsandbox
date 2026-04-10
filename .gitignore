@@ -2,3 +2,4 @@ bin
 bin_rel
 build
 .DS_Store
+*.blend1
