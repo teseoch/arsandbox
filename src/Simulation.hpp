@@ -18,6 +18,9 @@ public:
 	void rain(const float t, const float u, const float v);
 	void randomRain();
 
+	void lavaRain(const float t, const float u, const float v);
+	void randomLavaRain();
+
 	void mega1(float t = -1, float x = -1.0f, float y = -1.0f);
 	void mega2(float t = -1, float x = -1.0f, float y = -1.0f);
 
@@ -44,11 +47,16 @@ public:
 	inline const std::vector<std::shared_ptr<Creature>> &getCreatures() const { return creatures; }
 
 	inline const std::vector<Drop> &getRain() const { return rain_; }
+	inline const std::vector<Drop> &getLavaRain() const { return lava_rain_; }
+
 	inline const std::vector<Drop> &getMega1() const { return drops1; }
 	inline const std::vector<Drop> &getMega2() const { return drops2; }
 
 	inline const std::array<float, 2> &rainSize() const { return currentBiome()->rainSize(); }
 	inline const std::array<float, 3> &rainColor() const { return currentBiome()->rainColor(); }
+
+	inline const std::array<float, 2> &lavaRainSize() const { return currentBiome()->lavaRainSize(); }
+	inline const std::array<float, 3> &lavaRainColor() const { return currentBiome()->lavaRainColor(); }
 
 	inline const std::array<float, 2> &mega1Size() const { return currentBiome()->mega1Size(); }
 	inline const std::array<float, 3> &mega1Color() const { return currentBiome()->mega1Color(); }
@@ -74,6 +82,7 @@ private:
 	FlowMap flowMap2;
 
 	std::vector<Drop> rain_;
+	std::vector<Drop> lava_rain_;
 	std::vector<Drop> drops1;
 	std::vector<Drop> drops2;
 

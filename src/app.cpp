@@ -356,6 +356,9 @@ int main()
 			case InputActionType::Rain:
 				sim.randomRain();
 				break;
+			case InputActionType::LavaRain:
+				sim.randomLavaRain();
+				break;
 			case InputActionType::Mega1:
 				sim.mega1(); // random center
 				break;
@@ -519,6 +522,19 @@ int main()
 				// 	0.4f              // alpha
 				// });
 			}
+			else if (t.id == 12 && t.decision_margin > 30.0f)
+			{
+				sim.lavaRain(tNow, u, v);
+
+				// sprites.push_back({
+				// 	u, v,
+				// 	1000.0f, // size
+				// 	0.0f,
+				// 	0.0f,
+				// 	0.7f, 0.7f, 0.7f, // gray
+				// 	0.4f              // alpha
+				// });
+			}
 			else if (t.id == 7 && t.decision_margin > 30.0f)
 			{
 				sim.spawnGoat(gCtl.depth, tNow, u, v, dir.x, dir.y);
@@ -571,6 +587,7 @@ int main()
 		// std::cout << std::endl;
 
 		render_particles(*sim.currentBiome(), sim.getRain(), sim.rainColor(), sim.rainSize(), sprites);
+		render_particles(*sim.currentBiome(), sim.getLavaRain(), sim.lavaRainColor(), sim.lavaRainSize(), sprites);
 		render_particles(*sim.currentBiome(), sim.getMega1(), sim.mega1Color(), sim.mega1Size(), sprites);
 		render_particles(*sim.currentBiome(), sim.getMega2(), sim.mega2Color(), sim.mega2Size(), sprites);
 

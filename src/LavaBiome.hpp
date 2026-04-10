@@ -26,6 +26,9 @@ public:
 		rainSize_ = {2.5f, 4.5f};
 		rainColor_ = {0.32f, 0.28f, 0.26f};
 
+		lavaRainSize_ = {2.5f, 4.5f};
+		lavaRainColor_ = {0.8f, 0.1f, 0.0f};
+
 		mega1Size_ = {6.0f, 8.0f};
 		mega1Color_ = {0.45f, 0.32f, 0.22f};
 
@@ -52,6 +55,9 @@ public:
 		flow1DiffuseNeighWeight = 0.035f;
 
 		flow2Decay = 0.992f;
+
+		flow2RainAmount = 10.0f;
+		flow2RainMinSpeed = 0.00015f;
 
 		flow2DropAmount = 8.0f;
 		flow2DropMinSpeed = 0.00015f;

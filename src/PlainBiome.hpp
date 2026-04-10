@@ -30,6 +30,9 @@ public:
 		mega2Size_ = {8.0f, 10.0f};
 		mega2Color_ = {1.0f, 0.35f, 0.05f};
 
+		lavaRainSize_ = {3.0f, 6.0f};
+		lavaRainColor_ = {0.643529f, 0.0f, 0.0f};
+
 		gravity1 = 0.20f;
 		damping1 = 0.992f;
 		speed_cap1 = 0.06f;
@@ -50,6 +53,9 @@ public:
 		flow1DiffuseNeighWeight = 0.055f;
 
 		flow2Decay = 0.975f;
+
+		flow2RainAmount = 6.0f;
+		flow2RainMinSpeed = 0.0002f;
 
 		flow2DropAmount = 10.0f;
 		flow2DropMinSpeed = 0.0002f;

@@ -28,6 +28,7 @@ struct ButtonEdge
 enum class InputActionType
 {
 	Rain,
+	LavaRain,
 	Mega1,
 	Mega2,
 	Clear,
@@ -148,6 +149,11 @@ static void updateGamepad(Controls &c, float)
 	float LT = (ltAxis < 0.0f) ? std::clamp((ltAxis + 1.0f) * 0.5f, 0.0f, 1.0f) : std::clamp(ltAxis, 0.0f, 1.0f);
 	float RT = (rtAxis < 0.0f) ? std::clamp((rtAxis + 1.0f) * 0.5f, 0.0f, 1.0f) : std::clamp(rtAxis, 0.0f, 1.0f);
 
+	float haxis = axis(0);
+
+	float left = std::clamp(haxis, -1.0f, 0.0f);
+	float right = std::clamp(haxis, 0.0f, 1.0f);
+
 	bool A = button(0);
 	bool B = button(1);
 	bool X = button(3);
@@ -196,7 +202,7 @@ static void updateGamepad(Controls &c, float)
 	}
 	if (c.rtEdge.pressed(RTPressed))
 	{
-		c.actions.push_back(InputActionType::NextBiome);
+		c.actions.push_back(InputActionType::LavaRain);
 	}
 
 	if (c.lbEdge.pressed(LB))
@@ -207,6 +213,11 @@ static void updateGamepad(Controls &c, float)
 	{
 		c.actions.push_back(InputActionType::SpawnFrog);
 	}
+
+	if (left < -0.5f)
+		c.actions.push_back(InputActionType::PrevBiome);
+	else if (right > 0.5f)
+		c.actions.push_back(InputActionType::NextBiome);
 }
 
 static void moveSelectedCorner(Quad &Q, int key, float step)
@@ -241,6 +252,11 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 	if (key == GLFW_KEY_T)
 	{
 		gCtl.actions.push_back(InputActionType::Rain);
+		return;
+	}
+	if (key == GLFW_KEY_B)
+	{
+		gCtl.actions.push_back(InputActionType::LavaRain);
 		return;
 	}
 

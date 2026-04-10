@@ -65,6 +65,25 @@ void Simulation::rain(const float t, const float u, const float v)
 	}
 }
 
+void Simulation::lavaRain(const float t, const float u, const float v)
+{
+	for (int i = 0; i < 5; i++)
+	{
+		float r = random_float(0.01f, 0.36f);
+		float angle = random_float(0.0f, 2 * 3.14159f);
+
+		float du = ru * r * std::cos(angle);
+		float dv = rv * r * std::sin(angle);
+
+		Drop d;
+		d.reset(
+			std::clamp(u + du, 0.0f, 1.0f),
+			std::clamp(v + dv, 0.0f, 1.0f),
+			random_float(0.3f, 2.0f));
+		lava_rain_.push_back(d);
+	}
+}
+
 void Simulation::randomRain()
 {
 	for (int i = 0; i < 5; i++)
@@ -75,6 +94,18 @@ void Simulation::randomRain()
 			random_float(0.0f, 1.0f),
 			random_float(0.3f, 2.0f));
 		rain_.push_back(d);
+	}
+}
+void Simulation::randomLavaRain()
+{
+	for (int i = 0; i < 5; i++)
+	{
+		Drop d;
+		d.reset(
+			random_float(0.0f, 1.0f),
+			random_float(0.0f, 1.0f),
+			random_float(0.3f, 2.0f));
+		lava_rain_.push_back(d);
 	}
 }
 
@@ -483,6 +514,7 @@ void Simulation::spawnFrog(const Depth &depth, float t, float x, float y, float 
 void Simulation::clear()
 {
 	rain_.clear();
+	lava_rain_.clear();
 	drops1.clear();
 	drops2.clear();
 	creatures.clear();
@@ -532,12 +564,16 @@ void Simulation::step(const Depth &depth, float dt)
 
 	for (auto &d : rain_)
 		d.step(depth, dt, currentBiome()->gravity1, currentBiome()->damping1, currentBiome()->speed_cap1, currentBiome()->bounce1, flowMap2, 0.15f);
+	for (auto &d : lava_rain_)
+		d.step(depth, dt, currentBiome()->gravity2, currentBiome()->damping2, currentBiome()->speed_cap2, currentBiome()->bounce2, flowMap2, 0.15f);
 	for (auto &d : drops1)
 		d.step(depth, dt, currentBiome()->gravity1, currentBiome()->damping1, currentBiome()->speed_cap1, currentBiome()->bounce1, flowMap2, 0.15f);
 	for (auto &d : drops2)
 		d.step(depth, dt, currentBiome()->gravity2, currentBiome()->damping2, currentBiome()->speed_cap2, currentBiome()->bounce2, flowMap1, 0.15f);
 
 	rain_.erase(std::remove_if(rain_.begin(), rain_.end(), [](const Drop &d) { return !d.isAlive(); }), rain_.end());
+	lava_rain_.erase(std::remove_if(lava_rain_.begin(), lava_rain_.end(), [](const Drop &d) { return !d.isAlive(); }), lava_rain_.end());
+
 	drops1.erase(std::remove_if(drops1.begin(), drops1.end(), [](const Drop &d) { return !d.isAlive(); }), drops1.end());
 	drops2.erase(std::remove_if(drops2.begin(), drops2.end(), [](const Drop &d) { return !d.isAlive(); }), drops2.end());
 
@@ -551,6 +587,7 @@ void Simulation::step(const Depth &depth, float dt)
 	// Lava: thicker and more honey-like: slower spreading, stronger deposit,
 	// and much more persistent.
 	flowMap2.decay(currentBiome()->flow2Decay);
+	flowMap2.flowDrops(lava_rain_, currentBiome()->flow2RainAmount, currentBiome()->flow2RainMinSpeed);
 	flowMap2.flowDrops(drops2, currentBiome()->flow2DropAmount, currentBiome()->flow2DropMinSpeed);
 	flowMap2.diffuse_once(currentBiome()->flow2DiffuseCenterWeight, currentBiome()->flow2DiffuseNeighWeight);
 }

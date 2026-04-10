@@ -22,6 +22,9 @@ public:
 	inline const std::array<float, 2> &rainSize() const { return rainSize_; }
 	inline const std::array<float, 3> &rainColor() const { return rainColor_; }
 
+	inline const std::array<float, 2> &lavaRainSize() const { return lavaRainSize_; }
+	inline const std::array<float, 3> &lavaRainColor() const { return lavaRainColor_; }
+
 	inline const std::array<float, 2> &mega1Size() const { return mega1Size_; }
 	inline const std::array<float, 3> &mega1Color() const { return mega1Color_; }
 
@@ -49,6 +52,8 @@ public:
 
 	float flow2Decay = -1;
 
+	float flow2RainAmount = -1;
+	float flow2RainMinSpeed = -1;
 	float flow2DropAmount = -1;
 	float flow2DropMinSpeed = -1;
 	float flow2DiffuseCenterWeight = -1;
@@ -70,6 +75,8 @@ protected:
 
 	std::array<float, 2> rainSize_;
 	std::array<float, 3> rainColor_;
+	std::array<float, 2> lavaRainSize_;
+	std::array<float, 3> lavaRainColor_;
 	std::array<float, 2> mega1Size_;
 	std::array<float, 3> mega1Color_;
 	std::array<float, 2> mega2Size_;
