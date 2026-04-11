@@ -136,7 +136,7 @@ void Simulation::mega1(float t, float u, float v)
 
 	lastMega1Time = t;
 
-	Audio::instance().play(Sound::Splash, 0.2f);
+	Audio::instance().play(Sound::Splash, 0.14f);
 
 	for (int i = 0; i < 100; i++)
 	{
@@ -186,7 +186,7 @@ void Simulation::mega2(float t, float u, float v)
 
 	lastMega2Time = t;
 
-	Audio::instance().play(Sound::Lava, 0.6f);
+	Audio::instance().play(Sound::Lava, 0.9f);
 
 	for (int i = 0; i < 100; i++)
 	{
@@ -499,7 +499,7 @@ void Simulation::spawnFrog(const Depth &depth, float t, float x, float y, float 
 		return;
 
 	lastFrogTime = t;
-	Audio::instance().play(Sound::Frog, 0.7f);
+	Audio::instance().play(Sound::Frog, 0.5f);
 
 	int numFrog = 1;
 	const float r = random_float(0.0f, 1.0f);
@@ -554,7 +554,7 @@ void Simulation::step(const Depth &depth, float dt)
 		{
 			c->target = findNearestCreature(c, preys);
 			if (c->target)
-				Audio::instance().play(Sound::Eagle, 0.8f);
+				Audio::instance().play(Sound::Eagle, 0.6f);
 		}
 		else if (c->find_corpse())
 			c->target = findNearestCreature(c, corpses);
