@@ -16,6 +16,8 @@ enum class Sound
 	Eagle,
 	Fish_Flop,
 	Frog,
+	Wolf,
+	Rare,
 	COUNT
 };
 

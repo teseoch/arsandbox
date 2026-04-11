@@ -18,7 +18,9 @@ void Audio::init()
 		folder + "/pig.wav",
 		folder + "/eagle.wav",
 		folder + "/fish-flop.wav",
-		folder + "/frog.wav"};
+		folder + "/frog.wav",
+		folder + "/wolf.wav",
+		folder + "/rare.wav"};
 
 	for (int i = 0; i < paths.size(); ++i)
 	{

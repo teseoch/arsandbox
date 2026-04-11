@@ -346,6 +346,9 @@ void Simulation::spawnFish(const Depth &depth, float t, float x, float y, float 
 		c->init_dx = random_float(-1.0f, 1.0f);
 		c->init_dy = random_float(-1.0f, 1.0f);
 
+		if (c->textureIndex() == 7) // rare fish
+			Audio::instance().play(Sound::Rare, 0.8f);
+
 		creatures.push_back(c);
 		preys.push_back(c);
 
@@ -388,6 +391,9 @@ void Simulation::spawnFish(const Depth &depth, float t, float x, float y, float 
 			c->init_dx = 0.0f;
 			c->init_dy = 0.0f;
 		}
+
+		if (c->textureIndex() == 7) // rare fish
+			Audio::instance().play(Sound::Rare, 0.8f);
 
 		creatures.push_back(c);
 		preys.push_back(c);
@@ -553,7 +559,11 @@ void Simulation::step(const Depth &depth, float dt)
 		else if (c->find_corpse())
 			c->target = findNearestCreature(c, corpses);
 		else if (c->find_wolf_prey())
+		{
 			c->target = findNearestCreature(c, wolf_preys);
+			if (c->target)
+				Audio::instance().play(Sound::Wolf, 0.8f);
+		}
 	}
 
 	creatures.erase(std::remove_if(creatures.begin(), creatures.end(), [](const std::shared_ptr<Creature> &c) { return !c->alive(); }), creatures.end());
