@@ -293,7 +293,7 @@ void Simulation::spawnPig(const Depth &depth, float t, float x, float y, float d
 	if (t - lastPigTime < 2.0f)
 		return;
 
-	Audio::instance().play(Sound::Pig, 0.7f);
+	Audio::instance().play(Sound::Pig, 0.9f);
 
 	lastPigTime = t;
 

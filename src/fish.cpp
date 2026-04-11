@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <cstdlib>
 
-Fish::Fish() : Creature((std::rand() % 10) == 0 ? 7 : 2) // 10% chance to be a rare lava fish, which has a different sprite.
+Fish::Fish() : Creature((std::rand() % 50) == 0 ? 7 : 2) // 2% chance to be a rare lava fish, which has a different sprite.
 {
 	life = 5; // Fish live shorter than pigs and goats, as they can drown and are more fragile.
 
