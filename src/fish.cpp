@@ -53,6 +53,18 @@ void Fish::step(const Depth &hf,
 		hot = std::max(hot, terrain_hot);
 	}
 
+	// Terrain-defined biome hazards.
+	if (biome.water_threshold >= 0.0f)
+	{
+		float terrain_wet = std::clamp((biome.water_threshold - z) / 0.10f, 0.0f, 1.0f);
+		wet = std::max(wet, terrain_wet);
+	}
+
+	if (is_lava_fish)
+	{
+		std::swap(wet, hot);
+	}
+
 	// Update heading sometimes so fish do not all swim in straight lines forever.
 	heading_timer -= dt;
 	if (heading_timer <= 0.0f)
@@ -90,13 +102,6 @@ void Fish::step(const Depth &hf,
 		move_y += flow_follow_gain * wet * downhill_y;
 	}
 
-	// Terrain-defined biome hazards.
-	if (biome.water_threshold >= 0.0f)
-	{
-		float terrain_wet = std::clamp((biome.water_threshold - z) / 0.10f, 0.0f, 1.0f);
-		wet = std::max(wet, terrain_wet);
-	}
-
 	// Out of water, fish panic and try to get back to lower/wetter regions.
 	wet_cooldown -= dt;
 	if (wet < 0.25f)
@@ -114,7 +119,7 @@ void Fish::step(const Depth &hf,
 
 	// Lava is very bad for fish.
 	lava_cooldown -= dt;
-	if (!is_lava_fish && hot > 0.30f)
+	if (hot > 0.30f)
 	{
 		state = CreatureState::PANIC;
 		move_x += 0.08f * hot * downhill_x;
