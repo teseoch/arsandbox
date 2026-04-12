@@ -242,6 +242,9 @@ void Goat::step(const Depth &hf,
 		}
 	}
 
+	u = std::clamp(u, 0.0f, 1.0f);
+	v = std::clamp(v, 0.0f, 1.0f);
+
 	float du = u - old_u;
 	float dv = v - old_v;
 	float moved2 = du * du + dv * dv;

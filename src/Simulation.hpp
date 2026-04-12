@@ -76,7 +76,8 @@ public:
 private:
 	std::shared_ptr<Creature> findNearestCreature(
 		const std::shared_ptr<Creature> &self,
-		const std::vector<std::shared_ptr<Creature>> &candidates) const;
+		const std::vector<std::shared_ptr<Creature>> &candidates,
+		bool allow_corpse) const;
 
 	FlowMap flowMap1;
 	FlowMap flowMap2;

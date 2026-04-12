@@ -16,7 +16,10 @@ float random_float(float a, float b)
 	return a + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (b - a)));
 }
 
-std::shared_ptr<Creature> Simulation::findNearestCreature(const std::shared_ptr<Creature> &self, const std::vector<std::shared_ptr<Creature>> &candidates) const
+std::shared_ptr<Creature> Simulation::findNearestCreature(
+	const std::shared_ptr<Creature> &self,
+	const std::vector<std::shared_ptr<Creature>> &candidates,
+	bool allow_corpse) const
 {
 	std::shared_ptr<Creature> nearest = nullptr;
 	float nearest_dist2 = self->search_radius * self->search_radius;
@@ -24,6 +27,10 @@ std::shared_ptr<Creature> Simulation::findNearestCreature(const std::shared_ptr<
 	for (const auto &c : candidates)
 	{
 		if (c == self)
+			continue;
+		if (!c->alive())
+			continue;
+		if (c->decaying() && !allow_corpse)
 			continue;
 
 		float du = c->u - self->u;
@@ -549,18 +556,18 @@ void Simulation::step(const Depth &depth, float dt)
 	for (const auto &c : creatures)
 	{
 		if (c->find_ram())
-			c->target = findNearestCreature(c, rammables);
+			c->target = findNearestCreature(c, rammables, false);
 		else if (c->find_prey())
 		{
-			c->target = findNearestCreature(c, preys);
+			c->target = findNearestCreature(c, preys, false);
 			if (c->target)
 				Audio::instance().play(Sound::Eagle, 0.6f);
 		}
 		else if (c->find_corpse())
-			c->target = findNearestCreature(c, corpses);
+			c->target = findNearestCreature(c, corpses, true);
 		else if (c->find_wolf_prey())
 		{
-			c->target = findNearestCreature(c, wolf_preys);
+			c->target = findNearestCreature(c, wolf_preys, false);
 			if (c->target)
 				Audio::instance().play(Sound::Wolf, 0.8f);
 		}

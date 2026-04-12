@@ -58,7 +58,10 @@ struct Controls
 	bool freezeDepth = false;
 
 	// Gamepad edges
-	ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge, ltEdge, rtEdge, dpadUpEdge, dpadLeftEdge, dpadRightEdge, dpadDownEdge;
+	ButtonEdge aEdge, bEdge, xEdge, yEdge, lbEdge, rbEdge, ltEdge, rtEdge, dpadUpEdge,
+		dpadLeftEdge, dpadRightEdge, dpadDownEdge,
+		leftEdge, rightEdge;
+
 	bool gamepadPresent = false;
 
 	void reset()
@@ -214,9 +217,9 @@ static void updateGamepad(Controls &c, float)
 		c.actions.push_back(InputActionType::SpawnFrog);
 	}
 
-	if (left < -0.5f)
+	if (c.leftEdge.pressed(left < -0.5f))
 		c.actions.push_back(InputActionType::PrevBiome);
-	else if (right > 0.5f)
+	else if (c.rightEdge.pressed(right > 0.5f))
 		c.actions.push_back(InputActionType::NextBiome);
 }
 

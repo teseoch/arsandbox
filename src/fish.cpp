@@ -62,7 +62,8 @@ void Fish::step(const Depth &hf,
 
 	if (is_lava_fish)
 	{
-		std::swap(wet, hot);
+		wet = std::max(wet, hot);
+		hot = 0;
 	}
 
 	// Update heading sometimes so fish do not all swim in straight lines forever.
