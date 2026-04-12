@@ -53,13 +53,6 @@ void Fish::step(const Depth &hf,
 		hot = std::max(hot, terrain_hot);
 	}
 
-	// Terrain-defined biome hazards.
-	if (biome.water_threshold >= 0.0f)
-	{
-		float terrain_wet = std::clamp((biome.water_threshold - z) / 0.10f, 0.0f, 1.0f);
-		wet = std::max(wet, terrain_wet);
-	}
-
 	if (is_lava_fish)
 	{
 		wet = std::max(wet, hot);
@@ -101,6 +94,13 @@ void Fish::step(const Depth &hf,
 	{
 		move_x += flow_follow_gain * wet * downhill_x;
 		move_y += flow_follow_gain * wet * downhill_y;
+	}
+
+	// Terrain-defined biome hazards.
+	if (biome.water_threshold >= 0.0f)
+	{
+		float terrain_wet = std::clamp((biome.water_threshold - z) / 0.10f, 0.0f, 1.0f);
+		wet = std::max(wet, terrain_wet);
 	}
 
 	// Out of water, fish panic and try to get back to lower/wetter regions.
