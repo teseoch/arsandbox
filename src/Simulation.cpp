@@ -561,7 +561,7 @@ void Simulation::step(const Depth &depth, float dt)
 		{
 			c->target = findNearestCreature(c, preys, false);
 			if (c->target)
-				Audio::instance().play(Sound::Eagle, 0.6f);
+				Audio::instance().play(Sound::Eagle, 0.4f);
 		}
 		else if (c->find_corpse())
 			c->target = findNearestCreature(c, corpses, true);
