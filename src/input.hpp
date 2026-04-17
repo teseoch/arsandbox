@@ -302,6 +302,11 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 	// mode toggles (press only)
 	if (action == GLFW_PRESS)
 	{
+		if (key == GLFW_KEY_P)
+		{
+			Audio::instance().muted = !Audio::instance().muted;
+			return;
+		}
 		if (key == GLFW_KEY_K)
 		{
 			gCtl.actions.push_back(InputActionType::Mega1);
