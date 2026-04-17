@@ -65,6 +65,46 @@ const static float CREATURE_ANIM_FPS = 8.0f;
 const static int tileW = 64;
 const static int tileH = 64;
 
+static bool point_on_segment(Vec2 p, Vec2 a, Vec2 b)
+{
+	constexpr float eps = 1e-5f;
+	const float abx = b.x - a.x;
+	const float aby = b.y - a.y;
+	const float apx = p.x - a.x;
+	const float apy = p.y - a.y;
+	const float cross = abx * apy - aby * apx;
+	if (std::abs(cross) > eps)
+		return false;
+
+	const float dot = apx * abx + apy * aby;
+	if (dot < -eps)
+		return false;
+
+	const float len2 = abx * abx + aby * aby;
+	return dot <= len2 + eps;
+}
+
+static bool point_in_quad(const Quad &quad, Vec2 p)
+{
+	for (int i = 0, j = 3; i < 4; j = i++)
+	{
+		if (point_on_segment(p, quad.v[j], quad.v[i]))
+			return true;
+	}
+
+	bool inside = false;
+	for (int i = 0, j = 3; i < 4; j = i++)
+	{
+		const Vec2 a = quad.v[i];
+		const Vec2 b = quad.v[j];
+		const bool crosses = ((a.y > p.y) != (b.y > p.y)) &&
+							 (p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x);
+		if (crosses)
+			inside = !inside;
+	}
+	return inside;
+}
+
 void load_creature_sprite(
 	const std::string &folder,
 	const std::string &sprite,
@@ -499,18 +539,24 @@ int main()
 		bool isBiomeChange = false;
 		for (const auto &t : detectedTags)
 		{
+			if (t.decision_margin <= 30.0f)
+				continue;
+
+			if (!point_in_quad(gCtl.depth.uv_quad, t.uv))
+				continue;
+
 			auto [u, v] = gCtl.depth.inverse_warp_uv(t.uv.x, t.uv.y);
 			const Vec2 dir = gCtl.depth.inverse_warp_dir(u, v, t.corners_px);
 
-			if (t.id == 10 && t.decision_margin > 30.0f)
+			if (t.id == 10)
 			{
 				sim.mega2(tNow, u, v);
 			}
-			else if (t.id == 8 && t.decision_margin > 30.0f)
+			else if (t.id == 8)
 			{
 				sim.mega1(tNow, u, v);
 			}
-			else if (t.id == 9 && t.decision_margin > 30.0f)
+			else if (t.id == 9)
 			{
 				sim.rain(tNow, u, v);
 
@@ -523,7 +569,7 @@ int main()
 				// 	0.4f              // alpha
 				// });
 			}
-			else if (t.id == 12 && t.decision_margin > 30.0f)
+			else if (t.id == 12)
 			{
 				sim.lavaRain(tNow, u, v);
 
@@ -536,31 +582,31 @@ int main()
 				// 	0.4f              // alpha
 				// });
 			}
-			else if (t.id == 7 && t.decision_margin > 30.0f)
+			else if (t.id == 7)
 			{
 				sim.spawnGoat(gCtl.depth, tNow, u, v, dir.x, dir.y);
 			}
-			else if (t.id == 4 && t.decision_margin > 30.0f)
+			else if (t.id == 4)
 			{
 				sim.spawnPig(gCtl.depth, tNow, u, v, dir.x, dir.y);
 			}
-			else if (t.id == 5 && t.decision_margin > 30.0f)
+			else if (t.id == 5)
 			{
 				sim.spawnFish(gCtl.depth, tNow, u, v, dir.x, dir.y);
 			}
-			else if (t.id == 6 && t.decision_margin > 30.0f)
+			else if (t.id == 6)
 			{
 				sim.spawnEagle(gCtl.depth, tNow, u, v);
 			}
-			else if (t.id == 3 && t.decision_margin > 30.0f)
+			else if (t.id == 3)
 			{
 				sim.spawnVolture(gCtl.depth, tNow, u, v);
 			}
-			else if (t.id == 2 && t.decision_margin > 30.0f)
+			else if (t.id == 2)
 			{
 				sim.spawnFrog(gCtl.depth, tNow, u, v);
 			}
-			else if (t.id == 1 && t.decision_margin > 30.0f)
+			else if (t.id == 1)
 			{
 				if (!saw_change_biome && (tNow - lastBiomeSwitch > 1.0f))
 				{
@@ -571,7 +617,7 @@ int main()
 				}
 				isBiomeChange = true;
 			}
-			else if (t.id == 11 && t.decision_margin > 30.0f)
+			else if (t.id == 11)
 			{
 				sim.spawnWolf(gCtl.depth, tNow, u, v);
 			}
