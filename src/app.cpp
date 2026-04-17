@@ -404,6 +404,7 @@ int main()
 		{
 #ifdef SANDBOX_WITH_REALSENSE
 			realsense.grab(gCtl.depth);
+			// gCtl.depth.apply_ray_to_plane_correction();
 			gCtl.depth.blur();
 			gCtl.depth.blur();
 #else

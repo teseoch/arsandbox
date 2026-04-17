@@ -12,6 +12,13 @@
 
 #include "types.hpp"
 
+class CameraParameters
+{
+public:
+	float fx = 0.0f, fy = 0.0f; // focal lengths in pixels
+	float cx = 0.0f, cy = 0.0f; // principal point in pixels
+};
+
 class Depth
 {
 private:
@@ -23,6 +30,7 @@ public:
 	int w, h;
 	std::vector<float> depth; // millimeters, size w*h
 	float depthMinMm, depthMaxMm;
+	CameraParameters cam_param;
 
 	void newDepth();
 
@@ -165,6 +173,7 @@ public:
 	}
 
 	void save_png(const std::string &filename) const;
+	void apply_ray_to_plane_correction();
 
 	void blur()
 	{

@@ -44,6 +44,29 @@ void Depth::newDepth()
 	}
 }
 
+void Depth::apply_ray_to_plane_correction()
+{
+	if (cam_param.fx <= 0.0f || cam_param.fy <= 0.0f)
+		return;
+
+	for (int y = 0; y < h; ++y)
+	{
+		for (int x = 0; x < w; ++x)
+		{
+			const int i = y * w + x;
+			const float d = depth[i];
+			if (d <= 0.0f)
+				continue;
+
+			const float nx = (float(x) - cam_param.cx) / cam_param.fx;
+			const float ny = (float(y) - cam_param.cy) / cam_param.fy;
+			const float corr = 1.0f / std::sqrt(1.0f + nx * nx + ny * ny);
+
+			depth[i] = d * corr;
+		}
+	}
+}
+
 void Depth::save_png(const std::string &filename) const
 {
 	if (depth.empty())

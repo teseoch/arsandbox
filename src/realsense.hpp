@@ -25,7 +25,7 @@ public:
 	{
 		cfg.enable_stream(RS2_STREAM_DEPTH, w * scale, h * scale, RS2_FORMAT_Z16, fps);
 		cfg.enable_stream(RS2_STREAM_COLOR, w * scale, h * scale, RS2_FORMAT_BGR8, fps);
-		pipe.start(cfg);
+		rs2::pipeline_profile profile = pipe.start(cfg);
 		started = true;
 
 		spatial.set_option(RS2_OPTION_FILTER_MAGNITUDE, 4.0f);
@@ -39,6 +39,15 @@ public:
 		// temporal.set_option(RS2_OPTION_PERSIS, 0.0f);
 
 		decimate.set_option(RS2_OPTION_FILTER_MAGNITUDE, 2.0f);
+
+		auto depth_stream = profile.get_stream(RS2_STREAM_DEPTH).as<rs2::video_stream_profile>();
+
+		rs2_intrinsics K = depth_stream.get_intrinsics();
+
+		depth.cam_param.fx = K.fx;
+		depth.cam_param.fy = K.fy;
+		depth.cam_param.cx = K.ppx;
+		depth.cam_param.cy = K.ppy;
 
 		depth.h = h;
 		depth.w = w;
