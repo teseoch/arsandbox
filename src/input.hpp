@@ -252,6 +252,12 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 	if (action != GLFW_PRESS && action != GLFW_REPEAT)
 		return;
 
+	if (key == GLFW_KEY_ESCAPE)
+	{
+		glfwSetWindowShouldClose(w, GLFW_TRUE);
+		return;
+	}
+
 	if (key == GLFW_KEY_T)
 	{
 		gCtl.actions.push_back(InputActionType::Rain);
@@ -465,11 +471,5 @@ static void keyCallback(GLFWwindow *w, int key, int scancode, int action,
 	{
 		gCtl.depth.save_png("depth_debug.png");
 		std::cout << "Saved depth_debug.png\n";
-	}
-
-	if (key == GLFW_KEY_ESCAPE)
-	{
-		glfwSetWindowShouldClose(w, GLFW_TRUE);
-		return;
 	}
 }
