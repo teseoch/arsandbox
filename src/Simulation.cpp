@@ -422,7 +422,7 @@ void Simulation::spawnEagle(const Depth &depth, float t, float x, float y, float
 		return;
 	}
 
-	if (t - lastEagleTime < 10.0f)
+	if (t - lastEagleTime < 15.0f)
 		return;
 
 	lastEagleTime = t;
@@ -474,7 +474,7 @@ void Simulation::spawnVolture(const Depth &depth, float t, float x, float y, flo
 		return;
 	}
 
-	if (t - lastVoltureTime < 10.0f)
+	if (t - lastVoltureTime < 14.0f)
 		return;
 
 	lastVoltureTime = t;
