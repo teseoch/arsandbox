@@ -263,8 +263,7 @@ void Goat::step(const Depth &hf,
 
 	ram_cooldown -= dt;
 
-	if (std::rand() / float(RAND_MAX) < 0.000001f)
-		life--;
+	applyOldAge(dt, 180.0f);
 }
 
 bool Goat::find_ram() const

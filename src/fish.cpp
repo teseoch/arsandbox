@@ -185,4 +185,6 @@ void Fish::step(const Depth &hf,
 		state = CreatureState::DEAD;
 		return;
 	}
+
+	applyOldAge(dt, 120.0f);
 }

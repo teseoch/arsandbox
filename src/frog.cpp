@@ -138,6 +138,5 @@ void Frog::step(const Depth &hf,
 	u = std::clamp(u, 0.0f, 1.0f);
 	v = std::clamp(v, 0.0f, 1.0f);
 
-	if (std::rand() / float(RAND_MAX) < 0.000001f)
-		life--;
+	applyOldAge(dt, 120.0f);
 }

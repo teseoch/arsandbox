@@ -194,9 +194,6 @@ void Pig::step(const Depth &hf,
 		return;
 	}
 
-	if (std::rand() / float(RAND_MAX) < 0.00001f)
-		life--;
-
 	if (wet > 0.45f)
 	{
 		drown_timer += dt;
@@ -211,4 +208,6 @@ void Pig::step(const Depth &hf,
 	{
 		drown_timer = std::max(0.0f, drown_timer - 2.0f * dt); // recover quickly
 	}
+
+	applyOldAge(dt, 200.0f);
 }

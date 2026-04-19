@@ -171,9 +171,6 @@ void Wolf::step(const Depth &hf,
 
 		flip_x = (vx < 0.0f) ? 1.0f : 0.0f;
 	}
-
-	if (std::rand() / float(RAND_MAX) < 0.000001f)
-		life--;
 }
 
 bool Wolf::find_wolf_prey() const

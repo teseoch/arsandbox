@@ -115,9 +115,6 @@ void Volture::step(const Depth &,
 		angle = std::atan2(ty, tx);
 		// flip_x = (tx < 0.0f) ? 1.0f : 0.0f;
 	}
-
-	if (std::rand() / float(RAND_MAX) < 0.000001f)
-		life--;
 }
 
 bool Volture::find_corpse() const

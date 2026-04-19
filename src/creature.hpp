@@ -4,6 +4,7 @@
 #include "FlowMap.hpp"
 
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 #include <memory>
 
@@ -20,7 +21,7 @@ class Creature
 {
 public:
 	float u, v;
-	int life = 10; // frames
+	int life = 10; // health / life points
 
 	float angle = 0.0f;
 	float flip_x = 0.0f;
@@ -57,5 +58,15 @@ private:
 	const int texture_index;
 
 protected:
+	void applyOldAge(float dt, float mean_seconds_per_life)
+	{
+		if (dt <= 0.0f || mean_seconds_per_life <= 0.0f)
+			return;
+
+		const float chance = dt / mean_seconds_per_life;
+		if (chance >= 1.0f || std::rand() / float(RAND_MAX) < chance)
+			life--;
+	}
+
 	bool deadSoundPlayed = false;
 };
